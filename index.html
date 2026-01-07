@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BMT BIMA - Integrated System</title>
+    <title>BMT BIMA - Professional System</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
@@ -26,20 +26,42 @@
         .g-card { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); padding: 30px; border-radius: 16px; width: 200px; text-align: center; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); transition: 0.3s; }
         .g-card:hover { transform: translateY(-10px); background: rgba(255,255,255,0.2); border-color: var(--secondary); }
         
-        /* UI & LAYOUT */
+        /* UI COMPONENTS */
         .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; font-size: 0.9rem; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-success { background: #27ae60; color: white; }
         .btn-danger { background: #c0392b; color: white; }
         .btn-warning { background: #f39c12; color: white; }
+        
+        /* TOMBOL MENU ELEGAN (NEW) */
+        .btn-ghost { 
+            background: transparent; 
+            color: var(--primary); 
+            font-size: 1.2rem; 
+            cursor: pointer; 
+            border: none; 
+            margin-right: 15px;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-ghost:hover {
+            background: rgba(15, 61, 62, 0.08);
+            transform: scale(1.1);
+            color: var(--secondary);
+        }
+
         .card { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 25px; }
         .form-control { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.95rem; background: #fafafa; margin-bottom: 15px; }
         
-        /* SIDEBAR (SCROLL FIX) */
+        /* LAYOUT & SCROLL */
         .app-container { display: flex; min-height: 100vh; }
         .sidebar { width: var(--sidebar-width); background: var(--primary); color: white; height: 100vh; position: fixed; top: 0; left: 0; display: flex; flex-direction: column; z-index: 1000; transition: 0.3s; }
         .sidebar-brand { height: 90px; display: flex; align-items: center; padding: 0 25px; gap: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); flex-shrink: 0; }
-        /* Perbaikan Scroll di Sini */
         .sidebar-menu { flex: 1; padding-top: 20px; overflow-y: auto; overflow-x: hidden; }
         .sidebar-menu::-webkit-scrollbar { width: 5px; }
         .sidebar-menu::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
@@ -59,10 +81,10 @@
         th { background: #eee; font-weight: 600; }
         #login-modal, #reset-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999; display: none; align-items: center; justify-content: center; }
 
-        /* ID CARD - SCREEN VIEW */
-        .id-card-view { display: none; } 
+        /* ID CARD VIEW */
+        .id-card-view { display: none; }
 
-        /* --- PRINT STYLE --- */
+        /* PRINT STYLE */
         @media print {
             @page { size: A4; margin: 15mm 20mm; }
             .no-print, .sidebar, .topbar, #gateway, #loading-screen, #login-modal, .btn, #sync-status, #reset-modal { display: none !important; }
@@ -169,7 +191,12 @@
         </aside>
         <main class="main-content">
             <header class="topbar">
-                <div style="display:flex; align-items:center;"><button class="btn-ghost" onclick="document.getElementById('sidebar').classList.toggle('minimized')"><i class="fas fa-bars"></i></button><h2 id="page-title" style="color:var(--primary); margin:0;">Dashboard</h2></div>
+                <div style="display:flex; align-items:center;">
+                    <button class="btn-ghost" onclick="document.getElementById('sidebar').classList.toggle('minimized')">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h2 id="page-title" style="color:var(--primary); margin:0;">Dashboard</h2>
+                </div>
                 <div style="text-align:right;"><div id="user-role-display" style="font-weight:bold;">Role</div><small id="user-name-display">User</small></div>
             </header>
             <div id="content-body" style="padding: 40px;"></div>
@@ -182,7 +209,7 @@
         // ================================================================
         // KONFIGURASI DATABASE (WAJIB GANTI)
         // ================================================================
-        const DATABASE_URL = "https://script.google.com/macros/s/AKfycbzoo3oSDhhHfqRTRsztU2HcNplcJUNIdJwXEdqwatdMooZrAFrDFNmCb285BD9yWCUNmw/exec"; 
+        const DATABASE_URL = "ISI_URL_GOOGLE_SCRIPT_DISINI"; 
         // ================================================================
 
         // DEFAULT DATA
@@ -324,14 +351,45 @@
             
             if(id==='identitas') { t.innerText="Identitas & Tampilan"; b.innerHTML=`<div class="card"><h4>Identitas Lembaga</h4><div class="form-vertical"><label>Nama BMT</label><input id="s-nm" class="form-control" value="${settings.nama}"><label>Nomor Izin</label><input id="s-iz" class="form-control" value="${settings.izin}"><label>Alamat Lengkap</label><input id="s-al" class="form-control" value="${settings.alamat}"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><label>Email</label><input id="s-em" class="form-control" value="${settings.email}"></div><div><label>WA</label><input id="s-wa" class="form-control" value="${settings.wa}"></div></div><hr><label><b>Upload Logo Baru:</b></label><input type="file" onchange="updateLogo(this)"><label><b>Upload Wallpaper Login:</b></label><input type="file" onchange="updateWall(this)"><button class="btn btn-primary" onclick="saveID()">Simpan Perubahan</button></div></div>`; }
             else if(id==='input') { t.innerText="Input Nasabah"; let ex=activeApp==='kms'?`<input id="i-dp" class="form-control" placeholder="DP (Rp)">`: (activeApp==='gadai'?`<input id="i-jam" class="form-control" placeholder="Barang Jaminan">`:''); b.innerHTML=`<div class="card" style="max-width:600px"><div class="form-vertical"><input id="i-nm" class="form-control" placeholder="Nama Lengkap"><input id="i-nik" class="form-control" placeholder="NIK (KTP)"><input id="i-al" class="form-control" placeholder="Alamat Domisili"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><input id="i-wa" class="form-control" placeholder="No. WA"><input id="i-em" class="form-control" placeholder="Email (Opsional)"></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><input id="i-pl" class="form-control" placeholder="Plafond (Rp)"><input id="i-tn" class="form-control" placeholder="Tenor (Bulan)"></div>${ex}<hr><div class="form-group"><label>Foto KTP</label><input type="file"></div><div class="form-group"><label>Foto Ket. Kerja / Usaha</label><input type="file"></div><div class="form-group"><label>Foto Wajah (Untuk Akad)</label><input type="file" onchange="readFoto(this)"></div><button class="btn btn-primary" onclick="subNas()">Simpan Data</button></div></div>`; }
-            else if(id==='home') {
-                t.innerText="Dashboard";
-                if(activeApp==='induk') {
-                    let prof=parseInt(settings.shu.profit); let totalAsset = dbDana.reduce((a,b)=>a+parseInt(b.amount),0); 
-                    b.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(250px,1fr));gap:20px;margin-bottom:20px"><div class="card" style="background:var(--primary);color:white"><h3>SHU Berjalan</h3><h2>Rp ${prof.toLocaleString()}</h2></div><div class="card" style="background:var(--secondary);color:white"><h3>Total Aset</h3><h2>Rp ${totalAsset.toLocaleString()}</h2></div></div><div class="card"><h3>Visi & Misi</h3><p><b>Visi:</b> ${settings.visi}</p><p><b>Misi:</b><br>${settings.misi.replace(/\n/g,'<br>')}</p></div>`;
-                } else {
-                    let activeClients = dbNasabah.filter(x => x.unit === activeApp && x.status === 'Approved'); let totalPlafond = activeClients.reduce((a, b) => a + parseInt(b.plafond), 0); b.innerHTML = `<div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;"><div class="card" style="background:var(--primary); color:white;"><h3>Nasabah Aktif</h3><h1 style="margin:10px 0;">${activeClients.length}</h1></div><div class="card" style="background:var(--secondary); color:white;"><h3>Perputaran Uang</h3><h1 style="margin:10px 0;">Rp ${totalPlafond.toLocaleString()}</h1></div></div>`;
-                }
+            
+            // --- DASHBOARD INDUK (SMART SHU) ---
+            else if(id==='home' && activeApp==='induk') {
+                t.innerText="Dashboard Induk"; 
+                let prof = parseInt(settings.shu.profit); 
+                let totalAsset = dbDana.reduce((a,b)=>a+parseInt(b.amount),0);
+                
+                // HITUNG SHU PINTAR
+                let shuAnggotaTotal = prof * (settings.shu.p_nasabah / 100);
+                let totalPinjamanAll = dbNasabah.filter(x=>x.status==='Approved').reduce((a,b)=>a+parseInt(b.plafond),0);
+                
+                let shuRows = dbNasabah.filter(x=>x.status==='Approved').map(x => {
+                    let share = (parseInt(x.plafond) / totalPinjamanAll) * shuAnggotaTotal;
+                    if(isNaN(share)) share = 0;
+                    return `<tr><td>${x.nama}</td><td>Rp ${parseInt(x.plafond).toLocaleString()}</td><td>Rp ${share.toLocaleString(undefined, {maximumFractionDigits:0})}</td></tr>`;
+                }).join('');
+
+                b.innerHTML=`
+                <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(250px,1fr));gap:20px;margin-bottom:20px">
+                    <div class="card" style="background:var(--primary);color:white"><h3>SHU Berjalan</h3><h2>Rp ${prof.toLocaleString()}</h2></div>
+                    <div class="card" style="background:var(--secondary);color:white"><h3>Total Aset</h3><h2>Rp ${totalAsset.toLocaleString()}</h2></div>
+                </div>
+                <div class="card">
+                    <h3><i class="fas fa-chart-pie"></i> Estimasi Pembagian SHU Anggota</h3>
+                    <p>Total Alokasi SHU Anggota: <b>Rp ${shuAnggotaTotal.toLocaleString()}</b> (${settings.shu.p_nasabah}%)</p>
+                    <div class="table-responsive">
+                        <table>
+                            <thead><tr><th>Nama Nasabah</th><th>Total Pinjaman (Kontribusi)</th><th>Estimasi SHU Diterima</th></tr></thead>
+                            <tbody>${shuRows || '<tr><td colspan="3">Belum ada nasabah aktif.</td></tr>'}</tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card"><h3>Visi & Misi</h3><p><b>Visi:</b> ${settings.visi}</p><p><b>Misi:</b><br>${settings.misi.replace(/\n/g,'<br>')}</p></div>`;
+            }
+            // --- DASHBOARD UNIT ---
+            else if(id==='home') { 
+                let activeClients = dbNasabah.filter(x => x.unit === activeApp && x.status === 'Approved'); 
+                let totalPlafond = activeClients.reduce((a, b) => a + parseInt(b.plafond), 0); 
+                b.innerHTML = `<div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;"><div class="card" style="background:var(--primary); color:white;"><h3>Nasabah Aktif</h3><h1 style="margin:10px 0;">${activeClients.length}</h1></div><div class="card" style="background:var(--secondary); color:white;"><h3>Perputaran Uang</h3><h1 style="margin:10px 0;">Rp ${totalPlafond.toLocaleString()}</h1></div></div>`; 
             }
             
             else if(id==='users') { t.innerText="Manajemen Pengguna"; let rows=dbUsers.map((u,i)=>`<tr><td>${u.user}</td><td>${u.role}</td><td>${u.app}</td><td><button class="btn btn-danger btn-sm" onclick="delUser(${i})">Del</button></td></tr>`).join(''); b.innerHTML=`<div class="card" style="max-width:600px;"><h4>Tambah User</h4><div class="form-vertical"><input id="n-u" class="form-control" placeholder="Username Baru"><select id="n-r" class="form-control"><option value="anggota">Anggota</option><option value="admin">Admin</option><option value="bendahara">Bendahara</option><option value="sekretaris">Sekretaris</option><option value="marketing">Marketing</option><option value="manager">Manager</option><option value="accounting">Accounting</option></select><input id="n-p" type="text" class="form-control" placeholder="Password (Wajib Diisi)"><button class="btn btn-primary" onclick="addUser()">Simpan User</button></div></div><div class="card"><div class="table-responsive"><table><thead><tr><th>User</th><th>Role</th><th>App</th><th>Aksi</th></tr></thead><tbody>${rows}</tbody></table></div></div>`; }
@@ -358,7 +416,7 @@
 
         // --- SAVE FUNCTIONS ---
         function saveID() { settings.nama=document.getElementById('s-nm').value; settings.izin=document.getElementById('s-iz').value; settings.alamat=document.getElementById('s-al').value; settings.email=document.getElementById('s-em').value; settings.wa=document.getElementById('s-wa').value; saveToCloud(); renderIdentitas(); alert('Saved!'); }
-        function saveSHU() { settings.shu.profit=document.getElementById('sh-p').value; settings.shu.p_tetap=document.getElementById('sh-t').value; settings.shu.p_nasabah=document.getElementById('sh-n').value; saveToCloud(); alert('Saved'); }
+        function saveSHU() { settings.shu.profit=document.getElementById('sh-p').value; settings.shu.p_tetap=document.getElementById('sh-t').value; settings.shu.p_nasabah=document.getElementById('sh-n').value; saveToCloud(); alert('Saved'); page('home'); }
         function saveCodes() { settings.codes.sps=document.getElementById('c-sps').value; settings.codes.kms=document.getElementById('c-kms').value; settings.codes.gadai=document.getElementById('c-gadai').value; saveToCloud(); alert('Saved'); }
         function saveMargin() { settings.margins[activeApp]=document.getElementById('u-mar').value; saveToCloud(); alert('Saved'); }
         function saveAllTemplates() { settings.templates.sps = document.getElementById('t-sps').value; settings.templates.kms = document.getElementById('t-kms').value; settings.templates.gadai = document.getElementById('t-gadai').value; saveToCloud(); alert('Saved'); }
