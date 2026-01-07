@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BMT BIMA - Professional System</title>
+    <title>BMT BIMA - Enterprise System</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
@@ -20,101 +20,71 @@
         #sync-status { position: fixed; bottom: 20px; right: 20px; background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 50px; font-size: 0.8rem; z-index: 9999; display: flex; align-items: center; gap: 10px; transition: 0.3s; opacity: 0; pointer-events: none; }
         #sync-status.active { opacity: 1; }
 
-        /* GATEWAY (LOGIN) */
+        /* GATEWAY */
         #gateway { position: fixed; inset: 0; background: linear-gradient(rgba(5, 25, 26, 0.85), rgba(5, 25, 26, 0.9)); background-size: cover; background-position: center; z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; }
         .gateway-grid { display: flex; gap: 20px; margin-top: 40px; flex-wrap: wrap; justify-content: center; }
         .g-card { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); padding: 30px; border-radius: 16px; width: 200px; text-align: center; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); transition: 0.3s; }
         .g-card:hover { transform: translateY(-10px); background: rgba(255,255,255,0.2); border-color: var(--secondary); }
         
-        /* UI COMPONENTS */
-        .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; font-size: 0.9rem; }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-success { background: #27ae60; color: white; }
-        .btn-danger { background: #c0392b; color: white; }
-        .btn-warning { background: #f39c12; color: white; }
-        
-        /* TOMBOL MENU ELEGAN (NEW) */
-        .btn-ghost { 
-            background: transparent; 
-            color: var(--primary); 
-            font-size: 1.2rem; 
-            cursor: pointer; 
-            border: none; 
-            margin-right: 15px;
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .btn-ghost:hover {
-            background: rgba(15, 61, 62, 0.08);
-            transform: scale(1.1);
-            color: var(--secondary);
-        }
-
-        .card { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 25px; }
-        .form-control { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.95rem; background: #fafafa; margin-bottom: 15px; }
-        
-        /* LAYOUT & SCROLL */
+        /* UI LAYOUT */
         .app-container { display: flex; min-height: 100vh; }
         .sidebar { width: var(--sidebar-width); background: var(--primary); color: white; height: 100vh; position: fixed; top: 0; left: 0; display: flex; flex-direction: column; z-index: 1000; transition: 0.3s; }
         .sidebar-brand { height: 90px; display: flex; align-items: center; padding: 0 25px; gap: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); flex-shrink: 0; }
         .sidebar-menu { flex: 1; padding-top: 20px; overflow-y: auto; overflow-x: hidden; }
         .sidebar-menu::-webkit-scrollbar { width: 5px; }
         .sidebar-menu::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
-        
         .sidebar.minimized { width: 80px; }
         .sidebar.minimized .hide-mini { display: none; }
         .main-content { margin-left: var(--sidebar-width); flex: 1; width: calc(100% - var(--sidebar-width)); background: #f8f9fa; transition: 0.3s; }
         .sidebar.minimized ~ .main-content { margin-left: 80px; width: calc(100% - 80px); }
-        .topbar { height: 90px; background: white; padding: 0 40px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 900; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
+        
+        /* COMPONENTS */
+        .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem; transition:0.2s;}
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-success { background: #27ae60; color: white; }
+        .btn-danger { background: #c0392b; color: white; }
+        .btn-warning { background: #f39c12; color: white; }
+        .btn-ghost { background: transparent; color: var(--primary); font-size: 1.2rem; cursor: pointer; border: none; margin-right: 15px; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.3s; }
+        .btn-ghost:hover { background: rgba(15, 61, 62, 0.08); transform: scale(1.1); color: var(--secondary); }
+        .card { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 25px; }
+        .form-control { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.95rem; background: #fafafa; margin-bottom: 15px; }
         .menu-link { padding: 15px 25px; cursor: pointer; display: flex; align-items: center; gap: 15px; opacity: 0.8; transition: 0.2s; font-size: 0.95rem; white-space: nowrap; }
         .menu-link:hover, .menu-link.active { background: rgba(255,255,255,0.1); opacity: 1; border-left: 4px solid var(--secondary); }
-
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; }
+        .bg-pending { background: #ffeeba; color: #856404; }
+        .bg-success { background: #d4edda; color: #155724; }
+        
         /* TABLES */
         .table-responsive { width: 100%; overflow-x: auto; margin-top: 10px; border: 1px solid #eee; }
         table { width: 100%; border-collapse: collapse; min-width: 800px; }
         th, td { padding: 12px; border-bottom: 1px solid #ddd; white-space: nowrap; text-align: left; }
         th { background: #eee; font-weight: 600; }
         #login-modal, #reset-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999; display: none; align-items: center; justify-content: center; }
+        .id-card-view { display: none; } 
 
-        /* ID CARD VIEW */
-        .id-card-view { display: none; }
-
-        /* PRINT STYLE */
+        /* PRINT */
         @media print {
             @page { size: A4; margin: 15mm 20mm; }
             .no-print, .sidebar, .topbar, #gateway, #loading-screen, #login-modal, .btn, #sync-status, #reset-modal { display: none !important; }
             .main-content { margin: 0; width: 100%; padding: 0; background: white; }
             #printable-area { display: block !important; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 9999; }
             body { font-family: 'Times New Roman', serif; font-size: 11pt; color: #000; -webkit-print-color-adjust: exact; }
-            
             .bank-header { display: flex; align-items: center; border-bottom: 3px double #000; padding-bottom: 10px; margin-bottom: 20px; }
             .bank-logo { width: 80px; height: 80px; object-fit: contain; margin-right: 20px; }
             .bank-info { flex: 1; text-align: center; }
             .bank-info h1 { font-size: 18pt; font-weight: 900; margin: 0; text-transform: uppercase; letter-spacing: 1px; }
-            
             .doc-title { text-align: center; margin-bottom: 20px; text-transform: uppercase; }
             .doc-title h2 { font-size: 14pt; font-weight: bold; text-decoration: underline; margin: 0; }
             .doc-body { text-align: justify; line-height: 1.3; }
-            
             .bio-container { display: flex; gap: 15px; margin: 15px 0; border: 1px solid #000; padding: 10px; align-items: flex-start; }
             .photo-frame { width: 30mm; height: 40mm; border: 1px solid #000; background: #f0f0f0; display: block; overflow: hidden; }
             .photo-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
-            
-            .bio-text table { width: 100%; border: none; }
-            .bio-text td { border: none; padding: 2px 0; vertical-align: top; }
             .fin-table { width: 100%; border-collapse: collapse; margin: 15px 0; border: 1px solid #000; }
             .fin-table td, .fin-table th { border: 1px solid #000; padding: 6px 10px; }
             .fin-table tr:first-child td { background-color: #eee !important; font-weight: bold; text-align: center; }
-            
             .signatures { display: grid; grid-template-columns: 1fr 1fr 1fr; margin-top: 40px; page-break-inside: avoid; gap: 10px; }
             .sig-box { text-align: center; }
             .sig-line { border-bottom: 1px solid #000; margin-top: 70px; font-weight: bold; width: 80%; margin: auto; }
-            
             .id-card-print { display: block !important; margin: 20px auto; border: 1px solid #000; }
             .id-card { width: 85.6mm; height: 53.98mm; border: 1px solid #000; position: relative; overflow: hidden; }
             .id-header { background: #0f3d3e !important; -webkit-print-color-adjust: exact; height: 15mm; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
@@ -214,105 +184,87 @@
 
         // DEFAULT DATA
         const defaultUsers = [{user:'admin',role:'admin',app:'induk',password:'123'}, {user:'bendahara',role:'bendahara',app:'induk',password:'123'}, {user:'sekretaris',role:'sekretaris',app:'induk',password:'123'}, {user:'anggota',role:'anggota',app:'induk',password:'123'}, {user:'manager',role:'manager',app:'unit',password:'123'}, {user:'marketing',role:'marketing',app:'unit',password:'123'}, {user:'accounting',role:'accounting',app:'unit',password:'123'}];
-        const defaultConfig = { nama: "BMT BINA INSAN ASSIROT", izin: "518/BH/KWK/2025", alamat: "Jl. Jendral Sudirman No. 45", wa: "08123456789", email: "info@bmt.co.id", logo: "https://cdn-icons-png.flaticon.com/512/2317/2317968.png", wallpaper: "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?q=80&w=1600&auto=format&fit=crop", struktur: { ketua: "H. Abdullah", sekretaris: "Siti Aminah", bendahara: "Rudi Hartono" }, visi: "Menjadi Lembaga Keuangan Syariah Terdepan", misi: "1. Transaksi Syariah Murni\n2. Pelayanan Prima", unit_leads: {sps: "Bpk. Budi", kms: "Ibu Ani", gadai: "Bpk. Cipto"}, shu: { profit: 150000000, p_tetap: 50, p_nasabah: 20 }, codes: { sps: 'SPS', kms: 'KMS', gadai: 'GS' }, margins: { sps: 10, kms: 20, gadai: 5 }, limits: { sps: 100, kms: 100, gadai: 100 }, templates: { sps: "Pasal 1: Akad Mudharabah.\nPasal 2: Nisbah 60:40.", kms: "Pasal 1: Murabahah.\nPasal 2: Jual Beli.", gadai: "Pasal 1: Rahn.\nPasal 2: Biaya Titip." } };
+        const defaultConfig = { 
+            nama: "BMT BINA INSAN ASSIROT", izin: "518/BH/KWK/2025", alamat: "Jl. Jendral Sudirman No. 45", wa: "08123456789", email: "info@bmt.co.id", logo: "https://cdn-icons-png.flaticon.com/512/2317/2317968.png", wallpaper: "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?q=80&w=1600&auto=format&fit=crop", 
+            struktur: { ketua: "H. Abdullah", sekretaris: "Siti Aminah", bendahara: "Rudi Hartono" }, 
+            visi: "Menjadi Lembaga Keuangan Syariah Terdepan", misi: "1. Transaksi Syariah Murni\n2. Pelayanan Prima", 
+            unit_leads: {sps: "Bpk. Budi", kms: "Ibu Ani", gadai: "Bpk. Cipto"}, 
+            shu: { profit: 150000000, p_tetap: 50, p_nasabah: 20 }, 
+            codes: { sps: 'SPS', kms: 'KMS', gadai: 'GS' }, margins: { sps: 10, kms: 20, gadai: 5 }, limits: { sps: 100, kms: 100, gadai: 100 }, 
+            templates: { sps: "Pasal 1: Akad Mudharabah.\nPasal 2: Nisbah 60:40.", kms: "Pasal 1: Murabahah.\nPasal 2: Jual Beli.", gadai: "Pasal 1: Rahn.\nPasal 2: Biaya Titip." },
+            // NEW FIELDS FOR MESSAGE TEMPLATES & DUES
+            pesanTagih: "Assalamu'alaikum {sapaan} {nama}, kami dari BMT mengingatkan tagihan sebesar {tagihan} jatuh tempo pada {tanggal}. Mohon segera dibayar.",
+            pesanBayar: "Terima kasih {sapaan} {nama}, pembayaran sebesar {tagihan} telah kami terima.",
+            simpananWajib: 50000
+        };
 
         // VARIABLES
         let settings = defaultConfig;
         let dbUsers = defaultUsers;
         let dbNasabah = [], dbSarpras = [], dbSurat = [], dbDana = [], dbPresensi = [];
+        let dbArusKas = []; // New: Accounting
+        let dbSimpananWajib = []; // New: Bendahara
         let activeApp = '', activeUser = null;
 
         // --- INIT & CLOUD SYNC ---
         window.onload = async function() {
-            if (!DATABASE_URL || DATABASE_URL === "ISI_URL_GOOGLE_SCRIPT_DISINI") {
-                alert("URL Database belum diisi! Hubungi Admin.");
-                initApp();
-            } else {
-                await loadFromCloud();
-            }
+            if (!DATABASE_URL || DATABASE_URL === "ISI_URL_GOOGLE_SCRIPT_DISINI") { alert("URL Database belum diisi! Hubungi Admin."); initApp(); } 
+            else { await loadFromCloud(); }
         };
 
         async function loadFromCloud() {
             try {
-                let res = await fetch(DATABASE_URL);
-                let data = await res.json();
+                let res = await fetch(DATABASE_URL); let data = await res.json();
                 if (!data.users || data.users.length === 0) {
                     console.log("DB Kosong, Inisialisasi...");
                     dbDana = [ {id: 1, date: Date.now(), unit: 'sps', amount: 1000000000, status: 'Approved', desc: 'Modal Awal'}, {id: 2, date: Date.now(), unit: 'kms', amount: 1000000000, status: 'Approved', desc: 'Modal Awal'}, {id: 3, date: Date.now(), unit: 'gadai', amount: 1000000000, status: 'Approved', desc: 'Modal Awal'} ];
                     saveToCloud();
                 } else {
-                    settings = data.config || defaultConfig;
-                    dbUsers = data.users || defaultUsers;
-                    dbNasabah = data.nasabah || [];
-                    dbSarpras = data.sarpras || [];
-                    dbSurat = data.surat || [];
-                    dbDana = data.dana || [];
-                    dbPresensi = data.presensi || [];
+                    settings = data.config || defaultConfig; dbUsers = data.users || defaultUsers; dbNasabah = data.nasabah || [];
+                    dbSarpras = data.sarpras || []; dbSurat = data.surat || []; dbDana = data.dana || []; dbPresensi = data.presensi || [];
+                    dbArusKas = data.aruskas || []; dbSimpananWajib = data.simpananwajib || [];
                 }
                 initApp();
-            } catch(e) {
-                alert("Gagal koneksi Database! Membuka Mode Offline.");
-                initApp();
-            }
+            } catch(e) { alert("Gagal koneksi Database! Mode Offline."); initApp(); }
         }
 
         async function saveToCloud() {
             if (!DATABASE_URL || DATABASE_URL.includes("ISI_URL")) return;
-            const status = document.getElementById('sync-status');
-            status.innerHTML = '<i class="fas fa-sync fa-spin"></i> Menyimpan...'; status.classList.add('active');
-            
-            let payload = { config: settings, users: dbUsers, nasabah: dbNasabah, sarpras: dbSarpras, surat: dbSurat, dana: dbDana, presensi: dbPresensi };
-            
-            try {
-                await fetch(DATABASE_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                status.innerHTML = '<i class="fas fa-check"></i> Data Aman';
-                setTimeout(() => status.classList.remove('active'), 2000);
-            } catch(e) {
-                status.innerHTML = 'Gagal Simpan!';
-            }
+            const status = document.getElementById('sync-status'); status.innerHTML = '<i class="fas fa-sync fa-spin"></i> Menyimpan...'; status.classList.add('active');
+            let payload = { config: settings, users: dbUsers, nasabah: dbNasabah, sarpras: dbSarpras, surat: dbSurat, dana: dbDana, presensi: dbPresensi, aruskas: dbArusKas, simpananwajib: dbSimpananWajib };
+            try { await fetch(DATABASE_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); status.innerHTML = '<i class="fas fa-check"></i> Data Aman'; setTimeout(() => status.classList.remove('active'), 2000); } catch(e) { status.innerHTML = 'Gagal Simpan!'; }
         }
 
-        function initApp() {
-            document.getElementById('loading-screen').classList.add('hidden');
-            document.getElementById('gateway').classList.remove('hidden');
-            renderIdentitas();
-        }
-
+        function initApp() { document.getElementById('loading-screen').classList.add('hidden'); document.getElementById('gateway').classList.remove('hidden'); renderIdentitas(); }
         function renderIdentitas() {
-            document.getElementById('gw-nama').innerText = settings.nama;
-            document.getElementById('gw-izin').innerText = "Izin No: " + settings.izin;
-            document.getElementById('sb-nama').innerText = settings.nama;
-            document.getElementById('gw-logo').src = settings.logo;
-            document.getElementById('sb-logo').src = settings.logo;
-            let wp = settings.wallpaper || defaultConfig.wallpaper;
-            document.getElementById('gateway').style.background = `linear-gradient(rgba(5, 25, 26, 0.85), rgba(5, 25, 26, 0.9)), url('${wp}') no-repeat center center/cover`;
+            document.getElementById('gw-nama').innerText = settings.nama; document.getElementById('gw-izin').innerText = "Izin No: " + settings.izin;
+            document.getElementById('sb-nama').innerText = settings.nama; document.getElementById('gw-logo').src = settings.logo; document.getElementById('sb-logo').src = settings.logo;
+            let wp = settings.wallpaper || defaultConfig.wallpaper; document.getElementById('gateway').style.background = `linear-gradient(rgba(5, 25, 26, 0.85), rgba(5, 25, 26, 0.9)), url('${wp}') no-repeat center center/cover`;
         }
 
-        // --- IMAGE RESIZER (SAFE MODE - SUPER COMPRESS) ---
+        // --- UTILS ---
         function resizeImage(file, callback) {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
+            const reader = new FileReader(); reader.readAsDataURL(file);
             reader.onload = function(event) {
-                const img = new Image();
-                img.src = event.target.result;
+                const img = new Image(); img.src = event.target.result;
                 img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    // Resize to 120px max (Sangat Kecil tapi Aman untuk DB)
-                    const scaleFactor = 120 / img.width;
-                    canvas.width = 120;
-                    canvas.height = img.height * scaleFactor;
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    // Convert to low quality JPEG
-                    callback(canvas.toDataURL('image/jpeg', 0.5)); 
+                    const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
+                    const scaleFactor = 120 / img.width; canvas.width = 120; canvas.height = img.height * scaleFactor;
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height); callback(canvas.toDataURL('image/jpeg', 0.5)); 
                 }
             }
         }
-
         function updateLogo(input) { if(input.files[0]) resizeImage(input.files[0], (res) => { settings.logo = res; alert("Logo Siap! Tekan Simpan."); }); }
         function updateWall(input) { if(input.files[0]) resizeImage(input.files[0], (res) => { settings.wallpaper = res; alert("Wallpaper Siap! Tekan Simpan."); }); }
         let tempFoto = '';
         function readFoto(input) { if(input.files[0]) resizeImage(input.files[0], (res) => { tempFoto = res; alert("Foto Nasabah Siap!"); }); }
+        
+        function formatWA(num) {
+            let n = num.replace(/\D/g, ''); // Remove non-numeric
+            if(n.startsWith('0')) n = '62' + n.slice(1);
+            if(n.startsWith('8')) n = '62' + n;
+            return n;
+        }
 
         // --- CORE LOGIC ---
         function openLogin(app) { activeApp=app; document.getElementById('login-title').innerText="Login "+app.toUpperCase(); document.getElementById('login-modal').style.display='flex'; }
@@ -333,15 +285,36 @@
             const add=(id,i,t)=>m.innerHTML+=`<div class="menu-link" onclick="page('${id}')"><i class="${i}"></i> <span class="hide-mini">${t}</span></div>`;
             if(activeApp==='induk') {
                 add('home','fas fa-chart-line','Dashboard');
-                if(activeUser.role==='ADMIN') { add('edit_profile_lembaga','fas fa-university','Edit Profil'); add('manage_shu','fas fa-coins','Atur SHU'); add('users','fas fa-users-cog','Kelola User'); add('identitas','fas fa-cog','Identitas'); add('surat_induk','fas fa-envelope','Surat Umum'); add('template_akad','fas fa-file-contract','Template Akad'); add('config_surat','fas fa-sort-numeric-up','Config No Surat'); }
+                if(activeUser.role==='ADMIN') { 
+                    add('edit_profile_lembaga','fas fa-university','Edit Profil'); 
+                    add('config_pesan','fas fa-comment-dots','Template Pesan WA'); // NEW
+                    add('manage_shu','fas fa-coins','Atur SHU'); add('users','fas fa-users-cog','Kelola User'); 
+                    add('identitas','fas fa-cog','Identitas'); add('surat_induk','fas fa-envelope','Surat Umum'); 
+                    add('template_akad','fas fa-file-contract','Template Akad'); add('config_surat','fas fa-sort-numeric-up','Config No Surat'); 
+                }
                 if(['SEKRETARIS','ADMIN'].includes(activeUser.role)) { add('surat_induk','fas fa-envelope','Surat Menyurat'); add('cetak_akad','fas fa-print','Cetak Akad'); add('sarpras_approval','fas fa-check-square','Approval Sarpras'); add('laporan_pusat','fas fa-folder-open','Pusat Laporan'); add('monitoring_pegawai','fas fa-users','Monitoring Pegawai'); }
-                if(['BENDAHARA','ADMIN'].includes(activeUser.role)) { add('laporan_keuangan','fas fa-wallet','Laporan Keuangan'); add('distribusi_modal','fas fa-hand-holding-usd','Penyaluran Modal'); }
+                if(['BENDAHARA','ADMIN'].includes(activeUser.role)) { 
+                    add('laporan_keuangan','fas fa-wallet','Laporan Keuangan'); 
+                    add('simpanan_wajib','fas fa-piggy-bank','Iuran Anggota'); // NEW
+                    add('distribusi_modal','fas fa-hand-holding-usd','Penyaluran Modal'); 
+                }
             } else {
                 add('home','fas fa-tachometer-alt','Dashboard');
                 if(['MANAGER','ACCOUNTING','MARKETING'].includes(activeUser.role)) add('presensi_harian','fas fa-clock','Presensi Harian'); 
-                if(activeUser.role==='MARKETING') { add('input','fas fa-user-plus','Input Nasabah'); add('cetak','fas fa-print','Cetak'); }
-                if(activeUser.role==='MANAGER') { add('approval','fas fa-check-double','Approval'); add('req_sarpras','fas fa-box-open','Req Sarpras'); add('setting_margin','fas fa-percent','Setting Margin'); }
-                if(activeUser.role==='ACCOUNTING') { add('billing','fas fa-file-invoice','Billing'); add('dana_unit','fas fa-coins','Manajemen Dana'); }
+                if(activeUser.role==='MARKETING') { 
+                    add('input','fas fa-user-plus','Input Nasabah'); 
+                    add('cetak','fas fa-print','Cetak'); 
+                    add('billing','fas fa-file-invoice','Tagih & Bayar'); // MOVED HERE
+                }
+                if(activeUser.role==='MANAGER') { 
+                    add('approval','fas fa-check-double','Approval'); 
+                    add('laporan_tunggakan','fas fa-list-alt','Monitoring Pembayaran'); // NEW
+                    add('req_sarpras','fas fa-box-open','Req Sarpras'); add('setting_margin','fas fa-percent','Setting Margin'); 
+                }
+                if(activeUser.role==='ACCOUNTING') { 
+                    add('arus_kas','fas fa-book','Buku Kas Unit'); // NEW
+                    add('dana_unit','fas fa-coins','Manajemen Dana'); 
+                }
             }
             page('home');
         }
@@ -349,49 +322,77 @@
         function page(id) {
             let b=document.getElementById('content-body'); let t=document.getElementById('page-title'); b.innerHTML='';
             
-            if(id==='identitas') { t.innerText="Identitas & Tampilan"; b.innerHTML=`<div class="card"><h4>Identitas Lembaga</h4><div class="form-vertical"><label>Nama BMT</label><input id="s-nm" class="form-control" value="${settings.nama}"><label>Nomor Izin</label><input id="s-iz" class="form-control" value="${settings.izin}"><label>Alamat Lengkap</label><input id="s-al" class="form-control" value="${settings.alamat}"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><label>Email</label><input id="s-em" class="form-control" value="${settings.email}"></div><div><label>WA</label><input id="s-wa" class="form-control" value="${settings.wa}"></div></div><hr><label><b>Upload Logo Baru:</b></label><input type="file" onchange="updateLogo(this)"><label><b>Upload Wallpaper Login:</b></label><input type="file" onchange="updateWall(this)"><button class="btn btn-primary" onclick="saveID()">Simpan Perubahan</button></div></div>`; }
-            else if(id==='input') { t.innerText="Input Nasabah"; let ex=activeApp==='kms'?`<input id="i-dp" class="form-control" placeholder="DP (Rp)">`: (activeApp==='gadai'?`<input id="i-jam" class="form-control" placeholder="Barang Jaminan">`:''); b.innerHTML=`<div class="card" style="max-width:600px"><div class="form-vertical"><input id="i-nm" class="form-control" placeholder="Nama Lengkap"><input id="i-nik" class="form-control" placeholder="NIK (KTP)"><input id="i-al" class="form-control" placeholder="Alamat Domisili"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><input id="i-wa" class="form-control" placeholder="No. WA"><input id="i-em" class="form-control" placeholder="Email (Opsional)"></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><input id="i-pl" class="form-control" placeholder="Plafond (Rp)"><input id="i-tn" class="form-control" placeholder="Tenor (Bulan)"></div>${ex}<hr><div class="form-group"><label>Foto KTP</label><input type="file"></div><div class="form-group"><label>Foto Ket. Kerja / Usaha</label><input type="file"></div><div class="form-group"><label>Foto Wajah (Untuk Akad)</label><input type="file" onchange="readFoto(this)"></div><button class="btn btn-primary" onclick="subNas()">Simpan Data</button></div></div>`; }
-            
-            // --- DASHBOARD INDUK (SMART SHU) ---
-            else if(id==='home' && activeApp==='induk') {
-                t.innerText="Dashboard Induk"; 
-                let prof = parseInt(settings.shu.profit); 
-                let totalAsset = dbDana.reduce((a,b)=>a+parseInt(b.amount),0);
-                
-                // HITUNG SHU PINTAR
-                let shuAnggotaTotal = prof * (settings.shu.p_nasabah / 100);
-                let totalPinjamanAll = dbNasabah.filter(x=>x.status==='Approved').reduce((a,b)=>a+parseInt(b.plafond),0);
-                
-                let shuRows = dbNasabah.filter(x=>x.status==='Approved').map(x => {
-                    let share = (parseInt(x.plafond) / totalPinjamanAll) * shuAnggotaTotal;
-                    if(isNaN(share)) share = 0;
-                    return `<tr><td>${x.nama}</td><td>Rp ${parseInt(x.plafond).toLocaleString()}</td><td>Rp ${share.toLocaleString(undefined, {maximumFractionDigits:0})}</td></tr>`;
-                }).join('');
+            // --- NEW & UPDATED FEATURES ---
 
-                b.innerHTML=`
-                <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(250px,1fr));gap:20px;margin-bottom:20px">
-                    <div class="card" style="background:var(--primary);color:white"><h3>SHU Berjalan</h3><h2>Rp ${prof.toLocaleString()}</h2></div>
-                    <div class="card" style="background:var(--secondary);color:white"><h3>Total Aset</h3><h2>Rp ${totalAsset.toLocaleString()}</h2></div>
-                </div>
-                <div class="card">
-                    <h3><i class="fas fa-chart-pie"></i> Estimasi Pembagian SHU Anggota</h3>
-                    <p>Total Alokasi SHU Anggota: <b>Rp ${shuAnggotaTotal.toLocaleString()}</b> (${settings.shu.p_nasabah}%)</p>
-                    <div class="table-responsive">
-                        <table>
-                            <thead><tr><th>Nama Nasabah</th><th>Total Pinjaman (Kontribusi)</th><th>Estimasi SHU Diterima</th></tr></thead>
-                            <tbody>${shuRows || '<tr><td colspan="3">Belum ada nasabah aktif.</td></tr>'}</tbody>
-                        </table>
-                    </div>
-                </div>
-                <div class="card"><h3>Visi & Misi</h3><p><b>Visi:</b> ${settings.visi}</p><p><b>Misi:</b><br>${settings.misi.replace(/\n/g,'<br>')}</p></div>`;
+            // ADMIN: CONFIG PESAN WA & SIMPANAN
+            if(id==='config_pesan') {
+                t.innerText="Konfigurasi Pesan & Simpanan";
+                b.innerHTML=`<div class="card"><h4>Template Pesan WhatsApp</h4><small>Gunakan {sapaan}, {nama}, {tagihan}, {tanggal} sebagai pengganti otomatis.</small><div class="form-vertical"><label>Pesan Tagihan</label><textarea id="t-tagih" class="form-control" style="height:80px">${settings.pesanTagih||''}</textarea><label>Pesan Pembayaran Diterima</label><textarea id="t-bayar" class="form-control" style="height:80px">${settings.pesanBayar||''}</textarea><hr><label>Nominal Simpanan Wajib Anggota (Per Bulan)</label><input type="number" id="t-simpanan" class="form-control" value="${settings.simpananWajib||50000}"><button class="btn btn-primary" onclick="saveMsgConfig()">Simpan Konfigurasi</button></div></div>`;
             }
-            // --- DASHBOARD UNIT ---
-            else if(id==='home') { 
-                let activeClients = dbNasabah.filter(x => x.unit === activeApp && x.status === 'Approved'); 
-                let totalPlafond = activeClients.reduce((a, b) => a + parseInt(b.plafond), 0); 
-                b.innerHTML = `<div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;"><div class="card" style="background:var(--primary); color:white;"><h3>Nasabah Aktif</h3><h1 style="margin:10px 0;">${activeClients.length}</h1></div><div class="card" style="background:var(--secondary); color:white;"><h3>Perputaran Uang</h3><h1 style="margin:10px 0;">Rp ${totalPlafond.toLocaleString()}</h1></div></div>`; 
+
+            // MARKETING: INPUT NASABAH (UPDATED)
+            else if(id==='input') { 
+                t.innerText="Input Nasabah"; 
+                let tenorOpt = activeApp==='sps' ? `<select id="i-tenor-type" class="form-control"><option value="Bulan">Bulanan</option><option value="Minggu">Mingguan</option></select>` : `<input type="hidden" id="i-tenor-type" value="Bulan"><input class="form-control" value="Bulanan" readonly>`;
+                let ex=activeApp==='kms'?`<input id="i-dp" class="form-control" placeholder="DP (Rp)">`: (activeApp==='gadai'?`<input id="i-jam" class="form-control" placeholder="Barang Jaminan">`:''); 
+                b.innerHTML=`<div class="card" style="max-width:600px"><div class="form-vertical">
+                    <label>Data Diri</label>
+                    <input id="i-nm" class="form-control" placeholder="Nama Lengkap">
+                    <select id="i-jk" class="form-control"><option value="">-- Pilih Jenis Kelamin --</option><option value="L">Laki-laki</option><option value="P">Perempuan</option></select>
+                    <input id="i-nik" class="form-control" placeholder="NIK (KTP)">
+                    <input id="i-al" class="form-control" placeholder="Alamat Domisili">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><input id="i-wa" class="form-control" placeholder="No. WA (08...)"><input id="i-em" class="form-control" placeholder="Email (Opsional)"></div>
+                    <label>Data Pengajuan</label>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><input id="i-pl" class="form-control" placeholder="Plafond (Rp)"><input id="i-tn" class="form-control" placeholder="Lama Tenor (Angka)"></div>
+                    <label>Tipe Tenor</label>
+                    ${tenorOpt}
+                    ${ex}
+                    <hr>
+                    <div class="form-group"><label>Foto KTP</label><input type="file"></div><div class="form-group"><label>Foto Ket. Kerja / Usaha</label><input type="file"></div><div class="form-group"><label>Foto Wajah (Untuk Akad)</label><input type="file" onchange="readFoto(this)"></div><button class="btn btn-primary" onclick="subNas()">Simpan Data</button></div></div>`; 
             }
-            
+
+            // MARKETING: BILLING & WA (UPDATED)
+            else if(id==='billing') { 
+                t.innerText="Tagihan & Pembayaran"; 
+                let rows=dbNasabah.filter(x=>x.unit===activeApp && x.status==='Approved').map(x=>{
+                    let margin = parseInt(x.plafond) * (settings.margins[activeApp]/100);
+                    let total = parseInt(x.plafond) + margin;
+                    let angsuran = total / parseInt(x.tenor);
+                    return `<tr><td>${x.nama}</td><td>${x.payStatus}</td><td>Rp ${angsuran.toLocaleString()} / ${x.tenorType}</td><td><button class="btn btn-warning btn-sm" onclick="kirimWA('${x.id}', ${angsuran})"><i class="fab fa-whatsapp"></i> Tagih</button> <button class="btn btn-success btn-sm" onclick="bayar('${x.id}', ${angsuran})">Bayar</button></td></tr>`;
+                }).join(''); 
+                b.innerHTML=`<div class="card"><div class="table-responsive"><table><thead><tr><th>Nama</th><th>Status</th><th>Tagihan</th><th>Aksi</th></tr></thead><tbody>${rows}</tbody></table></div></div>`; 
+            }
+
+            // MANAGER: MONITORING PEMBAYARAN (NEW)
+            else if(id==='laporan_tunggakan') {
+                t.innerText="Monitoring Pembayaran Bulan Ini";
+                let rows=dbNasabah.filter(x=>x.unit===activeApp && x.status==='Approved').map(x=>`<tr><td>${x.nama}</td><td>${x.wa}</td><td><span class="badge ${x.payStatus==='Lunas'?'bg-success':'bg-pending'}">${x.payStatus}</span></td></tr>`).join('');
+                b.innerHTML=`<div class="card"><h4>Status Pembayaran Nasabah</h4><div class="table-responsive"><table><thead><tr><th>Nama</th><th>WA</th><th>Status Bulan Ini</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+            }
+
+            // ACCOUNTING: ARUS KAS (NEW)
+            else if(id==='arus_kas') {
+                t.innerText="Buku Kas Unit";
+                let rows = dbArusKas.filter(x=>x.unit===activeApp).map(x=>`<tr><td>${new Date(x.date).toLocaleDateString()}</td><td>${x.type}</td><td>Rp ${parseInt(x.amount).toLocaleString()}</td><td>${x.desc}</td></tr>`).join('');
+                b.innerHTML=`<div class="card"><h4>Input Transaksi</h4><div class="form-vertical"><select id="k-type" class="form-control"><option value="Masuk">Uang Masuk</option><option value="Keluar">Uang Keluar</option></select><input id="k-amt" type="number" class="form-control" placeholder="Nominal"><input id="k-desc" class="form-control" placeholder="Keterangan"><button class="btn btn-primary" onclick="saveKas()">Simpan</button></div></div><div class="card"><h4>Riwayat Transaksi <button class="btn btn-sm btn-ghost" onclick="printDiv('arus-table')"><i class="fas fa-print"></i></button></h4><div id="arus-table" class="table-responsive"><table><thead><tr><th>Tanggal</th><th>Jenis</th><th>Nominal</th><th>Ket</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+            }
+
+            // BENDAHARA: IURAN ANGGOTA (NEW)
+            else if(id==='simpanan_wajib') {
+                t.innerText="Iuran Wajib Anggota";
+                let users = dbUsers.filter(u=>u.role!=='admin'); // Semua user kecuali admin kena iuran (contoh)
+                let userOpt = users.map(u=>`<option value="${u.user}">${u.user} (${u.role})</option>`).join('');
+                let history = dbSimpananWajib.map(s=>`<tr><td>${new Date(s.date).toLocaleDateString()}</td><td>${s.user}</td><td>Rp ${parseInt(s.amount).toLocaleString()}</td></tr>`).join('');
+                b.innerHTML=`<div class="card"><h4>Catat Pembayaran Iuran</h4><div class="form-vertical"><select id="sw-user" class="form-control">${userOpt}</select><input class="form-control" value="Rp ${parseInt(settings.simpananWajib).toLocaleString()}" readonly><button class="btn btn-primary" onclick="saveSimpananWajib()">Catat Bayar</button></div></div><div class="card"><h4>Riwayat Pembayaran</h4><div class="table-responsive"><table><thead><tr><th>Tanggal</th><th>Nama</th><th>Jumlah</th></tr></thead><tbody>${history}</tbody></table></div></div>`;
+            }
+
+            // --- EXISTING PAGES (UNCHANGED) ---
+            else if(id==='identitas') { t.innerText="Identitas & Tampilan"; b.innerHTML=`<div class="card"><h4>Identitas Lembaga</h4><div class="form-vertical"><label>Nama BMT</label><input id="s-nm" class="form-control" value="${settings.nama}"><label>Nomor Izin</label><input id="s-iz" class="form-control" value="${settings.izin}"><label>Alamat Lengkap</label><input id="s-al" class="form-control" value="${settings.alamat}"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><label>Email</label><input id="s-em" class="form-control" value="${settings.email}"></div><div><label>WA</label><input id="s-wa" class="form-control" value="${settings.wa}"></div></div><hr><label><b>Upload Logo Baru:</b></label><input type="file" onchange="updateLogo(this)"><label><b>Upload Wallpaper Login:</b></label><input type="file" onchange="updateWall(this)"><button class="btn btn-primary" onclick="saveID()">Simpan Perubahan</button></div></div>`; }
+            else if(id==='home' && activeApp==='induk') {
+                t.innerText="Dashboard Induk"; let prof = parseInt(settings.shu.profit); let totalAsset = dbDana.reduce((a,b)=>a+parseInt(b.amount),0); let shuAnggotaTotal = prof * (settings.shu.p_nasabah / 100); let totalPinjamanAll = dbNasabah.filter(x=>x.status==='Approved').reduce((a,b)=>a+parseInt(b.plafond),0); let shuRows = dbNasabah.filter(x=>x.status==='Approved').map(x => { let share = (parseInt(x.plafond) / totalPinjamanAll) * shuAnggotaTotal; if(isNaN(share)) share = 0; return `<tr><td>${x.nama}</td><td>Rp ${parseInt(x.plafond).toLocaleString()}</td><td>Rp ${share.toLocaleString(undefined, {maximumFractionDigits:0})}</td></tr>`; }).join('');
+                b.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(250px,1fr));gap:20px;margin-bottom:20px"><div class="card" style="background:var(--primary);color:white"><h3>SHU Berjalan</h3><h2>Rp ${prof.toLocaleString()}</h2></div><div class="card" style="background:var(--secondary);color:white"><h3>Total Aset</h3><h2>Rp ${totalAsset.toLocaleString()}</h2></div></div><div class="card"><h3>Estimasi SHU Anggota</h3><p>Alokasi: <b>Rp ${shuAnggotaTotal.toLocaleString()}</b></p><div class="table-responsive"><table><thead><tr><th>Nama</th><th>Pinjaman</th><th>Est. SHU</th></tr></thead><tbody>${shuRows || '<tr><td colspan="3">Data kosong.</td></tr>'}</tbody></table></div></div>`;
+            }
+            else if(id==='home') { let activeClients = dbNasabah.filter(x => x.unit === activeApp && x.status === 'Approved'); let totalPlafond = activeClients.reduce((a, b) => a + parseInt(b.plafond), 0); b.innerHTML = `<div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;"><div class="card" style="background:var(--primary); color:white;"><h3>Nasabah Aktif</h3><h1 style="margin:10px 0;">${activeClients.length}</h1></div><div class="card" style="background:var(--secondary); color:white;"><h3>Perputaran Uang</h3><h1 style="margin:10px 0;">Rp ${totalPlafond.toLocaleString()}</h1></div></div>`; }
             else if(id==='users') { t.innerText="Manajemen Pengguna"; let rows=dbUsers.map((u,i)=>`<tr><td>${u.user}</td><td>${u.role}</td><td>${u.app}</td><td><button class="btn btn-danger btn-sm" onclick="delUser(${i})">Del</button></td></tr>`).join(''); b.innerHTML=`<div class="card" style="max-width:600px;"><h4>Tambah User</h4><div class="form-vertical"><input id="n-u" class="form-control" placeholder="Username Baru"><select id="n-r" class="form-control"><option value="anggota">Anggota</option><option value="admin">Admin</option><option value="bendahara">Bendahara</option><option value="sekretaris">Sekretaris</option><option value="marketing">Marketing</option><option value="manager">Manager</option><option value="accounting">Accounting</option></select><input id="n-p" type="text" class="form-control" placeholder="Password (Wajib Diisi)"><button class="btn btn-primary" onclick="addUser()">Simpan User</button></div></div><div class="card"><div class="table-responsive"><table><thead><tr><th>User</th><th>Role</th><th>App</th><th>Aksi</th></tr></thead><tbody>${rows}</tbody></table></div></div>`; }
             else if(id==='monitoring_pegawai') { t.innerText="Monitoring"; let logs = dbPresensi.map(p => `<tr><td>${new Date(p.time).toLocaleString()}</td><td>${p.user}</td><td>${p.type}</td><td>${p.loc}</td><td>${p.ket||'-'}</td></tr>`).join(''); let users = dbUsers.filter(u=>['manager','marketing','accounting'].includes(u.role)).map(u=>`<tr><td>${u.user}</td><td>${u.role}</td><td><button class="btn btn-sm btn-primary" onclick="printIDCard('${u.user}','${u.role}')">ID Card</button></td></tr>`).join(''); b.innerHTML=`<div class="card"><h3>Laporan Kehadiran</h3><button class="btn btn-success" onclick="printLaporanPresensi()">Cetak PDF</button><div class="table-responsive"><table><thead><tr><th>Waktu</th><th>Nama</th><th>Status</th><th>Lokasi</th><th>Ket</th></tr></thead><tbody>${logs}</tbody></table></div></div><div class="card"><h3>Cetak ID Pegawai</h3><div class="table-responsive"><table><thead><tr><th>Nama</th><th>Jabatan</th><th>Aksi</th></tr></thead><tbody>${users}</tbody></table></div></div>`; }
             else if(id==='laporan_pusat') { t.innerText="Pusat Laporan"; let sar=dbSarpras.map((s,i)=>`<tr><td>${s.unit}</td><td>${s.item}</td><td>${s.status}</td><td>${s.status=='Pending'?`<button class="btn btn-success btn-sm" onclick="accSarpras(${i})">ACC</button>`:''}</td></tr>`).join(''); b.innerHTML=`<div class="card"><h3>Laporan & Database</h3><div style="display:flex;gap:10px;margin-bottom:20px"><button class="btn btn-success" onclick="printLaporanSarpras()">Laporan Sarpras</button><button class="btn btn-primary" onclick="printDatabaseNasabah()">Database Nasabah</button></div><div class="table-responsive"><table><thead><tr><th>Unit</th><th>Item</th><th>Status</th><th>Aksi</th></tr></thead><tbody>${sar}</tbody></table></div></div>`; }
@@ -409,12 +410,114 @@
             else if(id==='laporan_keuangan') { t.innerText="Laporan Keuangan"; b.innerHTML=`<div class="card"><h3>Cetak Laporan Keuangan Unit</h3><div style="display:flex;gap:10px"><button class="btn btn-primary" onclick="printLaporanKeuangan('sps')">Laporan SPS</button><button class="btn btn-warning" onclick="printLaporanKeuangan('kms')">Laporan KMS</button><button class="btn btn-danger" onclick="printLaporanKeuangan('gadai')">Laporan Gadai</button></div></div>`; }
             else if(id==='setting_margin') { t.innerText="Margin"; b.innerHTML=`<div class="card"><div class="form-vertical"><label>Margin %</label><input id="u-mar" class="form-control" value="${settings.margins[activeApp]}"><button class="btn btn-primary" onclick="saveMargin()">Simpan</button></div></div>`; }
             else if(id==='cetak') { t.innerText="Cetak"; let rows=dbNasabah.filter(x=>x.unit===activeApp && x.status==='Approved').map(x=>`<tr><td>${x.nama}</td><td>${x.noSurat}</td><td><button class="btn btn-primary btn-sm" onclick="printAkad(${x.id})">Cetak</button></td></tr>`).join(''); b.innerHTML=`<div class="card"><div class="table-responsive"><table>${rows}</table></div></div>`; }
-            else if(id==='billing') { t.innerText="Billing"; let rows=dbNasabah.filter(x=>x.unit===activeApp && x.status==='Approved').map(x=>`<tr><td>${x.nama}</td><td>${x.payStatus}</td><td><button class="btn btn-warning" onclick="window.open('https://wa.me/${x.wa}')">Tagih</button> <button class="btn btn-success" onclick="bayar(${x.id})">Bayar</button></td></tr>`).join(''); b.innerHTML=`<div class="card"><div class="table-responsive"><table>${rows}</table></div></div>`; }
             else if(id==='config_surat') { t.innerText="Config Surat"; b.innerHTML=`<div class="card"><div class="form-vertical"><label>Kode SPS</label><input id="c-sps" class="form-control" value="${settings.codes.sps}"><label>Kode KMS</label><input id="c-kms" class="form-control" value="${settings.codes.kms}"><label>Kode Gadai</label><input id="c-gadai" class="form-control" value="${settings.codes.gadai}"><button class="btn btn-primary" onclick="saveCodes()">Simpan</button></div></div>`; }
             else { b.innerHTML=`<div class="card">Fitur Aktif</div>`; }
         }
 
-        // --- SAVE FUNCTIONS ---
+        // --- NEW BUSINESS LOGIC FUNCTIONS ---
+        function saveMsgConfig() { 
+            settings.pesanTagih = document.getElementById('t-tagih').value;
+            settings.pesanBayar = document.getElementById('t-bayar').value;
+            settings.simpananWajib = document.getElementById('t-simpanan').value;
+            saveToCloud(); alert("Konfigurasi Tersimpan!"); 
+        }
+
+        function saveKas() {
+            let type = document.getElementById('k-type').value;
+            let amt = document.getElementById('k-amt').value;
+            let desc = document.getElementById('k-desc').value;
+            dbArusKas.push({date: Date.now(), unit: activeApp, type: type, amount: amt, desc: desc});
+            saveToCloud(); alert("Transaksi Dicatat!"); page('arus_kas');
+        }
+
+        function saveSimpananWajib() {
+            let u = document.getElementById('sw-user').value;
+            let amt = settings.simpananWajib;
+            dbSimpananWajib.push({date: Date.now(), user: u, amount: amt});
+            saveToCloud(); alert("Pembayaran Iuran Diterima!"); page('simpanan_wajib');
+        }
+
+        function printDiv(id) {
+            let content = document.getElementById(id).innerHTML;
+            let w = window.open();
+            w.document.write(`<html><body><h3>Laporan Arus Kas</h3>${content}</body></html>`);
+            w.print(); w.close();
+        }
+
+        function subNas() { 
+            let d = {
+                id:Date.now(), unit:activeApp, 
+                nama:document.getElementById('i-nm').value, 
+                gender:document.getElementById('i-jk').value, // NEW
+                nik:document.getElementById('i-nik').value, 
+                alamat:document.getElementById('i-al').value, 
+                wa:document.getElementById('i-wa').value, 
+                email:document.getElementById('i-em').value, 
+                plafond:document.getElementById('i-pl').value, 
+                tenor:document.getElementById('i-tn').value,
+                tenorType:document.getElementById('i-tenor-type').value, // NEW 
+                dp:document.getElementById('i-dp')?.value||0, 
+                jaminan: document.getElementById('i-jam')?.value||'-', 
+                status:'Pending', payStatus:'Belum', noSurat:'-', foto:tempFoto
+            }; 
+            dbNasabah.push(d); saveToCloud(); alert('Saved'); page('input'); 
+        }
+
+        function kirimWA(id, angsuran) {
+            let d = dbNasabah.find(x => x.id == id);
+            let sapaan = d.gender === 'L' ? 'Bapak' : 'Ibu';
+            let tglJatuhTempo = new Date(); // Simulasi tanggal
+            tglJatuhTempo.setDate(tglJatuhTempo.getDate() + 5); 
+            let tglStr = tglJatuhTempo.toLocaleDateString('id-ID');
+
+            let msg = settings.pesanTagih
+                .replace('{sapaan}', sapaan)
+                .replace('{nama}', d.nama)
+                .replace('{tagihan}', 'Rp ' + angsuran.toLocaleString())
+                .replace('{tanggal}', tglStr);
+            
+            let url = `https://wa.me/${formatWA(d.wa)}?text=${encodeURI(msg)}`;
+            window.open(url, '_blank');
+        }
+
+        function bayar(id, angsuran) { 
+            let d = dbNasabah.find(x => x.id == id); // Fix find logic
+            let index = dbNasabah.findIndex(x => x.id == id);
+            
+            if(confirm(`Konfirmasi pembayaran dari ${d.nama}?`)) {
+                dbNasabah[index].payStatus = 'Lunas';
+                let sapaan = d.gender === 'L' ? 'Bapak' : 'Ibu';
+                let msg = settings.pesanBayar
+                    .replace('{sapaan}', sapaan)
+                    .replace('{nama}', d.nama)
+                    .replace('{tagihan}', 'Rp ' + angsuran.toLocaleString());
+                
+                let url = `https://wa.me/${formatWA(d.wa)}?text=${encodeURI(msg)}`;
+                window.open(url, '_blank');
+                
+                saveToCloud(); page('billing'); 
+            }
+        }
+
+        // --- EXISTING UTILS ---
+        function resizeImage(file, callback) {
+            const reader = new FileReader(); reader.readAsDataURL(file);
+            reader.onload = function(event) {
+                const img = new Image(); img.src = event.target.result;
+                img.onload = function() {
+                    const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
+                    const scaleFactor = 120 / img.width; canvas.width = 120; canvas.height = img.height * scaleFactor;
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height); callback(canvas.toDataURL('image/jpeg', 0.5)); 
+                }
+            }
+        }
+        function updateLogo(input) { if(input.files[0]) resizeImage(input.files[0], (res) => { settings.logo = res; alert("Logo Siap! Tekan Simpan."); }); }
+        function updateWall(input) { if(input.files[0]) resizeImage(input.files[0], (res) => { settings.wallpaper = res; alert("Wallpaper Siap! Tekan Simpan."); }); }
+        let tempFoto = '';
+        function readFoto(input) { if(input.files[0]) resizeImage(input.files[0], (res) => { tempFoto = res; alert("Foto Nasabah Siap!"); }); }
+        function formatWA(num) { let n = num.replace(/\D/g, ''); if(n.startsWith('0')) n = '62' + n.slice(1); if(n.startsWith('8')) n = '62' + n; return n; }
+        
+        // --- EXISTING SAVE & ACTION FUNCTIONS (KEPT SAME) ---
         function saveID() { settings.nama=document.getElementById('s-nm').value; settings.izin=document.getElementById('s-iz').value; settings.alamat=document.getElementById('s-al').value; settings.email=document.getElementById('s-em').value; settings.wa=document.getElementById('s-wa').value; saveToCloud(); renderIdentitas(); alert('Saved!'); }
         function saveSHU() { settings.shu.profit=document.getElementById('sh-p').value; settings.shu.p_tetap=document.getElementById('sh-t').value; settings.shu.p_nasabah=document.getElementById('sh-n').value; saveToCloud(); alert('Saved'); page('home'); }
         function saveCodes() { settings.codes.sps=document.getElementById('c-sps').value; settings.codes.kms=document.getElementById('c-kms').value; settings.codes.gadai=document.getElementById('c-gadai').value; saveToCloud(); alert('Saved'); }
@@ -422,7 +525,6 @@
         function saveAllTemplates() { settings.templates.sps = document.getElementById('t-sps').value; settings.templates.kms = document.getElementById('t-kms').value; settings.templates.gadai = document.getElementById('t-gadai').value; saveToCloud(); alert('Saved'); }
         function addUser() { let u=document.getElementById('n-u').value; let r=document.getElementById('n-r').value; let p=document.getElementById('n-p').value; if(!u||!p)return alert("Wajib!"); let a=['admin','bendahara','sekretaris','anggota'].includes(r)?'induk':'unit'; dbUsers.push({user:u, role:r, app:a, password:p}); saveToCloud(); alert('Added'); page('users'); }
         function delUser(i) { dbUsers.splice(i,1); saveToCloud(); page('users'); }
-        function subNas() { let d = {id:Date.now(), unit:activeApp, nama:document.getElementById('i-nm').value, nik:document.getElementById('i-nik').value, alamat:document.getElementById('i-al').value, wa:document.getElementById('i-wa').value, email:document.getElementById('i-em').value, plafond:document.getElementById('i-pl').value, tenor:document.getElementById('i-tn').value, dp:document.getElementById('i-dp')?.value||0, jaminan: document.getElementById('i-jam')?.value||'-', status:'Pending', payStatus:'Belum', noSurat:'-', foto:tempFoto}; dbNasabah.push(d); saveToCloud(); alert('Saved'); page('input'); }
         function approve(id, nominal) { let masuk = dbDana.filter(x => x.unit === activeApp && x.status === 'Approved').reduce((a,b)=>a+parseInt(b.amount),0); let keluar = dbNasabah.filter(x => x.unit === activeApp && x.status === 'Approved').reduce((a,b)=>a+parseInt(b.plafond),0); let limitPersen = settings.limits[activeApp] || 100; if(keluar + parseInt(nominal) > masuk * (limitPersen / 100)) return alert(`Limit ${limitPersen}% tercapai!`); let i=dbNasabah.findIndex(x=>x.id==id); dbNasabah[i].status='Approved'; dbNasabah[i].noSurat=`BIMA/${settings.codes[activeApp]}/${Math.floor(Math.random()*1000)}/2026`; saveToCloud(); page('approval'); }
         function saveModal(st) { let u = document.getElementById('m-unit').value; let a = document.getElementById('m-amount').value; dbDana.push({id: Date.now(), date: Date.now(), unit: u, amount: a, status: st, desc: document.getElementById('m-desc').value}); saveToCloud(); alert('Saved'); page('distribusi_modal'); }
         function saveLimits() { settings.limits.sps = document.getElementById('lim-sps').value; settings.limits.kms = document.getElementById('lim-kms').value; settings.limits.gadai = document.getElementById('lim-gadai').value; saveToCloud(); alert('Saved'); }
@@ -433,10 +535,9 @@
         function sendSarpras() { dbSarpras.push({unit:activeApp, item:document.getElementById('sp-i').value, alasan:document.getElementById('sp-a').value, status:'Pending'}); saveToCloud(); alert('Sent'); }
         function accSarpras(i) { dbSarpras[i].status='Approved'; saveToCloud(); page('sarpras_approval'); }
         function saveSurat(j) { let n=j==='Keluar'?`BIMA/SK/${Math.floor(Math.random()*1000)}/2026`:'-'; dbSurat.push({no:n, jenis:j, tujuan:document.getElementById('s-tuj').value, perihal:document.getElementById('s-per').value, isi:document.getElementById('s-isi').value}); saveToCloud(); alert('Saved '+n); page('surat_induk'); }
-        function bayar(id) { let i=dbNasabah.findIndex(x=>x.id===id); dbNasabah[i].payStatus='Lunas'; saveToCloud(); alert('Lunas'); page('billing'); }
         
         function openResetMenu() { let p = prompt("Masukkan Password Administrator:"); if(p === "Ahmad FD") { document.getElementById('reset-modal').style.display = 'flex'; } else { alert("Password Salah!"); } }
-        function wipeData(type) { if(!confirm("Yakin hapus data?")) return; if(type === 'induk') { settings = defaultConfig; dbUsers = defaultUsers; dbNasabah = []; dbSarpras = []; dbSurat = []; dbPresensi = []; dbDana = []; } else { dbNasabah = dbNasabah.filter(x => x.unit !== type); dbDana = dbDana.filter(x => x.unit !== type); dbSarpras = dbSarpras.filter(x => x.unit !== type); } saveToCloud(); location.reload(); }
+        function wipeData(type) { if(!confirm("Yakin hapus data?")) return; if(type === 'induk') { settings = defaultConfig; dbUsers = defaultUsers; dbNasabah = []; dbSarpras = []; dbSurat = []; dbPresensi = []; dbDana = []; dbArusKas = []; dbSimpananWajib = []; } else { dbNasabah = dbNasabah.filter(x => x.unit !== type); dbDana = dbDana.filter(x => x.unit !== type); dbSarpras = dbSarpras.filter(x => x.unit !== type); dbArusKas = dbArusKas.filter(x => x.unit !== type); } saveToCloud(); location.reload(); }
 
         // --- PRINT ENGINE ---
         function printLaporanPenyaluran() { let rows = dbDana.filter(d=>d.status==='Approved').map(d=>`<tr><td>${new Date(d.date).toLocaleDateString()}</td><td>${d.unit.toUpperCase()}</td><td>Rp ${parseInt(d.amount).toLocaleString()}</td><td>${d.desc}</td></tr>`).join(''); let html = `<div class="paper"><div class="bank-header"><img src="${settings.logo}" class="bank-logo"><div class="bank-info"><h1>${settings.nama}</h1><p>LAPORAN PENYALURAN MODAL</p></div></div><div class="doc-body"><br><table class="fin-table"><thead><tr><th>Tanggal</th><th>Unit Penerima</th><th>Nominal</th><th>Keterangan</th></tr></thead><tbody>${rows}</tbody></table><br><br><div style="text-align:right">Bendahara BMT</div></div></div>`; document.getElementById('printable-area').innerHTML = html; setTimeout(() => window.print(), 500); }
@@ -454,7 +555,7 @@
             let margin = parseInt(d.plafond) * (settings.margins[d.unit]/100);
             let totalTotal = parseInt(d.plafond) + margin;
             let angsuran = totalTotal / parseInt(d.tenor);
-            let extra = d.unit==='kms' ? `<tr><td>Uang Muka (DP)</td><td>Rp ${parseInt(d.dp).toLocaleString()}</td></tr>` : (d.unit==='gadai' ? `<tr><td>Jaminan</td><td>${d.jaminan}</td></tr>` : '');
+            let extra = d.unit==='kms' ? `<tr><td>Uang Muka</td><td>Rp ${parseInt(d.dp).toLocaleString()}</td></tr>` : (d.unit==='gadai' ? `<tr><td>Jaminan</td><td>${d.jaminan}</td></tr>` : '');
             
             let html = `
             <div class="paper">
@@ -468,7 +569,7 @@
                     </div>
                     <p>Selanjutnya disebut sebagai <b>PIHAK PERTAMA (Nasabah)</b>.</p><p>Bertindak mewakili <b>${settings.nama}</b>, selanjutnya disebut <b>PIHAK KEDUA (BMT)</b>.</p>
                     <p>Kedua belah pihak menyepakati akad pembiayaan dengan rincian:</p>
-                    <table class="fin-table"><tr><td>Plafond</td><td>Tenor</td><td>Margin/Jasa</td><td>Angsuran/Bln</td></tr><tr><td><b>Rp ${parseInt(d.plafond).toLocaleString()}</b></td><td>${d.tenor} Bulan</td><td>Rp ${margin.toLocaleString()}</td><td><b>Rp ${angsuran.toLocaleString()}</b></td></tr>${extra}</table>
+                    <table class="fin-table"><tr><td>Plafond</td><td>Tenor</td><td>Margin/Jasa</td><td>Angsuran/${d.tenorType||'Bulan'}</td></tr><tr><td><b>Rp ${parseInt(d.plafond).toLocaleString()}</b></td><td>${d.tenor} ${d.tenorType||'Bulan'}</td><td>Rp ${margin.toLocaleString()}</td><td><b>Rp ${angsuran.toLocaleString()}</b></td></tr>${extra}</table>
                     <div class="clauses"><b>PASAL - PASAL PERJANJIAN:</b><br>${tpl.replace(/\n/g, '<br>')}</div>
                     <div class="signatures"><div class="sig-box"><p>PIHAK PERTAMA<br>(Nasabah)</p><div class="sig-line">(${d.nama})</div></div><div class="sig-box"><p>SAKSI<br>(Marketing)</p><div class="sig-line">(....................)</div></div><div class="sig-box"><p>PIHAK KEDUA<br>(Manager Unit)</p><div class="sig-line">(....................)</div></div></div>
                 </div>
