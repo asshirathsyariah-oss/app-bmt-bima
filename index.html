@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BMT BIMA - Integrated System (Final Auto-Fix)</title>
+    <title>BMT BIMA - Integrated System (Custom Edition)</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
@@ -27,9 +27,20 @@
         .form-control { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.95rem; background: #fafafa; transition: 0.3s; }
         .form-control:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(15, 61, 62, 0.1); }
 
-        /* GATEWAY */
-        #gateway { position: fixed; inset: 0; background: linear-gradient(rgba(5, 25, 26, 0.85), rgba(5, 25, 26, 0.9)), url('https://images.unsplash.com/photo-1556761175-5973dc0f32e7?q=80&w=1600&auto=format&fit=crop'); background-size: cover; background-position: center; z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; }
-        .gateway-grid { display: flex; gap: 20px; margin-top: 40px; flex-wrap: wrap; justify-content: center; }
+        /* GATEWAY (LOGIN) - CUSTOMIZABLE */
+        #gateway { 
+            position: fixed; inset: 0; 
+            /* Default background, later overwritten by JS */
+            background: linear-gradient(rgba(5, 25, 26, 0.85), rgba(5, 25, 26, 0.9));
+            background-size: cover; background-position: center; 
+            z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; 
+            text-align: center;
+        }
+        .gateway-content {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            margin-bottom: 40px;
+        }
+        .gateway-grid { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
         .g-card { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); padding: 30px; border-radius: 16px; width: 200px; text-align: center; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); transition: 0.3s; }
         .g-card:hover { transform: translateY(-10px); background: rgba(255,255,255,0.2); border-color: var(--secondary); }
         #login-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999; display: none; align-items: center; justify-content: center; }
@@ -58,7 +69,7 @@
         .bg-pending { background: #ffeeba; color: #856404; }
         .bg-success { background: #d4edda; color: #155724; }
 
-        /* --- ID CARD STYLE --- */
+        /* ID CARD */
         .id-card { width: 85.6mm; height: 53.98mm; border: 1px solid #000; border-radius: 5px; position: relative; background: white; overflow: hidden; page-break-inside: avoid; margin-bottom: 10px; display: none; }
         .id-header { background: var(--primary); height: 15mm; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; text-align: center; font-size: 10pt; }
         .id-body { padding: 5px; display: flex; align-items: center; gap: 10px; height: 30mm; }
@@ -67,7 +78,7 @@
         .id-footer { position: absolute; bottom: 5px; width: 100%; text-align: center; }
         .barcode { height: 8mm; }
 
-        /* --- PRINT STYLE (BANKING PROFESSIONAL A4) --- */
+        /* --- PRINT STYLE --- */
         @media print {
             @page { size: A4; margin: 15mm 20mm; }
             .no-print, .sidebar, .topbar, #gateway, .btn, .card-dashboard { display: none !important; }
@@ -110,9 +121,12 @@
 <body>
 
     <div id="gateway">
-        <img id="gw-logo" src="https://cdn-icons-png.flaticon.com/512/2317/2317968.png" style="width: 90px; border-radius: 50%; border: 3px solid white; margin-bottom:10px; padding: 5px; background: rgba(255,255,255,0.1); object-fit: contain;">
-        <h1 id="gw-nama" style="font-family: 'Playfair Display'; font-size: 2.2rem; letter-spacing: 1px; text-transform: uppercase;">BMT BIMA</h1>
-        <p id="gw-izin" style="font-size: 0.9rem; opacity: 0.9;">Izin No: ...</p>
+        <div class="gateway-content">
+            <img id="gw-logo" src="https://cdn-icons-png.flaticon.com/512/2317/2317968.png" style="width: 120px; height: 120px; border-radius: 50%; border: 4px solid white; margin-bottom:20px; padding: 10px; background: rgba(255,255,255,0.15); object-fit: contain; backdrop-filter: blur(5px);">
+            <h1 id="gw-nama" style="font-family: 'Playfair Display'; font-size: 2.5rem; letter-spacing: 2px; text-transform: uppercase; text-shadow: 0 2px 10px rgba(0,0,0,0.5); margin: 0;">BMT BIMA</h1>
+            <p id="gw-izin" style="font-size: 1rem; opacity: 0.9; margin-top: 5px; font-weight: 300; letter-spacing: 1px;">Izin No: Loading...</p>
+        </div>
+        
         <div class="gateway-grid">
             <div class="g-card" onclick="openLogin('induk')"><i class="fas fa-university fa-3x" style="margin-bottom:15px;"></i><br><b>INDUK PUSAT</b><br><span>Admin, Sekretaris, Bendahara</span></div>
             <div class="g-card" onclick="openLogin('sps')"><i class="fas fa-hand-holding-usd fa-3x" style="margin-bottom:15px;"></i><br><b>Simpan Pinjam</b><br><span>Unit Syariah</span></div>
@@ -120,7 +134,7 @@
             <div class="g-card" onclick="openLogin('gadai')"><i class="fas fa-balance-scale fa-3x" style="margin-bottom:15px;"></i><br><b>Gadai Syariah</b><br><span>Unit Syariah</span></div>
         </div>
         <div style="margin-top: 30px;">
-            <button onclick="resetSystem()" style="background:transparent; border:1px solid rgba(255,255,255,0.3); color:rgba(255,255,255,0.5); padding:5px 10px; border-radius:5px; cursor:pointer; font-size:0.7rem;">RESET SYSTEM (FIX ERROR)</button>
+            <button onclick="resetSystem()" style="background:transparent; border:1px solid rgba(255,255,255,0.3); color:rgba(255,255,255,0.5); padding:5px 10px; border-radius:5px; cursor:pointer; font-size:0.7rem;">RESET SYSTEM</button>
         </div>
     </div>
 
@@ -140,7 +154,7 @@
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-brand">
                 <img id="sb-logo" src="" style="width:40px; border-radius:50%; object-fit:cover;">
-                <div class="hide-mini" style="line-height:1.2;"><div id="sb-nama" style="font-weight:bold; font-size:0.9rem;">BMT NAME</div><small style="opacity:0.7;">INTEGRATED</small></div>
+                <div class="hide-mini" style="line-height:1.2; margin-left:10px;"><div id="sb-nama" style="font-weight:bold; font-size:0.9rem;">BMT NAME</div><small style="opacity:0.7;">INTEGRATED</small></div>
             </div>
             <div id="menu-container" class="sidebar-menu"></div>
             <div style="padding: 25px;">
@@ -159,7 +173,7 @@
     <div id="printable-area"></div>
 
     <script>
-        // CONFIG & DB INIT
+        // CONFIG & DB
         const defaultUsers = [
             {user:'admin',role:'admin',app:'induk',password:'123'}, {user:'bendahara',role:'bendahara',app:'induk',password:'123'},
             {user:'sekretaris',role:'sekretaris',app:'induk',password:'123'}, {user:'anggota',role:'anggota',app:'induk',password:'123'},
@@ -167,7 +181,10 @@
             {user:'accounting',role:'accounting',app:'unit',password:'123'}
         ];
         const defaultConfig = {
-            nama: "BMT BINA INSAN ASSIROT", izin: "518/BH/KWK/2025", alamat: "Jl. Jendral Sudirman No. 45", wa: "08123456789", email: "info@bmt.co.id", logo: "https://cdn-icons-png.flaticon.com/512/2317/2317968.png",
+            nama: "BMT BINA INSAN ASSIROT", izin: "518/BH/KWK/2025", alamat: "Jl. Jendral Sudirman No. 45", wa: "08123456789", email: "info@bmt.co.id", 
+            logo: "https://cdn-icons-png.flaticon.com/512/2317/2317968.png", 
+            wallpaper: "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?q=80&w=1600&auto=format&fit=crop", // Default Wallpaper
+            cloudUrl: "",
             struktur: { ketua: "H. Abdullah", sekretaris: "Siti Aminah", bendahara: "Rudi Hartono" }, 
             visi: "Menjadi Lembaga Keuangan Syariah Terdepan", misi: "1. Transaksi Syariah Murni\n2. Pelayanan Prima",
             unit_leads: {sps: "Bpk. Budi", kms: "Ibu Ani", gadai: "Bpk. Cipto"},
@@ -177,7 +194,7 @@
             templates: { sps: "Pasal 1: Akad Mudharabah (Bagi Hasil).\nPasal 2: Nisbah bagi hasil 60:40.", kms: "Pasal 1: Akad Murabahah (Jual Beli).\nPasal 2: Harga jual fixed hingga lunas.", gadai: "Pasal 1: Akad Rahn (Gadai).\nPasal 2: Biaya Ijaroh pemeliharaan barang." }
         };
 
-        // AUTO FIX DATA IF MISSING OR CORRUPT
+        // LOAD DATA
         let settings = JSON.parse(localStorage.getItem('bmt_config'));
         if(!settings || !settings.limits) { localStorage.setItem('bmt_config', JSON.stringify(defaultConfig)); settings = defaultConfig; }
         
@@ -189,13 +206,8 @@
         let dbSurat = JSON.parse(localStorage.getItem('bmt_surat')) || [];
         
         let dbDana = JSON.parse(localStorage.getItem('bmt_dana'));
-        // AUTO-SEED FUNDS SO APPROVAL WORKS
         if(!dbDana || dbDana.length === 0) {
-            dbDana = [
-                {id: 1, date: Date.now(), unit: 'sps', amount: 1000000000, status: 'Approved', desc: 'Modal Awal'},
-                {id: 2, date: Date.now(), unit: 'kms', amount: 1000000000, status: 'Approved', desc: 'Modal Awal'},
-                {id: 3, date: Date.now(), unit: 'gadai', amount: 1000000000, status: 'Approved', desc: 'Modal Awal'}
-            ];
+            dbDana = [ {id: 1, date: Date.now(), unit: 'sps', amount: 1000000000, status: 'Approved', desc: 'Modal Awal'}, {id: 2, date: Date.now(), unit: 'kms', amount: 1000000000, status: 'Approved', desc: 'Modal Awal'}, {id: 3, date: Date.now(), unit: 'gadai', amount: 1000000000, status: 'Approved', desc: 'Modal Awal'} ];
             localStorage.setItem('bmt_dana', JSON.stringify(dbDana));
         }
         
@@ -203,21 +215,27 @@
         let activeApp = '', activeUser = null;
 
         window.onload = function() { renderIdentitas(); };
-        function renderIdentitas() { document.getElementById('gw-nama').innerText=settings.nama; document.getElementById('gw-izin').innerText="Izin: "+settings.izin; document.getElementById('sb-nama').innerText=settings.nama; document.getElementById('gw-logo').src=settings.logo; document.getElementById('sb-logo').src=settings.logo; }
-        function resetSystem() { if(confirm("Yakin ingin reset semua data ke awal?")) { localStorage.clear(); location.reload(); } }
+        function renderIdentitas() {
+            document.getElementById('gw-nama').innerText = settings.nama;
+            document.getElementById('gw-izin').innerText = "Izin No: " + settings.izin;
+            document.getElementById('sb-nama').innerText = settings.nama;
+            document.getElementById('gw-logo').src = settings.logo;
+            document.getElementById('sb-logo').src = settings.logo;
+            
+            // Set Wallpaper with Overlay
+            let wp = settings.wallpaper || defaultConfig.wallpaper;
+            document.getElementById('gateway').style.background = `linear-gradient(rgba(5, 25, 26, 0.85), rgba(5, 25, 26, 0.9)), url('${wp}') no-repeat center center/cover`;
+        }
+        function resetSystem() { if(confirm("RESET SEMUA DATA? Data akan hilang dan kembali ke default!")) { localStorage.clear(); location.reload(); } }
         
         function openLogin(app) { activeApp=app; document.getElementById('login-title').innerText="Login "+app.toUpperCase(); document.getElementById('login-modal').style.display='flex'; }
-        function logoutManual() { document.getElementById('app').classList.add('hidden'); document.getElementById('gateway').classList.remove('hidden'); activeUser=null; document.getElementById('username').value=''; document.getElementById('password').value=''; document.getElementById('sidebar').classList.remove('minimized'); }
+        function logoutManual() { document.getElementById('app').classList.add('hidden'); document.getElementById('gateway').classList.remove('hidden'); activeUser=null; document.getElementById('username').value=''; document.getElementById('password').value=''; }
         
         function prosesLogin() {
             let u = document.getElementById('username').value.toLowerCase();
             let p = document.getElementById('password').value;
             let user = dbUsers.find(x=>x.user===u);
-            
-            if(!user) return alert("User tidak ditemukan!");
-            let validPass = user.password || '123'; 
-            if(p !== validPass) return alert("Password Salah!");
-
+            if(!user || (user.password && user.password !== p)) return alert("Login Gagal!");
             if((activeApp==='induk' && user.app!=='induk') || (activeApp!=='induk' && user.app!=='unit')) return alert("Akses Ditolak");
             activeUser = { user:u, role:user.role.toUpperCase() };
             document.getElementById('login-modal').style.display='none'; document.getElementById('gateway').classList.add('hidden'); document.getElementById('app').classList.remove('hidden');
@@ -235,45 +253,87 @@
                     add('edit_profile_lembaga','fas fa-university','Edit Profil Lembaga'); 
                     add('manage_shu','fas fa-coins','Atur SHU'); 
                     add('users','fas fa-users-cog','Kelola User'); 
-                    add('identitas','fas fa-building','Identitas'); 
+                    add('identitas','fas fa-database','Identitas & DB'); 
                     add('surat_induk','fas fa-envelope','Surat Umum');
                     add('template_akad','fas fa-file-contract','Template Akad');
                     add('config_surat','fas fa-cog','Config No Surat');
                 }
-                if(['SEKRETARIS','ADMIN'].includes(activeUser.role)) { 
-                    add('surat_induk','fas fa-envelope','Surat Menyurat'); 
-                    add('cetak_akad','fas fa-print','Cetak Akad'); 
-                    add('sarpras_approval','fas fa-check-square','Approval Sarpras'); 
-                    add('laporan_pusat','fas fa-folder-open','Pusat Laporan'); 
-                    add('monitoring_pegawai','fas fa-users','Monitoring Pegawai'); 
-                }
+                if(['SEKRETARIS','ADMIN'].includes(activeUser.role)) { add('surat_induk','fas fa-envelope','Surat Menyurat'); add('cetak_akad','fas fa-print','Cetak Akad'); add('sarpras_approval','fas fa-check-square','Approval Sarpras'); add('laporan_pusat','fas fa-folder-open','Pusat Laporan'); add('monitoring_pegawai','fas fa-users','Monitoring Pegawai'); }
                 if(['BENDAHARA','ADMIN'].includes(activeUser.role)) { add('laporan_keuangan','fas fa-wallet','Laporan Keuangan'); add('distribusi_modal','fas fa-hand-holding-usd','Penyaluran Modal'); }
             } else {
                 add('home','fas fa-tachometer-alt','Dashboard');
                 if(['MANAGER','ACCOUNTING','MARKETING'].includes(activeUser.role)) add('presensi_harian','fas fa-clock','Presensi Harian'); 
-                if(activeUser.role==='MARKETING') { add('input','fas fa-user-plus','Input'); add('cetak','fas fa-print','Cetak'); }
+                if(activeUser.role==='MARKETING') { add('input','fas fa-user-plus','Input Nasabah'); add('cetak','fas fa-print','Cetak'); }
                 if(activeUser.role==='MANAGER') { add('approval','fas fa-check-double','Approval'); add('req_sarpras','fas fa-box-open','Req Sarpras'); add('setting_margin','fas fa-percent','Setting Margin'); }
                 if(activeUser.role==='ACCOUNTING') { add('billing','fas fa-file-invoice','Billing'); add('dana_unit','fas fa-coins','Manajemen Dana'); }
             }
             page('home');
         }
 
+        // --- PAGE RENDERER ---
         function page(id) {
             let b=document.getElementById('content-body'); let t=document.getElementById('page-title'); b.innerHTML='';
             
-            // --- ALL PAGES RENDER LOGIC ---
-            if(id==='users') {
-                t.innerText="Manajemen Pengguna"; let rows=dbUsers.map((u,i)=>`<tr><td>${u.user}</td><td>${u.role}</td><td>${u.app}</td><td><button class="btn btn-danger btn-sm" onclick="delUser(${i})">Hapus</button></td></tr>`).join('');
-                b.innerHTML=`<div class="card" style="max-width:600px;"><h4>Tambah User Baru</h4><div class="form-vertical"><input id="n-u" class="form-control" placeholder="Username Baru"><select id="n-r" class="form-control"><option value="anggota">Anggota</option><option value="admin">Admin</option><option value="bendahara">Bendahara</option><option value="sekretaris">Sekretaris</option><option value="marketing">Marketing</option><option value="manager">Manager</option><option value="accounting">Accounting</option></select><input id="n-p" type="text" class="form-control" placeholder="Password (Wajib Diisi)"><button class="btn btn-primary" onclick="addUser()">Simpan User</button></div></div><div class="card"><h4>Daftar User</h4><div class="table-responsive"><table><thead><tr><th>User</th><th>Role</th><th>App</th><th>Aksi</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+            // ADMIN: IDENTITAS & DATABASE (UPDATED)
+            if(id==='identitas') {
+                t.innerText="Identitas & Database Cloud";
+                b.innerHTML=`
+                <div class="card">
+                    <h4>Identitas Lembaga</h4>
+                    <div class="form-vertical">
+                        <label>Nama BMT</label><input id="s-nm" class="form-control" value="${settings.nama}">
+                        <label>Nomor Izin</label><input id="s-iz" class="form-control" value="${settings.izin}">
+                        <label>Alamat Lengkap</label><input id="s-al" class="form-control" value="${settings.alamat}">
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                            <div><label>Email</label><input id="s-em" class="form-control" value="${settings.email}"></div>
+                            <div><label>WA</label><input id="s-wa" class="form-control" value="${settings.wa}"></div>
+                        </div>
+                        <hr>
+                        <label><b>Upload Logo Baru:</b></label>
+                        <input type="file" id="f-logo" onchange="previewImage(this, 's-lg')">
+                        <input type="hidden" id="s-lg" value="${settings.logo}">
+                        
+                        <label><b>Upload Wallpaper Login:</b></label>
+                        <input type="file" id="f-wall" onchange="previewImage(this, 's-wall')">
+                        <input type="hidden" id="s-wall" value="${settings.wallpaper || ''}">
+                        
+                        <button class="btn btn-primary" onclick="saveID()">Simpan Identitas & Tampilan</button>
+                    </div>
+                </div>
+                <div class="card" style="border-left:5px solid #00C851;">
+                    <h4>Koneksi Database (Google Drive)</h4>
+                    <p>Masukkan URL Web App dari Google Apps Script untuk menyimpan data secara online:</p>
+                    <div style="display:flex;gap:10px">
+                        <input id="cloud-url" class="form-control" placeholder="https://script.google.com/macros/s/..." value="${settings.cloudUrl||''}">
+                        <button class="btn btn-primary" onclick="saveCloudUrl()">Simpan URL</button>
+                    </div>
+                    <br>
+                    <div style="display:flex;gap:10px">
+                        <button class="btn btn-warning" onclick="syncToCloud()"><i class="fas fa-cloud-upload-alt"></i> Upload Data ke Drive</button>
+                        <button class="btn btn-success" onclick="syncFromCloud()"><i class="fas fa-cloud-download-alt"></i> Ambil Data dari Drive</button>
+                    </div>
+                </div>`;
             }
-            else if(id==='monitoring_pegawai') {
-                t.innerText="Monitoring Pegawai"; let logs = dbPresensi.map(p => `<tr><td>${new Date(p.time).toLocaleString()}</td><td>${p.user}</td><td>${p.type}</td><td>${p.loc}</td><td>${p.ket||'-'}</td></tr>`).join(''); let users = dbUsers.filter(u=>['manager','marketing','accounting'].includes(u.role)).map(u=>`<tr><td>${u.user}</td><td>${u.role}</td><td><button class="btn btn-sm btn-primary" onclick="printIDCard('${u.user}','${u.role}')">Cetak ID</button></td></tr>`).join('');
-                b.innerHTML=`<div class="card"><h3>Laporan Kehadiran</h3><button class="btn btn-success" onclick="printLaporanPresensi()">Cetak Laporan Presensi</button><div class="table-responsive"><table><thead><tr><th>Waktu</th><th>Nama</th><th>Status</th><th>Lokasi</th><th>Ket</th></tr></thead><tbody>${logs}</tbody></table></div></div><div class="card"><h3>Cetak Identitas Pegawai</h3><div class="table-responsive"><table><thead><tr><th>Nama</th><th>Jabatan</th><th>Aksi</th></tr></thead><tbody>${users}</tbody></table></div></div>`;
+            
+            // MARKETING: INPUT NASABAH (LABEL UPDATED)
+            else if(id==='input') { 
+                t.innerText="Input Nasabah"; 
+                let ex=activeApp==='kms'?`<input id="i-dp" class="form-control" placeholder="DP (Rp)">`: (activeApp==='gadai'?`<input id="i-jam" class="form-control" placeholder="Barang Jaminan">`:''); 
+                b.innerHTML=`<div class="card" style="max-width:600px"><div class="form-vertical">
+                    <input id="i-nm" class="form-control" placeholder="Nama Lengkap"><input id="i-nik" class="form-control" placeholder="NIK (KTP)"><input id="i-al" class="form-control" placeholder="Alamat Domisili">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><input id="i-wa" class="form-control" placeholder="No. WA"><input id="i-em" class="form-control" placeholder="Email (Opsional)"></div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><input id="i-pl" class="form-control" placeholder="Plafond (Rp)"><input id="i-tn" class="form-control" placeholder="Tenor (Bulan)"></div>${ex}
+                    <hr>
+                    <div class="form-group"><label>Foto KTP</label><input type="file"></div>
+                    <div class="form-group"><label>Foto Ket. Kerja / Usaha</label><input type="file"></div> <div class="form-group"><label>Foto Wajah (Untuk Akad)</label><input type="file" onchange="readFoto(this)"><img id="prev-foto" style="width:80px;display:none;margin-top:5px"></div>
+                    <button class="btn btn-primary" onclick="subNas()">Simpan Data</button>
+                </div></div>`; 
             }
-            else if(id==='laporan_pusat') {
-                t.innerText="Pusat Laporan"; let sar=dbSarpras.map((s,i)=>`<tr><td>${s.unit}</td><td>${s.item}</td><td>${s.status}</td><td>${s.status=='Pending'?`<button class="btn btn-success btn-sm" onclick="accSarpras(${i})">ACC</button>`:''}</td></tr>`).join('');
-                b.innerHTML=`<div class="card"><h3>Laporan & Database</h3><div style="display:flex;gap:10px;margin-bottom:20px"><button class="btn btn-success" onclick="printLaporanSarpras()">Cetak Lap. Sarpras</button><button class="btn btn-primary" onclick="printDatabaseNasabah()">Cetak Database Nasabah</button></div><div class="table-responsive"><table><thead><tr><th>Unit</th><th>Item</th><th>Status</th><th>Aksi</th></tr></thead><tbody>${sar}</tbody></table></div></div>`;
-            }
+
+            // --- EXISTING PAGES (UNCHANGED) ---
+            else if(id==='users') { t.innerText="Manajemen Pengguna"; let rows=dbUsers.map((u,i)=>`<tr><td>${u.user}</td><td>${u.role}</td><td>${u.app}</td><td><button class="btn btn-danger btn-sm" onclick="delUser(${i})">Del</button></td></tr>`).join(''); b.innerHTML=`<div class="card" style="max-width:600px;"><h4>Tambah User</h4><div class="form-vertical"><input id="n-u" class="form-control" placeholder="Username"><select id="n-r" class="form-control"><option value="anggota">Anggota</option><option value="admin">Admin</option><option value="bendahara">Bendahara</option><option value="sekretaris">Sekretaris</option><option value="marketing">Marketing</option><option value="manager">Manager</option><option value="accounting">Accounting</option></select><input id="n-p" class="form-control" placeholder="Password"><button class="btn btn-primary" onclick="addUser()">Simpan</button></div></div><div class="card"><div class="table-responsive"><table><thead><tr><th>User</th><th>Role</th><th>App</th><th>Aksi</th></tr></thead><tbody>${rows}</tbody></table></div></div>`; }
+            else if(id==='monitoring_pegawai') { t.innerText="Monitoring"; let logs = dbPresensi.map(p => `<tr><td>${new Date(p.time).toLocaleString()}</td><td>${p.user}</td><td>${p.type}</td><td>${p.loc}</td><td>${p.ket||'-'}</td></tr>`).join(''); let users = dbUsers.filter(u=>['manager','marketing','accounting'].includes(u.role)).map(u=>`<tr><td>${u.user}</td><td>${u.role}</td><td><button class="btn btn-sm btn-primary" onclick="printIDCard('${u.user}','${u.role}')">ID Card</button></td></tr>`).join(''); b.innerHTML=`<div class="card"><h3>Laporan Kehadiran</h3><button class="btn btn-success" onclick="printLaporanPresensi()">Cetak PDF</button><div class="table-responsive"><table><thead><tr><th>Waktu</th><th>Nama</th><th>Status</th><th>Lokasi</th><th>Ket</th></tr></thead><tbody>${logs}</tbody></table></div></div><div class="card"><h3>Cetak ID Pegawai</h3><div class="table-responsive"><table><thead><tr><th>Nama</th><th>Jabatan</th><th>Aksi</th></tr></thead><tbody>${users}</tbody></table></div></div>`; }
+            else if(id==='laporan_pusat') { t.innerText="Pusat Laporan"; let sar=dbSarpras.map((s,i)=>`<tr><td>${s.unit}</td><td>${s.item}</td><td>${s.status}</td><td>${s.status=='Pending'?`<button class="btn btn-success btn-sm" onclick="accSarpras(${i})">ACC</button>`:''}</td></tr>`).join(''); b.innerHTML=`<div class="card"><h3>Laporan & Database</h3><div style="display:flex;gap:10px;margin-bottom:20px"><button class="btn btn-success" onclick="printLaporanSarpras()">Laporan Sarpras</button><button class="btn btn-primary" onclick="printDatabaseNasabah()">Database Nasabah</button></div><div class="table-responsive"><table><thead><tr><th>Unit</th><th>Item</th><th>Status</th><th>Aksi</th></tr></thead><tbody>${sar}</tbody></table></div></div>`; }
             else if(id==='edit_profile_lembaga') { t.innerText="Edit Profil Lembaga"; b.innerHTML=`<div class="card"><h4>Visi & Misi</h4><div class="form-vertical"><label>Visi</label><textarea id="e-visi" class="form-control">${settings.visi}</textarea><label>Misi</label><textarea id="e-misi" class="form-control" style="height:100px">${settings.misi}</textarea></div></div><div class="card"><h4>Struktur Pimpinan</h4><div class="form-vertical"><label>Ketua</label><input id="e-ketua" class="form-control" value="${settings.struktur.ketua}"><label>Sekretaris</label><input id="e-sekretaris" class="form-control" value="${settings.struktur.sekretaris}"><label>Bendahara</label><input id="e-bendahara" class="form-control" value="${settings.struktur.bendahara}"></div></div><div class="card"><h4>Pimpinan Unit</h4><div class="form-vertical"><label>Manager SPS</label><input id="e-u-sps" class="form-control" value="${settings.unit_leads?.sps||''}"><label>Manager KMS</label><input id="e-u-kms" class="form-control" value="${settings.unit_leads?.kms||''}"><label>Manager Gadai</label><input id="e-u-gadai" class="form-control" value="${settings.unit_leads?.gadai||''}"><button class="btn btn-primary" onclick="saveProfilLembaga()">Simpan Profil</button></div></div>`; }
             else if(id==='presensi_harian') { t.innerText="Presensi Harian"; b.innerHTML=`<div class="card" style="text-align:center"><h3>Halo, ${activeUser.user}</h3><p id="clock-display" style="font-size:2rem;font-weight:bold"></p><div style="display:flex;justify-content:center;gap:20px;margin:20px 0;"><button class="btn btn-success" onclick="doPresensi('Masuk')" style="padding:15px 30px"><i class="fas fa-sign-in-alt"></i> Masuk (08:00)</button><button class="btn btn-danger" onclick="doPresensi('Pulang')" style="padding:15px 30px"><i class="fas fa-sign-out-alt"></i> Pulang (14:00)</button></div></div><div class="card"><h4>Izin / Sakit / Libur</h4><div class="form-vertical"><select id="p-status" class="form-control"><option value="Izin">Izin</option><option value="Sakit">Sakit</option><option value="Libur">Libur</option></select><input id="p-ket" class="form-control" placeholder="Keterangan"><button class="btn btn-warning" onclick="doPresensi('Izin')">Kirim Keterangan</button></div></div>`; setInterval(()=>document.getElementById('clock-display').innerText=new Date().toLocaleTimeString(),1000); }
             else if(id==='home' && activeApp==='induk') { t.innerText="Dashboard Induk"; let prof=parseInt(settings.shu.profit); let totalAsset = dbDana.reduce((a,b)=>a+parseInt(b.amount),0); b.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(250px,1fr));gap:20px;margin-bottom:20px"><div class="card" style="background:var(--primary);color:white"><h3>SHU Berjalan</h3><h2>Rp ${prof.toLocaleString()}</h2></div><div class="card" style="background:var(--secondary);color:white"><h3>Total Aset</h3><h2>Rp ${totalAsset.toLocaleString()}</h2></div></div><div class="card"><h3>Visi & Misi</h3><p><b>Visi:</b> ${settings.visi}</p><p><b>Misi:</b><br>${settings.misi.replace(/\n/g,'<br>')}</p></div><div class="card"><h3>Struktur Organisasi</h3><div class="org-chart"><div class="org-box">Ketua<br>${settings.struktur.ketua}</div><br><div class="org-line"></div><br><div style="display:flex;justify-content:center;gap:20px"><div class="org-box">Sekretaris<br>${settings.struktur.sekretaris}</div><div class="org-box">Bendahara<br>${settings.struktur.bendahara}</div></div><br><div class="org-line"></div><br><div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap"><div class="org-box">SPS: ${settings.unit_leads?.sps||'-'}</div><div class="org-box">KMS: ${settings.unit_leads?.kms||'-'}</div><div class="org-box">Gadai: ${settings.unit_leads?.gadai||'-'}</div></div></div></div>`; }
@@ -283,13 +343,11 @@
             else if(id==='dana_unit') { t.innerText="Manajemen Dana"; let totalMasuk = dbDana.filter(x => x.unit === activeApp && x.status === 'Approved').reduce((a,b)=>a+parseInt(b.amount),0); let totalPakai = dbNasabah.filter(x => x.unit === activeApp && x.status === 'Approved').reduce((a,b)=>a+parseInt(b.plafond),0); let sisa = totalMasuk - totalPakai; b.innerHTML = `<div class="card" style="background:${sisa<0?'#ffebee':'#e8f5e9'}"><h3>Sisa Kuota: Rp ${sisa.toLocaleString()}</h3></div><div class="card"><h4>Ajukan Dana</h4><div class="form-vertical"><input id="req-amt" type="number" class="form-control" placeholder="Nominal"><input id="req-desc" class="form-control" placeholder="Keperluan"><button class="btn btn-primary" onclick="reqDana()">Kirim</button></div></div>`; }
             else if(id==='approval') { t.innerText="Approval"; let rows = dbNasabah.filter(x=>x.unit===activeApp && x.status==='Pending').map(x=>`<tr><td>${x.nama}</td><td>Rp ${parseInt(x.plafond).toLocaleString()}</td><td><button class="btn btn-success" onclick="approve('${x.id}', ${x.plafond})">ACC</button></td></tr>`).join(''); b.innerHTML=`<div class="card"><h4>Daftar Pending</h4><div class="table-responsive"><table><thead><tr><th>Nama</th><th>Plafond</th><th>Aksi</th></tr></thead><tbody>${rows}</tbody></table></div></div>`; }
             else if (id === 'home' && activeApp !== 'induk') { t.innerText = "Dashboard Unit"; let activeClients = dbNasabah.filter(x => x.unit === activeApp && x.status === 'Approved'); let totalPlafond = activeClients.reduce((a, b) => a + parseInt(b.plafond), 0); b.innerHTML = `<div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;"><div class="card" style="background:var(--primary); color:white;"><h3>Nasabah Aktif</h3><h1 style="margin:10px 0;">${activeClients.length}</h1></div><div class="card" style="background:var(--secondary); color:white;"><h3>Perputaran Uang</h3><h1 style="margin:10px 0;">Rp ${totalPlafond.toLocaleString()}</h1></div></div>`; }
-            else if(id==='identitas') { t.innerText="Identitas"; b.innerHTML=`<div class="card"><div class="form-vertical"><label>Nama</label><input id="s-nm" class="form-control" value="${settings.nama}"><label>Izin</label><input id="s-iz" class="form-control" value="${settings.izin}"><label>Alamat</label><input id="s-al" class="form-control" value="${settings.alamat}"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><label>Email</label><input id="s-em" class="form-control" value="${settings.email}"></div><div><label>WA</label><input id="s-wa" class="form-control" value="${settings.wa}"></div></div><label>Logo</label><input id="s-lg" class="form-control" value="${settings.logo}"><button class="btn btn-primary" onclick="saveID()">Simpan</button></div></div>`; }
             else if(id==='surat_induk') { t.innerText="Surat Menyurat"; let rows=dbSurat.map(s=>`<tr><td>${s.no}</td><td>${s.jenis}</td><td>${s.tujuan}</td><td><button class="btn btn-sm btn-primary" onclick="printSurat('${s.no}','${s.tujuan}','${s.isi}')">Cetak</button></td></tr>`).join(''); b.innerHTML=`<div class="card"><h4>Buat Surat</h4><div class="form-vertical"><input id="s-tuj" class="form-control" placeholder="Tujuan"><input id="s-per" class="form-control" placeholder="Perihal"><textarea id="s-isi" class="form-control" placeholder="Isi Surat..."></textarea><div style="display:flex;gap:10px"><button class="btn btn-success" onclick="saveSurat('Keluar')">Surat Keluar (Auto No)</button><button class="btn btn-warning" onclick="saveSurat('Masuk')">Log Surat Masuk</button></div></div></div><div class="card"><h4>Arsip</h4><div class="table-responsive"><table><thead><tr><th>No</th><th>Jenis</th><th>Tujuan</th><th>Aksi</th></tr></thead><tbody>${rows}</tbody></table></div></div><div class="card"><h4>Config No Surat</h4><div class="form-vertical"><label>Kode SPS</label><input id="c-sps" class="form-control" value="${settings.codes.sps}"><label>Kode KMS</label><input id="c-kms" class="form-control" value="${settings.codes.kms}"><label>Kode Gadai</label><input id="c-gadai" class="form-control" value="${settings.codes.gadai}"><button class="btn btn-primary" onclick="saveCodes()">Simpan Kode</button></div></div>`; }
             else if(id==='manage_shu') { t.innerText="SHU"; b.innerHTML=`<div class="card"><div class="form-vertical"><label>Profit</label><input id="sh-p" class="form-control" value="${settings.shu.profit}"><label>% Tetap</label><input id="sh-t" class="form-control" value="${settings.shu.p_tetap}"><label>% Nasabah</label><input id="sh-n" class="form-control" value="${settings.shu.p_nasabah}"><button class="btn btn-primary" onclick="saveSHU()">Simpan</button></div></div>`; }
             else if(id==='sarpras_approval') { t.innerText="Approval Sarpras"; let rows=dbSarpras.map((s,i)=>`<tr><td>${s.unit.toUpperCase()}</td><td>${s.item}</td><td>${s.alasan}</td><td><span class="badge ${s.status=='Pending'?'bg-pending':'bg-success'}">${s.status}</span></td><td>${s.status=='Pending'?`<button class="btn btn-sm btn-success" onclick="accSarpras(${i})">ACC</button>`:''}</td></tr>`).join(''); b.innerHTML=`<div class="card"><h4>Pengajuan Unit</h4><div class="table-responsive"><table><thead><tr><th>Unit</th><th>Item</th><th>Alasan</th><th>Status</th><th>Aksi</th></tr></thead><tbody>${rows}</tbody></table></div></div>`; }
             else if(id==='req_sarpras') { t.innerText="Ajukan Sarpras"; b.innerHTML=`<div class="card"><div class="form-vertical"><input id="sp-i" class="form-control" placeholder="Barang"><input id="sp-a" class="form-control" placeholder="Alasan"><button class="btn btn-primary" onclick="sendSarpras()">Kirim</button></div></div>`; }
             else if(id==='laporan_keuangan') { t.innerText="Laporan Keuangan"; b.innerHTML=`<div class="card"><h3>Cetak Laporan Keuangan Unit</h3><div style="display:flex;gap:10px"><button class="btn btn-primary" onclick="printLaporanKeuangan('sps')">Laporan SPS</button><button class="btn btn-warning" onclick="printLaporanKeuangan('kms')">Laporan KMS</button><button class="btn btn-danger" onclick="printLaporanKeuangan('gadai')">Laporan Gadai</button></div></div>`; }
-            else if(id==='input') { t.innerText="Input"; let ex=activeApp==='kms'?`<input id="i-dp" class="form-control" placeholder="DP">`: (activeApp==='gadai'?`<input id="i-jam" class="form-control" placeholder="Jaminan">`:''); b.innerHTML=`<div class="card" style="max-width:600px"><div class="form-vertical"><input id="i-nm" class="form-control" placeholder="Nama"><input id="i-nik" class="form-control" placeholder="NIK"><input id="i-al" class="form-control" placeholder="Alamat"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><input id="i-wa" class="form-control" placeholder="WA"><input id="i-em" class="form-control" placeholder="Email"></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><input id="i-pl" class="form-control" placeholder="Plafond"><input id="i-tn" class="form-control" placeholder="Tenor"></div>${ex}<div class="form-group"><label>Foto KTP</label><input type="file"></div><div class="form-group"><label>Foto Ijazah</label><input type="file"></div><div class="form-group"><label>Foto Wajah</label><input type="file" onchange="readFoto(this)"></div><button class="btn btn-primary" onclick="subNas()">Simpan</button></div></div>`; }
             else if(id==='setting_margin') { t.innerText="Margin"; b.innerHTML=`<div class="card"><div class="form-vertical"><label>Margin %</label><input id="u-mar" class="form-control" value="${settings.margins[activeApp]}"><button class="btn btn-primary" onclick="saveMargin()">Simpan</button></div></div>`; }
             else if(id==='cetak') { t.innerText="Cetak"; let rows=dbNasabah.filter(x=>x.unit===activeApp && x.status==='Approved').map(x=>`<tr><td>${x.nama}</td><td>${x.noSurat}</td><td><button class="btn btn-primary btn-sm" onclick="printAkad(${x.id})">Cetak</button></td></tr>`).join(''); b.innerHTML=`<div class="card"><div class="table-responsive"><table>${rows}</table></div></div>`; }
             else if(id==='billing') { t.innerText="Billing"; let rows=dbNasabah.filter(x=>x.unit===activeApp && x.status==='Approved').map(x=>`<tr><td>${x.nama}</td><td>${x.payStatus}</td><td><button class="btn btn-warning" onclick="window.open('https://wa.me/${x.wa}')">Tagih</button> <button class="btn btn-success" onclick="bayar(${x.id})">Bayar</button></td></tr>`).join(''); b.innerHTML=`<div class="card"><div class="table-responsive"><table>${rows}</table></div></div>`; }
@@ -297,13 +355,49 @@
             else { b.innerHTML=`<div class="card">Fitur Aktif</div>`; }
         }
 
-        // --- LOGIC ---
+        // --- LOGIC (FILE UPLOAD + CLOUD) ---
         let tempFoto = '';
         function readFoto(i) { if(i.files[0]){let r=new FileReader(); r.onload=e=>tempFoto=e.target.result; r.readAsDataURL(i.files[0]);} }
         
-        function saveProfilLembaga() { settings.visi = document.getElementById('e-visi').value; settings.misi = document.getElementById('e-misi').value; settings.struktur.ketua = document.getElementById('e-ketua').value; settings.struktur.sekretaris = document.getElementById('e-sekretaris').value; settings.struktur.bendahara = document.getElementById('e-bendahara').value; settings.unit_leads = { sps: document.getElementById('e-u-sps').value, kms: document.getElementById('e-u-kms').value, gadai: document.getElementById('e-u-gadai').value }; localStorage.setItem('bmt_config', JSON.stringify(settings)); alert('Profil Tersimpan!'); page('home'); }
-        function doPresensi(type) { let h = new Date().getHours(); if (type === 'Masuk' && (h < 8 || h >= 14)) return alert("Absen Masuk hanya jam 08:00 - 14:00"); if (type === 'Pulang' && h < 14) return alert("Belum waktunya pulang (14:00)"); let ket = type === 'Izin' ? (document.getElementById('p-status').value + ": " + document.getElementById('p-ket').value) : '-'; let loc = "Lokasi: -8.123, 112.456 (Kantor)"; dbPresensi.push({ time: Date.now(), user: activeUser.user, role: activeUser.role, type: type, loc: loc, ket: ket }); localStorage.setItem('bmt_presensi', JSON.stringify(dbPresensi)); alert("Presensi Berhasil: " + type); }
-        function saveID() { settings.nama=document.getElementById('s-nm').value; settings.izin=document.getElementById('s-iz').value; settings.alamat=document.getElementById('s-al').value; settings.email=document.getElementById('s-em').value; settings.wa=document.getElementById('s-wa').value; settings.logo=document.getElementById('s-lg').value; localStorage.setItem('bmt_config',JSON.stringify(settings)); renderIdentitas(); alert('Saved'); }
+        // GENERIC IMAGE UPLOADER FOR LOGO/WALLPAPER
+        function previewImage(input, targetId) {
+            if(input.files[0]) {
+                let r = new FileReader();
+                r.onload = function(e) { document.getElementById(targetId).value = e.target.result; }
+                r.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function saveCloudUrl() { settings.cloudUrl = document.getElementById('cloud-url').value; localStorage.setItem('bmt_config', JSON.stringify(settings)); alert("URL Cloud Tersimpan!"); }
+        async function syncToCloud() {
+            if(!settings.cloudUrl) return alert("Masukkan URL Database (Google Script) dulu!");
+            let data = { users: localStorage.getItem('bmt_users_v3'), nasabah: localStorage.getItem('bmt_nasabah'), config: localStorage.getItem('bmt_config'), surat: localStorage.getItem('bmt_surat'), sarpras: localStorage.getItem('bmt_sarpras'), dana: localStorage.getItem('bmt_dana'), presensi: localStorage.getItem('bmt_presensi') };
+            try { await fetch(settings.cloudUrl, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) }); alert("Upload Sukses!"); } catch(e) { alert("Gagal: "+e); }
+        }
+        async function syncFromCloud() {
+            if(!settings.cloudUrl) return alert("Masukkan URL Database dulu!");
+            try {
+                let res = await fetch(settings.cloudUrl); let data = await res.json();
+                if(data.users) localStorage.setItem('bmt_users_v3', data.users);
+                if(data.nasabah) localStorage.setItem('bmt_nasabah', data.nasabah);
+                if(data.config) localStorage.setItem('bmt_config', data.config);
+                if(data.surat) localStorage.setItem('bmt_surat', data.surat);
+                if(data.sarpras) localStorage.setItem('bmt_sarpras', data.sarpras);
+                if(data.dana) localStorage.setItem('bmt_dana', data.dana);
+                if(data.presensi) localStorage.setItem('bmt_presensi', data.presensi);
+                alert("Data Berhasil Diambil!"); location.reload();
+            } catch(e) { alert("Gagal Ambil Data: "+e); }
+        }
+
+        function saveID() { 
+            settings.nama=document.getElementById('s-nm').value; settings.izin=document.getElementById('s-iz').value; 
+            settings.alamat=document.getElementById('s-al').value; settings.email=document.getElementById('s-em').value; 
+            settings.wa=document.getElementById('s-wa').value; 
+            settings.logo=document.getElementById('s-lg').value;
+            settings.wallpaper=document.getElementById('s-wall').value; // Save Wallpaper
+            localStorage.setItem('bmt_config',JSON.stringify(settings)); renderIdentitas(); alert('Identitas & Tampilan Disimpan!'); 
+        }
+        
         function saveSHU() { settings.shu.profit=document.getElementById('sh-p').value; settings.shu.p_tetap=document.getElementById('sh-t').value; settings.shu.p_nasabah=document.getElementById('sh-n').value; localStorage.setItem('bmt_config',JSON.stringify(settings)); alert('Saved'); }
         function saveCodes() { settings.codes.sps=document.getElementById('c-sps').value; settings.codes.kms=document.getElementById('c-kms').value; settings.codes.gadai=document.getElementById('c-gadai').value; localStorage.setItem('bmt_config',JSON.stringify(settings)); alert('Saved'); }
         function saveMargin() { settings.margins[activeApp]=document.getElementById('u-mar').value; localStorage.setItem('bmt_config',JSON.stringify(settings)); alert('Saved'); }
@@ -320,6 +414,8 @@
         function accDana(id) { let i = dbDana.findIndex(d=>d.id==id); dbDana[i].status='Approved'; localStorage.setItem('bmt_dana', JSON.stringify(dbDana)); page('distribusi_modal'); }
         function reqDana() { dbDana.push({id: Date.now(), date: Date.now(), unit: activeApp, amount: document.getElementById('req-amt').value, status: 'Pending', desc: document.getElementById('req-desc').value}); localStorage.setItem('bmt_dana', JSON.stringify(dbDana)); alert('Terkirim ke Bendahara'); page('dana_unit'); }
         function approve(id, nominal) { let masuk = dbDana.filter(x => x.unit === activeApp && x.status === 'Approved').reduce((a,b)=>a+parseInt(b.amount),0); let keluar = dbNasabah.filter(x => x.unit === activeApp && x.status === 'Approved').reduce((a,b)=>a+parseInt(b.plafond),0); let limitPersen = settings.limits[activeApp] || 100; let batasMax = masuk * (limitPersen / 100); if(keluar + parseInt(nominal) > batasMax) return alert(`GAGAL! Dana melebihi limit ${limitPersen}%.`); let i=dbNasabah.findIndex(x=>x.id==id); dbNasabah[i].status='Approved'; dbNasabah[i].noSurat=`BIMA/${settings.codes[activeApp]}/${Math.floor(Math.random()*1000)}/2026`; localStorage.setItem('bmt_nasabah',JSON.stringify(dbNasabah)); page('approval'); }
+        function saveProfilLembaga() { settings.visi = document.getElementById('e-visi').value; settings.misi = document.getElementById('e-misi').value; settings.struktur.ketua = document.getElementById('e-ketua').value; settings.struktur.sekretaris = document.getElementById('e-sekretaris').value; settings.struktur.bendahara = document.getElementById('e-bendahara').value; settings.unit_leads = { sps: document.getElementById('e-u-sps').value, kms: document.getElementById('e-u-kms').value, gadai: document.getElementById('e-u-gadai').value }; localStorage.setItem('bmt_config', JSON.stringify(settings)); alert('Profil Tersimpan!'); page('home'); }
+        function doPresensi(type) { let h = new Date().getHours(); if (type === 'Masuk' && (h < 8 || h >= 14)) return alert("Absen Masuk hanya jam 08:00 - 14:00"); if (type === 'Pulang' && h < 14) return alert("Belum waktunya pulang (14:00)"); let ket = type === 'Izin' ? (document.getElementById('p-status').value + ": " + document.getElementById('p-ket').value) : '-'; let loc = "Lokasi: -8.123, 112.456 (Kantor)"; dbPresensi.push({ time: Date.now(), user: activeUser.user, role: activeUser.role, type: type, loc: loc, ket: ket }); localStorage.setItem('bmt_presensi', JSON.stringify(dbPresensi)); alert("Presensi Berhasil: " + type); }
 
         // --- PRINT ENGINE ---
         function printLaporanPenyaluran() { let rows = dbDana.filter(d=>d.status==='Approved').map(d=>`<tr><td>${new Date(d.date).toLocaleDateString()}</td><td>${d.unit.toUpperCase()}</td><td>Rp ${parseInt(d.amount).toLocaleString()}</td><td>${d.desc}</td></tr>`).join(''); let html = `<div class="paper"><div class="bank-header"><img src="${settings.logo}" class="bank-logo"><div class="bank-info"><h1>${settings.nama}</h1><p>LAPORAN PENYALURAN MODAL</p></div></div><div class="doc-body"><br><table class="fin-table"><thead><tr><th>Tanggal</th><th>Unit Penerima</th><th>Nominal</th><th>Keterangan</th></tr></thead><tbody>${rows}</tbody></table><br><br><div style="text-align:right">Bendahara BMT</div></div></div>`; document.getElementById('printable-area').innerHTML = html; window.print(); }
@@ -330,7 +426,7 @@
         function printLaporanPresensi() { let rows = dbPresensi.map(p => `<tr><td>${new Date(p.time).toLocaleString()}</td><td>${p.user}</td><td>${p.type}</td><td>${p.ket||'-'}</td></tr>`).join(''); let html = `<div class="paper"><div class="bank-header"><img src="${settings.logo}" class="bank-logo"><div class="bank-info"><h1>${settings.nama}</h1><p>LAPORAN PRESENSI PEGAWAI</p></div></div><div class="doc-body"><table class="fin-table"><thead><tr><th>Waktu</th><th>Nama Pegawai</th><th>Status</th><th>Keterangan</th></tr></thead><tbody>${rows}</tbody></table><br><br><div style="text-align:right">Sekretaris BMT</div></div></div>`; document.getElementById('printable-area').innerHTML = html; window.print(); }
         function printIDCard(user, role) { let html = `<div class="id-card-print"><div class="id-card" style="display:block;"><div class="id-header">${settings.nama.toUpperCase()}</div><div class="id-body"><div class="id-photo"><img src="https://cdn-icons-png.flaticon.com/512/1077/1077114.png" style="width:100%;height:100%;"></div><div class="id-details"><b style="font-size:12pt">${user}</b><br><span>${role.toUpperCase()}</span><br><span>ID: ${Math.floor(Math.random()*100000)}</span><br><br><img class="barcode" src="https://lindell.me/JsBarcode/images/barcode.png"></div></div><div class="id-footer" style="font-size:7pt;">Kartu Identitas Pegawai Resmi</div></div></div>`; document.getElementById('printable-area').innerHTML = html; window.print(); }
 
-        // --- CETAK AKAD (FIXED 3 COLS + ANGSURAN) ---
+        // --- CETAK AKAD (FIXED) ---
         function printAkad(id) {
             let d = dbNasabah.find(x => x.id == id);
             let uName = d.unit==='sps'?'SIMPAN PINJAM':(d.unit==='kms'?'KREDIT MOTOR':'GADAI');
@@ -349,13 +445,8 @@
                     <div class="bio-container"><div class="photo-frame"><img src="${d.foto || ''}" alt="FOTO"></div><div class="bio-text"><table><tr><td width="130">Nama Lengkap</td><td>: <b>${d.nama}</b></td></tr><tr><td>NIK</td><td>: ${d.nik}</td></tr><tr><td>Alamat</td><td>: ${d.alamat}</td></tr><tr><td>No. Telepon</td><td>: ${d.wa}</td></tr></table></div></div>
                     <p>Selanjutnya disebut sebagai <b>PIHAK PERTAMA (Nasabah)</b>.</p><p>Bertindak mewakili <b>${settings.nama}</b>, selanjutnya disebut <b>PIHAK KEDUA (BMT)</b>.</p>
                     <p>Kedua belah pihak menyepakati akad pembiayaan dengan rincian:</p>
-                    <table class="fin-table">
-                        <tr><td>Plafond</td><td>Tenor</td><td>Margin/Jasa</td><td>Angsuran/Bulan</td></tr>
-                        <tr><td><b>Rp ${parseInt(d.plafond).toLocaleString()}</b></td><td>${d.tenor} Bulan</td><td>Rp ${margin.toLocaleString()}</td><td><b>Rp ${angsuran.toLocaleString()}</b></td></tr>
-                        ${extra}
-                    </table>
+                    <table class="fin-table"><tr><td>Plafond</td><td>Tenor</td><td>Margin/Jasa</td><td>Angsuran/Bln</td></tr><tr><td><b>Rp ${parseInt(d.plafond).toLocaleString()}</b></td><td>${d.tenor} Bulan</td><td>Rp ${margin.toLocaleString()}</td><td><b>Rp ${angsuran.toLocaleString()}</b></td></tr>${extra}</table>
                     <div class="clauses"><b>PASAL - PASAL PERJANJIAN:</b><br>${tpl.replace(/\n/g, '<br>')}</div>
-                    
                     <div class="signatures">
                         <div class="sig-box"><p>PIHAK PERTAMA<br>(Nasabah)</p><div class="sig-line">(${d.nama})</div></div>
                         <div class="sig-box"><p>SAKSI<br>(Marketing)</p><div class="sig-line">(....................)</div></div>
