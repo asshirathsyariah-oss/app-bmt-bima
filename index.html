@@ -635,7 +635,40 @@
         function approveProfitKetua(id) { let p = dbProfitFlow.find(x => x.id == id); p.status = 'Pending Manager'; saveToCloud(); page('acc_profit_ketua'); }
         function acceptProfitManager(id) { let p = dbProfitFlow.find(x => x.id == id); p.status = 'Pending Accounting'; saveToCloud(); alert("Dana Diterima. Teruskan ke Accounting."); page('terima_profit_manager'); }
         function distributeProfitAccounting(id) { let p = dbProfitFlow.find(x => x.id == id); let unitClients = dbNasabah.filter(n => n.unit === p.targetUnit && n.status === 'Approved'); let marketingCounts = {}; unitClients.forEach(c => { if(!marketingCounts[c.inputBy]) marketingCounts[c.inputBy] = 0; marketingCounts[c.inputBy]++; }); let totalClients = unitClients.length; if(totalClients === 0) return alert("Belum ada nasabah lolos."); let amountPerClient = parseInt(p.amount) / totalClients; dbArusKas.push({date:Date.now(), unit:p.targetUnit, type:'Keluar', amount:p.amount, desc:'Distribusi Profit Marketing'}); Object.keys(marketingCounts).forEach(mkt => { let share = Math.floor(amountPerClient * marketingCounts[mkt]); dbArusKas.push({date:Date.now(), unit:p.targetUnit, type:'Info', amount:0, desc:`Share ${mkt}: Rp ${share.toLocaleString()}`}); }); p.status = 'Complete'; saveToCloud(); alert("Distribusi Selesai!"); page('distribusi_insentif'); }
-        function updateRoleAccess() { let checkboxes = document.querySelectorAll('.perm-check'); checkboxes.forEach(cb => { let role = cb.dataset.role; let mid = cb.dataset.mid; if(!settings.role_permissions[role]) settings.role_permissions[role] = []; if(cb.checked) { if(!settings.role_permissions[role].includes(mid)) settings.role_permissions[role].push(mid); } else { settings.role_permissions[role] = settings.role_permissions[role].filter(x => x !== mid); } }); saveToCloud(); alert("Hak Akses Tersimpan!"); }
+        function updateRoleAccess() {
+            // 1. Pastikan wadah penyimpanan siap
+            if (!settings.role_permissions) settings.role_permissions = {};
+
+            // 2. Loop semua kotak centang
+            let checkboxes = document.querySelectorAll('.perm-check');
+            
+            checkboxes.forEach(cb => {
+                let role = cb.dataset.role; // misal: MANAGER
+                let mid = cb.dataset.mid;   // misal: laporan_laba_unit
+                
+                // Pastikan array untuk role ini ada (jangan sampai undefined)
+                if (!settings.role_permissions[role]) {
+                    settings.role_permissions[role] = [];
+                }
+
+                if (cb.checked) {
+                    // JIKA DICENTANG: Masukkan ke daftar izin (kalau belum ada)
+                    if (!settings.role_permissions[role].includes(mid)) {
+                        settings.role_permissions[role].push(mid);
+                    }
+                } else {
+                    // JIKA TIDAK DICENTANG: Hapus dari daftar izin
+                    settings.role_permissions[role] = settings.role_permissions[role].filter(id => id !== mid);
+                }
+            });
+
+            // 3. Simpan ke Database
+            saveToCloud();
+            
+            // 4. Beri notifikasi & Cek isi data (untuk memastikan)
+            console.log("Data Tersimpan:", settings.role_permissions);
+            alert("Hak Akses Tersimpan!\n\nPENTING: Akun Manager/Marketing HARUS Logout & Login ulang agar perubahan terasa.");
+        }
         function saveAnggotaLoan() { let amt = document.getElementById('ang-amt').value; let ten = document.getElementById('ang-ten').value; let type = document.getElementById('ang-type').value; if(!amt || !ten) return alert("Lengkapi Data!"); dbNasabah.push({ id: Date.now(), unit: 'sps', nama: activeUser.user, plafond: amt, tenor: ten, tenorType: type, status: 'Pending', payStatus: 'Belum', inputBy: 'Self-Service', noSurat: '-', ktp: '', foto: '' }); saveToCloud(); alert("Pengajuan Terkirim ke Manager SPS"); page('home'); }
         function saveTabungan() { let nama = document.getElementById('t-nm').value; let setoran = document.getElementById('t-setoran').value; let tenorType = document.getElementById('t-tenor-type').value; let tenor = document.getElementById('t-tenor').value; if(!nama || !setoran) return alert("Data belum lengkap"); dbTabungan.push({ id: Date.now(), unit: activeApp, nama: nama, setoranAwal: setoran, tenorType: tenorType, tenor: tenor, saldo: setoran, inputBy: activeUser.user, date: Date.now() }); dbArusKas.push({date:Date.now(), unit: activeApp, type:'Masuk', amount: 5000, desc: `Adm Buka Rek ${nama}`}); saveToCloud(); alert("Rekening Tabungan Berhasil Dibuat"); page('input_tabungan'); }
 
