@@ -244,7 +244,9 @@
         </div>
 
         <div style="margin-top: 40px; display:flex; gap:15px; align-items:center;">
-             <button onclick="openResetMenu()" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:#ff8787; padding:10px 20px; border-radius:30px; cursor:pointer; font-size:0.8rem; backdrop-filter:blur(5px);"><i class="fas fa-trash-alt"></i> RESET DATA</button>
+             <button onclick="openResetMenu()" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:#ff8787; padding:10px 20px; border-radius:30px; cursor:pointer; font-size:0.8rem; backdrop-filter:blur(5px);"><i class="fas fa-trash-alt"></i> RESET DATA</button><button onclick="forceUpdatePermissions()" style="background:purple; border:none; color:white; padding:10px 20px; border-radius:30px; cursor:pointer; font-size:0.8rem; font-weight:bold; margin-left: 10px;">
+    <i class="fas fa-sync"></i> FIX AKSES
+</button>
              
              <button onclick="document.getElementById('modal-admin').style.display='flex'" style="background:var(--secondary); border:none; color:white; padding:10px 20px; border-radius:30px; cursor:pointer; font-size:0.8rem; font-weight:bold;">
                 <i class="fas fa-user-shield"></i> PORTAL ADMIN
@@ -1060,7 +1062,18 @@
             saveToCloud(); page('approval'); 
         }
         function saveModal(st) { let u = document.getElementById('m-unit').value; let a = document.getElementById('m-amount').value; dbDana.push({id: Date.now(), date: Date.now(), unit: u, amount: a, status: st, desc: document.getElementById('m-desc').value}); saveToCloud(); alert('Saved'); page('distribusi_modal'); }
-
+// --- SCRIPT PERBAIKAN DATABASE (Hanya dipakai sekali) ---
+        function forceUpdatePermissions() {
+            // 1. Paksa sistem mengambil data defaultAccess yang SUDAH ANDA EDIT tadi
+            settings.role_permissions = JSON.parse(JSON.stringify(defaultAccess));
+            
+            // 2. Timpa data lama di database dengan yang baru
+            saveToCloud();
+            
+            // 3. Kabari kalau sukses
+            alert("BERHASIL! Database sudah diperbarui dengan menu Laba Rugi.\n\nSilakan Login Admin -> Atur Hak Akses untuk mengecek.");
+            location.reload();
+        }
     </script>
 </body>
 </html>
