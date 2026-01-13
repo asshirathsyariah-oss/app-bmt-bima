@@ -575,9 +575,19 @@
         function loginSuccess() { saveSession(); const status = document.getElementById('sync-status'); if(status) { status.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Memuat...'; status.classList.add('active'); } setTimeout(() => { location.reload(); }, 500); }
 
         function checkAccess(role, menuId) {
+            // 1. Admin selalu punya akses penuh
             if (role === 'ADMIN' || (activeUser && activeUser.user === 'haura app')) return true;
-            if (!settings.role_permissions) settings.role_permissions = defaultAccess;
-            let r = role.toUpperCase(); if (settings.role_permissions && settings.role_permissions[r]) return settings.role_permissions[r].includes(menuId);
+
+            // 2. Ambil data izin dari Database (Settings), jika kosong pakai Default
+            let permissions = settings.role_permissions || defaultAccess;
+            
+            // 3. Cek apakah role tersebut punya izin untuk menuId ini
+            let r = role.toUpperCase();
+            if (permissions && permissions[r]) {
+                return permissions[r].includes(menuId);
+            }
+            
+            // 4. Jika tidak ada di daftar, tolak akses
             return false;
         }
 
@@ -636,38 +646,38 @@
         function acceptProfitManager(id) { let p = dbProfitFlow.find(x => x.id == id); p.status = 'Pending Accounting'; saveToCloud(); alert("Dana Diterima. Teruskan ke Accounting."); page('terima_profit_manager'); }
         function distributeProfitAccounting(id) { let p = dbProfitFlow.find(x => x.id == id); let unitClients = dbNasabah.filter(n => n.unit === p.targetUnit && n.status === 'Approved'); let marketingCounts = {}; unitClients.forEach(c => { if(!marketingCounts[c.inputBy]) marketingCounts[c.inputBy] = 0; marketingCounts[c.inputBy]++; }); let totalClients = unitClients.length; if(totalClients === 0) return alert("Belum ada nasabah lolos."); let amountPerClient = parseInt(p.amount) / totalClients; dbArusKas.push({date:Date.now(), unit:p.targetUnit, type:'Keluar', amount:p.amount, desc:'Distribusi Profit Marketing'}); Object.keys(marketingCounts).forEach(mkt => { let share = Math.floor(amountPerClient * marketingCounts[mkt]); dbArusKas.push({date:Date.now(), unit:p.targetUnit, type:'Info', amount:0, desc:`Share ${mkt}: Rp ${share.toLocaleString()}`}); }); p.status = 'Complete'; saveToCloud(); alert("Distribusi Selesai!"); page('distribusi_insentif'); }
         function updateRoleAccess() {
-            // 1. Pastikan wadah penyimpanan siap
-            if (!settings.role_permissions) settings.role_permissions = {};
+            // 1. Siapkan wadah penyimpanan di memori
+            if (!settings.role_permissions) settings.role_permissions = JSON.parse(JSON.stringify(defaultAccess));
 
-            // 2. Loop semua kotak centang
+            // 2. Loop semua kotak centang (checkbox) yang ada di layar
             let checkboxes = document.querySelectorAll('.perm-check');
             
             checkboxes.forEach(cb => {
-                let role = cb.dataset.role; // misal: MANAGER
-                let mid = cb.dataset.mid;   // misal: laporan_laba_unit
+                let role = cb.dataset.role; // Contoh: MANAGER
+                let mid = cb.dataset.mid;   // Contoh: laporan_laba_unit
                 
-                // Pastikan array untuk role ini ada (jangan sampai undefined)
+                // Buat array kosong jika role ini belum punya data
                 if (!settings.role_permissions[role]) {
                     settings.role_permissions[role] = [];
                 }
 
                 if (cb.checked) {
-                    // JIKA DICENTANG: Masukkan ke daftar izin (kalau belum ada)
+                    // JIKA DICENTANG: Tambahkan ke daftar (kalau belum ada)
                     if (!settings.role_permissions[role].includes(mid)) {
                         settings.role_permissions[role].push(mid);
                     }
                 } else {
-                    // JIKA TIDAK DICENTANG: Hapus dari daftar izin
+                    // JIKA TIDAK DICENTANG: Hapus dari daftar
                     settings.role_permissions[role] = settings.role_permissions[role].filter(id => id !== mid);
                 }
             });
 
-            // 3. Simpan ke Database
+            // 3. Simpan permanen ke Cloud/Database
             saveToCloud();
             
-            // 4. Beri notifikasi & Cek isi data (untuk memastikan)
-            console.log("Data Tersimpan:", settings.role_permissions);
-            alert("Hak Akses Tersimpan!\n\nPENTING: Akun Manager/Marketing HARUS Logout & Login ulang agar perubahan terasa.");
+            // 4. Konfirmasi
+            alert("Pengaturan Hak Akses Tersimpan!\n\nUser target HARUS Logout dan Login ulang agar perubahan aktif.");
+        }
         function saveAnggotaLoan() { let amt = document.getElementById('ang-amt').value; let ten = document.getElementById('ang-ten').value; let type = document.getElementById('ang-type').value; if(!amt || !ten) return alert("Lengkapi Data!"); dbNasabah.push({ id: Date.now(), unit: 'sps', nama: activeUser.user, plafond: amt, tenor: ten, tenorType: type, status: 'Pending', payStatus: 'Belum', inputBy: 'Self-Service', noSurat: '-', ktp: '', foto: '' }); saveToCloud(); alert("Pengajuan Terkirim ke Manager SPS"); page('home'); }
         function saveTabungan() { let nama = document.getElementById('t-nm').value; let setoran = document.getElementById('t-setoran').value; let tenorType = document.getElementById('t-tenor-type').value; let tenor = document.getElementById('t-tenor').value; if(!nama || !setoran) return alert("Data belum lengkap"); dbTabungan.push({ id: Date.now(), unit: activeApp, nama: nama, setoranAwal: setoran, tenorType: tenorType, tenor: tenor, saldo: setoran, inputBy: activeUser.user, date: Date.now() }); dbArusKas.push({date:Date.now(), unit: activeApp, type:'Masuk', amount: 5000, desc: `Adm Buka Rek ${nama}`}); saveToCloud(); alert("Rekening Tabungan Berhasil Dibuat"); page('input_tabungan'); }
 
@@ -712,9 +722,43 @@
             }
 
             else if (id === 'manage_access') {
-                t.innerText = "Atur Hak Akses Menu"; let roles = ['KETUA', 'SEKRETARIS', 'BENDAHARA', 'MANAGER', 'MARKETING', 'ACCOUNTING']; let th = roles.map(r => `<th>${r}</th>`).join('');
-                let trs = allMenus.map(m => { let tds = roles.map(r => { let checked = checkAccess(r, m.id) ? 'checked' : ''; return `<td><input type="checkbox" class="perm-check" data-role="${r}" data-mid="${m.id}" ${checked}></td>`; }).join(''); return `<tr><td>${m.name}</td>${tds}</tr>`; }).join('');
-                b.innerHTML = `<div class="card"><button class="btn btn-success" onclick="updateRoleAccess()" style="margin-bottom:15px;">Simpan Perubahan</button><div class="table-responsive"><table style="font-size:0.8rem;"><thead><tr><th>Menu / Fitur</th>${th}</tr></thead><tbody>${trs}</tbody></table></div></div>`;
+                t.innerText = "Atur Hak Akses Menu";
+                
+                // Daftar Role yang mau diatur
+                let roles = ['KETUA', 'SEKRETARIS', 'BENDAHARA', 'MANAGER', 'MARKETING', 'ACCOUNTING'];
+                
+                // Header Tabel
+                let th = roles.map(r => `<th>${r}</th>`).join('');
+                
+                // Baris Tabel (Loop semua menu)
+                let trs = allMenus.map(m => {
+                    let tds = roles.map(r => {
+                        // Cek apakah Role ini punya akses ke Menu ini?
+                        // Kita pakai fungsi checkAccess yang sudah diperbaiki
+                        let isAllowed = checkAccess(r, m.id);
+                        let checked = isAllowed ? 'checked' : '';
+                        
+                        return `<td><input type="checkbox" class="perm-check" data-role="${r}" data-mid="${m.id}" ${checked}></td>`;
+                    }).join('');
+                    
+                    return `<tr><td>${m.name}</td>${tds}</tr>`;
+                }).join('');
+
+                b.innerHTML = `
+                <div class="card">
+                    <div style="background:#e3f2fd; padding:10px; border-radius:5px; margin-bottom:15px; font-size:0.9rem;">
+                        <i class="fas fa-info-circle"></i> <b>Petunjuk:</b> Centang untuk memberi akses. Hilangkan centang untuk memblokir akses. Jangan lupa klik tombol Simpan.
+                    </div>
+                    <button class="btn btn-success" onclick="updateRoleAccess()" style="margin-bottom:15px; width:100%; font-weight:bold;">
+                        <i class="fas fa-save"></i> SIMPAN PERUBAHAN
+                    </button>
+                    <div class="table-responsive">
+                        <table style="font-size:0.8rem; text-align:center;">
+                            <thead><tr><th style="text-align:left;">Menu / Fitur</th>${th}</tr></thead>
+                            <tbody>${trs}</tbody>
+                        </table>
+                    </div>
+                </div>`;
             }
             else if(id === 'dashboard_nasabah') { t.innerText = `Halo, ${activeUser.user}`; let myData = dbNasabah.filter(n => n.nama.toLowerCase() === activeUser.user.toLowerCase() && n.status === 'Approved'); let totalHutang = myData.reduce((a,b) => a + parseInt(b.plafond), 0); let rows = myData.map(d => `<tr><td>${d.unit.toUpperCase()}</td><td>Rp ${parseInt(d.plafond).toLocaleString()}</td><td>${d.tenor} ${d.tenorType}</td></tr>`).join(''); b.innerHTML = `<div class="card" style="background:var(--primary-gradient); color:white;"><h3>Sisa Pembiayaan</h3><h1>Rp ${totalHutang.toLocaleString()}</h1><small>SHU Anda: Rp 0</small></div><div class="card"><h4>Riwayat Akad</h4><div class="table-responsive"><table><thead><tr><th>Unit</th><th>Plafond</th><th>Tenor</th></tr></thead><tbody>${rows || '<tr><td colspan="3">Belum ada akad aktif.</td></tr>'}</tbody></table></div></div>`; }
             else if(id === 'ajukan_pinjaman') { t.innerText = "Ajukan Pinjaman Anggota"; b.innerHTML = `<div class="card"><h4>Formulir Pengajuan</h4><div class="form-vertical"><input id="ang-amt" type="number" class="form-control" placeholder="Nominal (Rp)"><div style="display:flex; gap:10px;"><input id="ang-ten" type="number" class="form-control" placeholder="Tenor"><select id="ang-type" class="form-control"><option value="Bulan">Bulan</option><option value="Minggu">Minggu</option></select></div><textarea class="form-control" placeholder="Keperluan"></textarea><button class="btn btn-primary" onclick="saveAnggotaLoan()">Kirim Pengajuan</button></div></div>`; }
