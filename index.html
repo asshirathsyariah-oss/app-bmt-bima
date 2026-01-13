@@ -668,7 +668,6 @@
             // 4. Beri notifikasi & Cek isi data (untuk memastikan)
             console.log("Data Tersimpan:", settings.role_permissions);
             alert("Hak Akses Tersimpan!\n\nPENTING: Akun Manager/Marketing HARUS Logout & Login ulang agar perubahan terasa.");
-        }
         function saveAnggotaLoan() { let amt = document.getElementById('ang-amt').value; let ten = document.getElementById('ang-ten').value; let type = document.getElementById('ang-type').value; if(!amt || !ten) return alert("Lengkapi Data!"); dbNasabah.push({ id: Date.now(), unit: 'sps', nama: activeUser.user, plafond: amt, tenor: ten, tenorType: type, status: 'Pending', payStatus: 'Belum', inputBy: 'Self-Service', noSurat: '-', ktp: '', foto: '' }); saveToCloud(); alert("Pengajuan Terkirim ke Manager SPS"); page('home'); }
         function saveTabungan() { let nama = document.getElementById('t-nm').value; let setoran = document.getElementById('t-setoran').value; let tenorType = document.getElementById('t-tenor-type').value; let tenor = document.getElementById('t-tenor').value; if(!nama || !setoran) return alert("Data belum lengkap"); dbTabungan.push({ id: Date.now(), unit: activeApp, nama: nama, setoranAwal: setoran, tenorType: tenorType, tenor: tenor, saldo: setoran, inputBy: activeUser.user, date: Date.now() }); dbArusKas.push({date:Date.now(), unit: activeApp, type:'Masuk', amount: 5000, desc: `Adm Buka Rek ${nama}`}); saveToCloud(); alert("Rekening Tabungan Berhasil Dibuat"); page('input_tabungan'); }
 
