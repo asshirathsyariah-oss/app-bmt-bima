@@ -1067,31 +1067,29 @@
             saveToCloud(); page('approval'); 
         }
         function saveModal(st) { let u = document.getElementById('m-unit').value; let a = document.getElementById('m-amount').value; dbDana.push({id: Date.now(), date: Date.now(), unit: u, amount: a, status: st, desc: document.getElementById('m-desc').value}); saveToCloud(); alert('Saved'); page('distribusi_modal'); }
-// --- SCRIPT DARURAT (VERSI AMAN) ---
+// --- SCRIPT DARURAT (VERSI PASSWORD) ---
         function forceUpdatePermissions() {
-            // 1. Minta Password Dulu
-            let pass = prompt("Masukkan Password Administrator untuk Reset Akses:");
+            // 1. MUNCULKAN POPUP PASSWORD
+            var password = prompt("Masukkan Password Admin:");
 
-            // 2. Cek Password (Saya set '12345', silakan ganti jika mau)
-            if (pass !== "hauraapp") {
-                return alert("⛔ Password Salah! Tindakan dibatalkan.");
+            // 2. CEK PASSWORD (Ganti '12345' dengan password Anda)
+            if (password !== "hauraapp") {
+                alert("Password Salah! Akses ditolak.");
+                return; // Berhenti di sini, tidak lanjut reset
             }
 
-            // 3. Konfirmasi ulang agar tidak tidak sengaja kepencet
-            if(!confirm("⚠️ PERINGATAN: Database Hak Akses akan di-reset mengikuti kodingan default.\n\nApakah Anda yakin?")) return;
+            // 3. JIKA BENAR, LANJUT RESET
+            if(!confirm("Yakin ingin mereset database hak akses?")) return;
 
-            // 4. Mulai Proses Update
             if(typeof defaultAccess === 'undefined') return alert("Error: defaultAccess tidak ditemukan!");
             
-            // Ambil data dari kodingan defaultAccess
             settings.role_permissions = JSON.parse(JSON.stringify(defaultAccess));
             
-            // Simpan ke Firebase
             db.ref('bmt_data/config').update({ role_permissions: settings.role_permissions }, (error) => {
                 if (error) {
-                    alert("Gagal Update: " + error.message);
+                    alert("Gagal: " + error.message);
                 } else {
-                    alert("✅ BERHASIL! Database Hak Akses sudah di-reset.\nSilakan Login Admin untuk mengecek.");
+                    alert("BERHASIL! Database sudah di-reset.");
                     location.reload();
                 }
             });
