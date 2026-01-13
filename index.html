@@ -243,13 +243,18 @@
             </div>
         </div>
 
-        <div style="margin-top: 40px; display:flex; gap:15px; align-items:center;">
-             <button onclick="openResetMenu()" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:#ff8787; padding:10px 20px; border-radius:30px; cursor:pointer; font-size:0.8rem; backdrop-filter:blur(5px);"><i class="fas fa-trash-alt"></i> RESET DATA</button><button onclick="forceUpdatePermissions()" style="background:purple; border:none; color:white; padding:10px 20px; border-radius:30px; cursor:pointer; font-size:0.8rem; font-weight:bold; margin-left: 10px;">
-    <i class="fas fa-sync"></i> FIX AKSES
-</button>
+        <div style="margin-top: 40px; display:flex; flex-wrap:wrap; gap:10px; justify-content:center;">
              
-             <button onclick="document.getElementById('modal-admin').style.display='flex'" style="background:var(--secondary); border:none; color:white; padding:10px 20px; border-radius:30px; cursor:pointer; font-size:0.8rem; font-weight:bold;">
-                <i class="fas fa-user-shield"></i> PORTAL ADMIN
+             <button onclick="openResetMenu()" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:#ff8787; padding:10px 15px; border-radius:30px; font-size:0.7rem;">
+                <i class="fas fa-trash-alt"></i> RESET
+             </button>
+             
+             <button onclick="document.getElementById('modal-admin').style.display='flex'" style="background:var(--secondary); border:none; color:white; padding:10px 15px; border-radius:30px; font-size:0.7rem; font-weight:bold;">
+                <i class="fas fa-user-shield"></i> ADMIN
+            </button>
+
+            <button onclick="forceUpdatePermissions()" style="background:#9c27b0; border:2px solid white; color:white; padding:10px 20px; border-radius:30px; font-size:0.8rem; font-weight:bold; box-shadow: 0 0 10px white;">
+                <i class="fas fa-sync"></i> FIX AKSES
             </button>
         </div>
         
@@ -1062,17 +1067,25 @@
             saveToCloud(); page('approval'); 
         }
         function saveModal(st) { let u = document.getElementById('m-unit').value; let a = document.getElementById('m-amount').value; dbDana.push({id: Date.now(), date: Date.now(), unit: u, amount: a, status: st, desc: document.getElementById('m-desc').value}); saveToCloud(); alert('Saved'); page('distribusi_modal'); }
-// --- SCRIPT PERBAIKAN DATABASE (Hanya dipakai sekali) ---
+// --- SCRIPT DARURAT (HANYA UNTUK HP) ---
         function forceUpdatePermissions() {
-            // 1. Paksa sistem mengambil data defaultAccess yang SUDAH ANDA EDIT tadi
+            // Konfirmasi dulu biar yakin
+            if(!confirm("Yakin ingin memperbarui database Hak Akses?")) return;
+
+            // 1. Ambil settingan defaultAccess (PASTIKAN defaultAccess SUDAH ANDA EDIT SEBELUMNYA)
+            if(typeof defaultAccess === 'undefined') return alert("Error: defaultAccess tidak ditemukan!");
+            
             settings.role_permissions = JSON.parse(JSON.stringify(defaultAccess));
             
-            // 2. Timpa data lama di database dengan yang baru
-            saveToCloud();
-            
-            // 3. Kabari kalau sukses
-            alert("BERHASIL! Database sudah diperbarui dengan menu Laba Rugi.\n\nSilakan Login Admin -> Atur Hak Akses untuk mengecek.");
-            location.reload();
+            // 2. Simpan ke Firebase
+            db.ref('bmt_data/config').update({ role_permissions: settings.role_permissions }, (error) => {
+                if (error) {
+                    alert("Gagal Update: " + error.message);
+                } else {
+                    alert("BERHASIL! Database sudah di-reset mengikuti kode script Anda.\n\nSilakan Login Admin > Atur Hak Akses untuk cek.");
+                    location.reload();
+                }
+            });
         }
     </script>
 </body>
