@@ -205,7 +205,7 @@
             <div class="login-identity" style="padding: 10px !important; min-height: auto;">
                 <img id="gw-logo" src="https://cdn-icons-png.flaticon.com/512/2317/2317968.png" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #d4af37; box-shadow: 0 5px 15px rgba(0,0,0,0.3); background: white;" onerror="this.src='https://cdn-icons-png.flaticon.com/512/2317/2317968.png'">
                 <h2 id="gw-nama" style="font-family: 'Amiri'; margin: 5px 0; font-size: 1.3rem; text-shadow: 0 2px 5px rgba(0,0,0,0.2);">BMT SYARIAH</h2>
-                <p id="gw-izin" style="font-size: 0.9rem; opacity: 0.9; font-style: italic;">Mitra Keuangan Syariah Terpercaya</p>
+                <p id="gw-izin" style="font-size: 0.9rem; opacity: 0.9; font-style: italic;">Bina Insan Mandiri Asshirath</p>
                 <div class="ornament-islamic"></div>
             </div>
 
@@ -788,7 +788,7 @@
             else if(id === 'laporan_laba_unit') {
                 t.innerText = "Laporan Laba Unit (" + activeApp.toUpperCase() + ")";
                 let marginPersen = settings.margins[activeApp] || 0;
-                let dataNasabah = dbNasabah.filter(x => x.unit === activeApp && x.status === 'Approved');
+                let dataNasabah =s dbNasabah.filter(x => x.unit === activeApp && x.status === 'Approved');
                 let totalPlafond = 0, totalPotensiLaba = 0, totalLabaCair = 0;
 
                 let rows = dataNasabah.map((n, i) => {
@@ -809,7 +809,43 @@
             else if(id === 'laporan_tunggakan') { t.innerText = "Monitoring Pembayaran"; let rows = dbNasabah.filter(x => x.unit === activeApp && x.status === 'Approved' && x.payStatus !== 'Lunas').map(x => { let isUnpaid = x.payStatus !== 'Lunas'; let rowClass = isUnpaid ? 'row-danger' : ''; let actionBtn = isUnpaid ? `<button class="btn btn-danger btn-sm" onclick="waMarketing('${x.inputBy}', '${x.nama}')"><i class="fab fa-whatsapp"></i> Tegur Marketing</button>` : `<span class="badge" style="background:#d4edda; color:#155724;">Aman</span>`; return `<tr class="${rowClass}"><td data-label="Nama">${x.nama}</td><td data-label="WA Nasabah">${x.wa}</td><td data-label="Marketing">${x.inputBy || '-'}</td><td data-label="Status">${x.payStatus}</td><td data-label="Aksi">${actionBtn}</td></tr>`; }).join(''); b.innerHTML=`<div class="card"><h4>Nasabah Aktif (Belum Lunas)</h4><p>Baris <span style="color:#c0392b; font-weight:bold">MERAH</span> menandakan macet.</p><div class="table-responsive"><table><thead><tr><th>Nama</th><th>WA</th><th>Marketing</th><th>Status</th><th>Aksi</th></tr></thead><tbody>${rows}</tbody></table></div></div>`; }
             else if(id === 'laporan_detail') { t.innerText = "Arsip & Detail Nasabah"; renderManagerArsip(b); }
             else if(id === 'id_card_maker') { t.innerText = "Pembuat Kartu Pegawai"; let userOpts = dbUsers.map(u => `<option value="${u.user}">${u.user} - ${u.role}</option>`).join(''); b.innerHTML = `<div class="card"><div style="display:flex; flex-wrap:wrap; gap:20px;"><div style="flex:1; min-width:300px;"><h4>Editor Data</h4><div class="form-vertical"><label>Pilih Data</label><select class="form-control" onchange="autoFillIDCard(this.value)"><option value="">-- Pilih User --</option>${userOpts}</select><hr><label>Nama</label><input id="idc-name" class="form-control" placeholder="Nama" onkeyup="updateIDPreview()"><label>Jabatan</label><input id="idc-role" class="form-control" placeholder="Jabatan" onkeyup="updateIDPreview()"><label>NIP</label><input id="idc-nip" class="form-control" placeholder="NIP" onkeyup="updateIDPreview()"><hr><label>Foto</label><input type="file" class="form-control" onchange="updateIDPhoto(this)"><label>Background</label><input type="file" class="form-control" onchange="updateIDBg(this)"></div></div><div style="flex:1; min-width:300px; display:flex; flex-direction:column; align-items:center;"><h4>Preview</h4><div id="id-card-final" class="id-card-preview-container" style="background: white; width: 320px; height: 200px; border: 1px solid #ccc; margin: 20px auto; position: relative; overflow: hidden; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); background-size: cover; background-position: center; color: #333;"><div class="id-card-content" style="position: relative; width: 100%; height: 100%; z-index: 2; padding: 10px; display: flex; align-items: center;"><img id="prev-photo" src="https://cdn-icons-png.flaticon.com/512/1077/1077114.png" class="id-card-photo" style="width: 80px; height: 100px; background: #ddd; object-fit: cover; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"><div class="id-card-info" style="margin-left: 15px;"><h3 style="margin:0; font-size:16px; color:var(--primary); text-transform:uppercase;" id="prev-name">NAMA</h3><p style="margin:0; font-size:12px; font-weight:bold; color:var(--secondary);" id="prev-role">JABATAN</p><p style="margin:5px 0 0 0; font-size:10px;">ID: <span id="prev-nip">000000</span></p></div><div style="position:absolute; top:10px; right:10px; text-align:right;"><img src="${settings.logo}" style="width:30px;"><div style="font-size:8px; font-weight:bold; color:var(--primary);">${settings.nama}</div></div></div></div><button class="btn btn-primary" style="margin-top:20px;" onclick="generatePDF('id-card-final', 'ID_Card')"><i class="fas fa-print"></i> Cetak</button></div></div></div>`; }
-            else if(id === 'setting_margin') { t.innerText="Setting Margin"; b.innerHTML=`<div class="card"><h4>Unit SPS</h4><div class="form-vertical"><label>Bulan %</label><input class="form-control" value="${settings.margins.sps}"><label>Minggu %</label><input class="form-control" value="${settings.margins_weekly.sps}"></div></div><div class="card"><h4>Unit KMS</h4><div class="form-vertical"><label>Bulan %</label><input class="form-control" value="${settings.margins.kms}"><label>Minggu %</label><input class="form-control" value="${settings.margins_weekly.kms}"></div></div><div class="card"><h4>Unit Gadai</h4><div class="form-vertical"><label>Bulan %</label><input class="form-control" value="${settings.margins.gadai}"><label>Minggu %</label><input class="form-control" value="${settings.margins_weekly.gadai}"></div></div><button class="btn btn-primary" onclick="alert('Disimpan')">Simpan Semua</button>`; }
+            else if(id === 'setting_margin') { 
+                t.innerText = "Setting Margin (Keuntungan)"; 
+                b.innerHTML = `
+                <div class="card">
+                    <h4>Unit SPS (Simpan Pinjam)</h4>
+                    <div class="form-vertical">
+                        <label>Bunga Bulanan (%)</label>
+                        <input id="set-sps-mo" type="number" class="form-control" value="${settings.margins.sps}">
+                        <label>Bunga Mingguan (%)</label>
+                        <input id="set-sps-wk" type="number" class="form-control" value="${settings.margins_weekly.sps}">
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h4>Unit KMS (Kredit Motor)</h4>
+                    <div class="form-vertical">
+                        <label>Bunga Bulanan (%)</label>
+                        <input id="set-kms-mo" type="number" class="form-control" value="${settings.margins.kms}">
+                        <label>Bunga Mingguan (%)</label>
+                        <input id="set-kms-wk" type="number" class="form-control" value="${settings.margins_weekly.kms}">
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h4>Unit Gadai</h4>
+                    <div class="form-vertical">
+                        <label>Bunga Bulanan (%)</label>
+                        <input id="set-gadai-mo" type="number" class="form-control" value="${settings.margins.gadai}">
+                        <label>Bunga Mingguan (%)</label>
+                        <input id="set-gadai-wk" type="number" class="form-control" value="${settings.margins_weekly.gadai}">
+                    </div>
+                </div>
+                
+                <button class="btn btn-primary" onclick="saveRealMargins()" style="width:100%; padding:15px; font-weight:bold;">
+                    <i class="fas fa-save"></i> SIMPAN PERUBAHAN
+                </button>`; 
+            }
             else if(id==='simpanan_wajib') { t.innerText = "Iuran Wajib Anggota"; let users = dbUsers.filter(u=>u.role!=='admin'); let userOpt = users.map(u=>`<option value="${u.user}">${u.user} (${u.role})</option>`).join(''); let history = dbSimpananWajib.map(s=>`<tr><td data-label="Tgl">${new Date(s.date).toLocaleDateString()}</td><td data-label="Nama">${s.user}</td><td data-label="Jml">Rp ${parseInt(s.amount).toLocaleString()}</td></tr>`).join(''); b.innerHTML=`<div class="card"><h4>Input Pembayaran Iuran</h4><div class="form-vertical" style="display:flex; gap:10px; flex-wrap:wrap;"><select id="sw-user" class="form-control" style="flex:1">${userOpt}</select><input class="form-control" value="Rp ${parseInt(settings.simpananWajib).toLocaleString()}" readonly style="width:120px"><button class="btn btn-primary" onclick="saveSimpananWajib()">Terima Bayar</button></div></div><div class="card"><h4>Riwayat Pembayaran</h4><div class="table-responsive"><table><thead><tr><th>Tanggal</th><th>Nama</th><th>Jumlah</th></tr></thead><tbody>${history}</tbody></table></div></div>`; }
             else if(id==='arus_kas') { t.innerText="Buku Kas Unit (" + activeApp.toUpperCase() + ")"; let rows = dbArusKas.filter(x=>x.unit===activeApp).map(x=>`<tr><td data-label="Tgl">${new Date(x.date).toLocaleDateString()}</td><td data-label="Tipe"><span class="badge" style="background:${x.type=='Masuk'?'#d4edda':'#f8d7da'}; color:${x.type=='Masuk'?'#155724':'#721c24'}; padding:5px 10px; border-radius:15px;">${x.type}</span></td><td data-label="Jml">Rp ${parseInt(x.amount).toLocaleString()}</td><td data-label="Ket">${x.desc}</td></tr>`).join(''); b.innerHTML=`<div class="card"><h4>Input Transaksi Harian Unit</h4><div class="form-vertical"><select id="k-type" class="form-control"><option value="Masuk">Uang Masuk</option><option value="Keluar">Uang Keluar</option></select><input id="k-amt" type="number" class="form-control" placeholder="Nominal"><input id="k-desc" class="form-control" placeholder="Keterangan"><button class="btn btn-primary" onclick="saveKas()">Simpan Transaksi</button></div></div><div class="card"><div style="display:flex; justify-content:space-between; margin-bottom:15px;"><h4>Buku Kas Unit</h4><button class="btn btn-sm btn-ghost" onclick="generatePDF('arus-table', 'Laporan_Arus_Kas'); printLaporanKas('${activeApp}')"><i class="fas fa-print"></i> PDF</button></div><div id="arus-table" class="table-responsive"><table><thead><tr><th>Tanggal</th><th>Jenis</th><th>Nominal</th><th>Ket</th></tr></thead><tbody>${rows}</tbody></table></div></div>`; }
             else if(id==='input') { 
@@ -1094,6 +1130,28 @@
                 }
             });
         }
+       // --- FUNGSI SIMPAN MARGIN (BARU) ---
+        function saveRealMargins() {
+            // 1. Pastikan objek penyimpanan ada
+            if(!settings.margins) settings.margins = {};
+            if(!settings.margins_weekly) settings.margins_weekly = {};
+
+            // 2. Ambil nilai dari inputan yang kita buat di Langkah 1
+            settings.margins.sps = document.getElementById('set-sps-mo').value;
+            settings.margins_weekly.sps = document.getElementById('set-sps-wk').value;
+            
+            settings.margins.kms = document.getElementById('set-kms-mo').value;
+            settings.margins_weekly.kms = document.getElementById('set-kms-wk').value;
+            
+            settings.margins.gadai = document.getElementById('set-gadai-mo').value;
+            settings.margins_weekly.gadai = document.getElementById('set-gadai-wk').value;
+
+            // 3. Simpan ke Database
+            saveToCloud();
+
+            // 4. Beri kabar sukses
+            alert("BERHASIL! Settingan Margin sudah tersimpan ke Database.");
+        } 
     </script>
 </body>
 </html>
