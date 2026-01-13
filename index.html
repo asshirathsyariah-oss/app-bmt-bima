@@ -374,7 +374,7 @@
             'KETUA': ['approval_pusat', 'approval', 'manajemen_anggota', 'iuran_ketua', 'laporan_eksekutif', 'kirim_instruksi', 'rapat_online', 'acc_profit_ketua'],
             'SEKRETARIS': ['inbox_ketua', 'chat_tamu', 'id_card_maker', 'surat_induk', 'sarpras_approval', 'laporan_pusat', 'monitoring_pegawai', 'kelayakan_marketing'],
             'BENDAHARA': ['inbox_ketua', 'kas_pusat', 'simpanan_wajib', 'distribusi_modal', 'distribusi_profit'],
-            'MANAGER': ['approval', 'laporan_tunggakan', 'laporan_detail', 'req_sarpras', 'setting_margin', 'monitoring_kinerja', 'terima_profit_manager'],
+            'MANAGER': ['approval', 'laporan_tunggakan', 'laporan_detail', 'req_sarpras', 'setting_margin', 'monitoring_kinerja', 'terima_profit_manager', 'laporan_laba_unit'],
             'MARKETING': ['input', 'input_tabungan', 'cetak', 'billing', 'dompet_marketing'],
             'ACCOUNTING': ['arus_kas', 'dana_unit', 'distribusi_insentif']
         };
@@ -409,6 +409,7 @@
             {id: 'setting_margin', name: 'Setting Margin'},
             {id: 'monitoring_kinerja', name: 'Kinerja Marketing'},
             {id: 'terima_profit_manager', name: 'Terima Profit Manager'},
+            {id: 'laporan_laba_unit', name: 'Laporan Laba Rugi Unit'},
             
             {id: 'input', name: 'Input Pembiayaan'},
             {id: 'input_tabungan', name: 'Input Tabungan'},
@@ -701,6 +702,97 @@
             else if(id === 'rapat_online') { t.innerText = "Ruang Rapat Online"; b.innerHTML = `<div class="card" style="height:80vh;"><div id="jitsi-container" style="width:100%; height:100%;"></div></div>`; openMeeting(); }
             else if(id === 'inbox_ketua') { t.innerText = "Pesan & Instruksi Ketua"; dbInstruksi.forEach(x => { if(x.toRole.toUpperCase() === activeUser.role) x.read = true; }); saveToCloud(); renderMenu(); let msgs = dbInstruksi.filter(x => x.toRole.toUpperCase() === activeUser.role).sort((a,b) => b.date - a.date); let rows = msgs.map(m => `<tr><td data-label="Tanggal">${new Date(m.date).toLocaleString()}</td><td data-label="Pesan" style="white-space:pre-wrap;">${m.message}</td></tr>`).join(''); if(rows === '') rows = '<tr><td colspan="2" style="text-align:center">Belum ada instruksi.</td></tr>'; b.innerHTML = `<div class="card"><h4>Kotak Masuk</h4><div class="table-responsive"><table><thead><tr><th>Waktu</th><th>Isi Instruksi</th></tr></thead><tbody>${rows}</tbody></table></div></div>`; }
             else if(id === 'chat_tamu') { t.innerText = "Live Chat Tamu"; b.innerHTML = `<div class="card" style="height:70vh; display:flex; flex-direction:column;"><div id="sek-chat-body" style="flex:1; overflow-y:auto; background:#f9f9f9; padding:15px; border:1px solid #ddd; border-radius:8px; margin-bottom:15px;"></div><div style="display:flex; gap:10px;"><input id="sek-chat-input" class="form-control" placeholder="Balas pesan tamu..." style="margin:0;"><button class="btn btn-primary" onclick="sendChat('Sekretaris')">Kirim</button></div></div>`; renderChatSekretaris(); }
+            // --- SCRIPT TAMBAHAN: LAPORAN LABA MANAGER ---
+            else if(id === 'laporan_laba_unit') {
+                t.innerText = "Laporan Laba Unit (" + activeApp.toUpperCase() + ")";
+                
+                // 1. Ambil Margin Unit Saat Ini
+                let marginPersen = settings.margins[activeApp] || 0;
+                
+                // 2. Ambil Nasabah Unit ini yang sudah Approved
+                let dataNasabah = dbNasabah.filter(x => x.unit === activeApp && x.status === 'Approved');
+                
+                // 3. Hitung Total
+                let totalPlafond = 0;
+                let totalPotensiLaba = 0;
+                let totalLabaCair = 0; // Laba dari yang sudah lunas
+
+                let rows = dataNasabah.map((n, i) => {
+                    let plaf = parseInt(n.plafond);
+                    let profit = plaf * (marginPersen / 100); // Rumus: Plafond x Margin%
+                    
+                    totalPlafond += plaf;
+                    totalPotensiLaba += profit;
+                    
+                    let statusLaba = '';
+                    if(n.payStatus === 'Lunas') {
+                        totalLabaCair += profit;
+                        statusLaba = '<span class="badge" style="background:#d4edda; color:green">Terealisasi (Lunas)</span>';
+                    } else {
+                        statusLaba = '<span class="badge" style="background:#fff3cd; color:#856404">Potensi (Berjalan)</span>';
+                    }
+
+                    return `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td data-label="Nama"><b>${n.nama}</b><br><small>Tenor: ${n.tenor} ${n.tenorType}</small></td>
+                        <td data-label="Plafond">Rp ${plaf.toLocaleString()}</td>
+                        <td data-label="Margin (Keuntungan)" style="color:green; font-weight:bold;">Rp ${profit.toLocaleString()} <small>(${marginPersen}%)</small></td>
+                        <td data-label="Status">${statusLaba}</td>
+                    </tr>`;
+                }).join('');
+
+                // 4. Tampilkan HTML
+                b.innerHTML = `
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:15px; margin-bottom:20px;">
+                    <div class="card" style="background:var(--primary-gradient); color:white;">
+                        <h3>Total Penyaluran</h3>
+                        <h2>Rp ${totalPlafond.toLocaleString()}</h2>
+                        <small>Total modal yang dipinjamkan</small>
+                    </div>
+                    <div class="card" style="background:white; border-left:5px solid var(--secondary);">
+                        <h3 style="color:var(--primary)">Potensi Keuntungan</h3>
+                        <h2 style="color:var(--secondary)">Rp ${totalPotensiLaba.toLocaleString()}</h2>
+                        <small>Jika semua nasabah lunas</small>
+                    </div>
+                    <div class="card" style="background:#d4edda; color:#155724;">
+                        <h3>Keuntungan Masuk</h3>
+                        <h2>Rp ${totalLabaCair.toLocaleString()}</h2>
+                        <small>Dari nasabah status LUNAS</small>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                        <h4>Rincian Per Nasabah</h4>
+                        <button class="btn btn-primary btn-sm" onclick="generatePDF('tabel-laba', 'Laporan_Laba_${activeApp}')"><i class="fas fa-print"></i> PDF</button>
+                    </div>
+                    <div id="tabel-laba" class="table-responsive">
+                        <table class="fin-table">
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>Nama Nasabah</th>
+                                    <th>Plafond Pinjaman</th>
+                                    <th>Est. Keuntungan</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rows || '<tr><td colspan="5" style="text-align:center">Belum ada data nasabah approved.</td></tr>'}
+                            </tbody>
+                            <tfoot>
+                                <tr style="background:#f0f0f0; font-weight:bold;">
+                                    <td colspan="3" style="text-align:right">TOTAL POTENSI KEUNTUNGAN</td>
+                                    <td colspan="2" style="color:green; font-size:1.1rem;">Rp ${totalPotensiLaba.toLocaleString()}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+                `;
+            }
+            // --- AKHIR SCRIPT TAMBAHAN ---    
             else if(id==='approval') { t.innerText="Approval Pengajuan"; let rows = dbNasabah.filter(x => x.status === 'Pending').map(x => { let isUnitMatch = (x.unit === activeApp) || (activeApp === 'induk'); let bgStyle = isUnitMatch ? '' : 'background:#fff5f5;'; let unitLabel = isUnitMatch ? `<b>${x.unit.toUpperCase()}</b>` : `<b style="color:red">${x.unit.toUpperCase()} (Beda Unit)</b>`; let actionBtn = `<button class="btn btn-success btn-sm" onclick="approve('${x.id}', ${x.plafond})">ACC</button> <button class="btn btn-danger btn-sm" onclick="reject('${x.id}')">Tolak</button>`; return `<tr style="${bgStyle}"><td data-label="Unit">${unitLabel}</td><td data-label="Nama">${x.nama}</td><td data-label="Plafond">Rp ${parseInt(x.plafond).toLocaleString()}</td><td data-label="Marketing">${x.inputBy || '-'}</td><td data-label="Aksi" style="display:flex; gap:5px; justify-content:flex-end;">${actionBtn}</td></tr>`; }).join(''); b.innerHTML=`<div class="card"><div style="background:#e3f2fd; padding:10px; border-radius:5px; margin-bottom:10px; font-size:0.85rem;"><i class="fas fa-info-circle"></i> Manager login di: <b>${activeApp.toUpperCase()}</b>. Baris merah milik unit lain.</div><h4>Daftar Pending</h4><div class="table-responsive"><table><thead><tr><th>Unit</th><th>Nama</th><th>Plafond</th><th>Marketing</th><th>Aksi</th></tr></thead><tbody>${rows || '<tr><td colspan="5" style="text-align:center; padding:20px;">Belum ada data masuk.</td></tr>'}</tbody></table></div></div>`; }
             else if(id === 'laporan_tunggakan') { t.innerText = "Monitoring Pembayaran"; let rows = dbNasabah.filter(x => x.unit === activeApp && x.status === 'Approved' && x.payStatus !== 'Lunas').map(x => { let isUnpaid = x.payStatus !== 'Lunas'; let rowClass = isUnpaid ? 'row-danger' : ''; let actionBtn = isUnpaid ? `<button class="btn btn-danger btn-sm" onclick="waMarketing('${x.inputBy}', '${x.nama}')"><i class="fab fa-whatsapp"></i> Tegur Marketing</button>` : `<span class="badge" style="background:#d4edda; color:#155724;">Aman</span>`; return `<tr class="${rowClass}"><td data-label="Nama">${x.nama}</td><td data-label="WA Nasabah">${x.wa}</td><td data-label="Marketing">${x.inputBy || '-'}</td><td data-label="Status">${x.payStatus}</td><td data-label="Aksi">${actionBtn}</td></tr>`; }).join(''); b.innerHTML=`<div class="card"><h4>Nasabah Aktif (Belum Lunas)</h4><p>Baris <span style="color:#c0392b; font-weight:bold">MERAH</span> menandakan macet.</p><div class="table-responsive"><table><thead><tr><th>Nama</th><th>WA</th><th>Marketing</th><th>Status</th><th>Aksi</th></tr></thead><tbody>${rows}</tbody></table></div></div>`; }
             else if(id === 'laporan_detail') { t.innerText = "Arsip & Detail Nasabah"; renderManagerArsip(b); }
