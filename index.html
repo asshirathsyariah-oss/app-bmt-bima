@@ -1100,7 +1100,8 @@
             html2pdf().set(opt).from(area).save().then(() => {
                 area.style.display = 'none';
             });
-   
+            }
+
         function printBukuTabungan(id) { let d = dbNasabah.find(x => x.id == id); let html = `<div id="buku-tabungan" style="width:100%; font-family:monospace; padding:20px; border:1px solid #ccc;"> <h3 style="text-align:center">BUKU TABUNGAN ${activeApp.toUpperCase()}</h3> <table style="width:100%; margin-top:20px;"> <tr><td>No. Rekening</td><td>: ${d.id}</td></tr> <tr><td>Nama</td><td>: ${d.nama.toUpperCase()}</td></tr> <tr><td>Alamat</td><td>: ${d.alamat || '-'}</td></tr> <tr><td>Tanggal Buka</td><td>: ${new Date(d.id).toLocaleDateString()}</td></tr> </table> <table style="width:100%; border:1px solid black; border-collapse:collapse; margin-top:20px;"> <tr style="background:#eee;"> <th style="border:1px solid black; padding:5px;">TGL</th> <th style="border:1px solid black; padding:5px;">SANDI</th> <th style="border:1px solid black; padding:5px;">DEBET</th> <th style="border:1px solid black; padding:5px;">KREDIT</th> <th style="border:1px solid black; padding:5px;">SALDO</th> </tr> <tr> <td style="border:1px solid black; padding:5px;">${new Date().toLocaleDateString()}</td> <td style="border:1px solid black; padding:5px;">01 (Setor)</td> <td style="border:1px solid black; padding:5px;">0</td> <td style="border:1px solid black; padding:5px;">${parseInt(d.saldo).toLocaleString()}</td> <td style="border:1px solid black; padding:5px;">${parseInt(d.saldo).toLocaleString()}</td> </tr></table></div>`; document.getElementById('printable-area').innerHTML = html; generatePDF('buku-tabungan', `Tabungan_${d.nama}`); }
 
         function addUser() { 
