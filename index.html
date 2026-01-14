@@ -678,7 +678,51 @@
         function createProfitDistribution() { let amt = document.getElementById('pd-amt').value; let unit = document.getElementById('pd-unit').value; if(!amt || !unit) return alert("Lengkapi Data!"); dbProfitFlow.push({ id: Date.now(), date: Date.now(), amount: amt, targetUnit: unit, status: 'Pending Ketua' }); saveToCloud(); alert("Distribusi Diajukan ke Ketua"); page('distribusi_profit'); }
         function approveProfitKetua(id) { let p = dbProfitFlow.find(x => x.id == id); p.status = 'Pending Manager'; saveToCloud(); page('acc_profit_ketua'); }
         function acceptProfitManager(id) { let p = dbProfitFlow.find(x => x.id == id); p.status = 'Pending Accounting'; saveToCloud(); alert("Dana Diterima. Teruskan ke Accounting."); page('terima_profit_manager'); }
-        function distributeProfitAccounting(id) { let p = dbProfitFlow.find(x => x.id == id); let unitClients = dbNasabah.filter(n => n.unit === p.targetUnit && n.status === 'Approved'); let marketingCounts = {}; unitClients.forEach(c => { if(!marketingCounts[c.inputBy]) marketingCounts[c.inputBy] = 0; marketingCounts[c.inputBy]++; }); let totalClients = unitClients.length; if(totalClients === 0) return alert("Belum ada nasabah lolos."); let amountPerClient = parseInt(p.amount) / totalClients; dbArusKas.push({date:Date.now(), unit:p.targetUnit, type:'Keluar', amount:p.amount, desc:'Distribusi Profit Marketing'}); Object.keys(marketingCounts).forEach(mkt => { let share = Math.floor(amountPerClient * marketingCounts[mkt]); dbArusKas.push({date:Date.now(), unit:p.targetUnit, type:'Info', amount:0, desc:`Share ${mkt}: Rp ${share.toLocaleString()}`}); }); p.status = 'Complete'; saveToCloud(); alert("Distribusi Selesai!"); page('distribusi_insentif'); }
+        function distributeProfitAccounting(id) { 
+    let p = dbProfitFlow.find(x => x.id == id); 
+    // Ambil nasabah yang lunas/approve di unit tersebut
+    let unitClients = dbNasabah.filter(n => n.unit === p.targetUnit && n.status === 'Approved'); 
+    
+    let marketingCounts = {}; 
+    unitClients.forEach(c => { 
+        if(!marketingCounts[c.inputBy]) marketingCounts[c.inputBy] = 0; 
+        marketingCounts[c.inputBy]++; 
+    }); 
+
+    let totalClients = unitClients.length; 
+    if(totalClients === 0) return alert("Belum ada nasabah lolos."); 
+    
+    let amountPerClient = parseInt(p.amount) / totalClients; 
+    
+    // Simpan Pengeluaran Global Unit
+    dbArusKas.push({
+        date: Date.now(), 
+        unit: p.targetUnit, 
+        type: 'Keluar', 
+        amount: p.amount, 
+        desc: 'Distribusi Profit Marketing'
+    }); 
+
+    // LOOPING PEMBAGIAN KE MARKETING
+    Object.keys(marketingCounts).forEach(mkt => { 
+        let share = Math.floor(amountPerClient * marketingCounts[mkt]); 
+        
+        // --- PERBAIKAN DISINI: Simpan dengan format yang bisa dibaca Marketing ---
+        dbArusKas.push({
+            date: Date.now(), 
+            unit: p.targetUnit, 
+            type: 'Insentif',      // Tipe khusus agar mudah difilter
+            recipient: mkt,        // Menyimpan nama penerima
+            amount: share, 
+            desc: `Bonus SHU (${marketingCounts[mkt]} Nasabah)`
+        }); 
+    }); 
+
+    p.status = 'Complete'; 
+    saveToCloud(); 
+    alert("Distribusi Selesai! Data masuk ke dompet marketing."); 
+    page('distribusi_insentif'); 
+}
         function updateRoleAccess() {
             // 1. Siapkan wadah penyimpanan di memori
             if (!settings.role_permissions) settings.role_permissions = JSON.parse(JSON.stringify(defaultAccess));
@@ -836,7 +880,48 @@
             else if(id === 'acc_profit_ketua') { t.innerText = "ACC Distribusi Profit (Ketua)"; let rows = dbProfitFlow.filter(p => p.status === 'Pending Ketua').map(p => `<tr><td>${p.targetUnit}</td><td>Rp ${parseInt(p.amount).toLocaleString()}</td><td><button class="btn btn-success btn-sm" onclick="approveProfitKetua(${p.id})">ACC</button></td></tr>`).join(''); b.innerHTML = `<div class="card"><h4>Menunggu Persetujuan</h4><div class="table-responsive"><table><thead><tr><th>Unit</th><th>Nominal</th><th>Aksi</th></tr></thead><tbody>${rows || '<tr><td colspan="3">Tidak ada data</td></tr>'}</tbody></table></div></div>`; }
             else if(id === 'terima_profit_manager') { t.innerText = "Terima Dana SHU (Manager)"; let rows = dbProfitFlow.filter(p => p.status === 'Pending Manager' && p.targetUnit === activeApp).map(p => `<tr><td>Rp ${parseInt(p.amount).toLocaleString()}</td><td><button class="btn btn-primary btn-sm" onclick="acceptProfitManager(${p.id})">Terima Dana</button></td></tr>`).join(''); b.innerHTML = `<div class="card"><h4>Dana Masuk dari Pusat</h4><div class="table-responsive"><table><thead><tr><th>Nominal</th><th>Aksi</th></tr></thead><tbody>${rows || '<tr><td colspan="2">Kosong</td></tr>'}</tbody></table></div></div>`; }
             else if(id === 'distribusi_insentif') { t.innerText = "Distribusi ke Marketing (Accounting)"; let rows = dbProfitFlow.filter(p => p.status === 'Pending Accounting' && p.targetUnit === activeApp).map(p => `<tr><td>Rp ${parseInt(p.amount).toLocaleString()}</td><td><button class="btn btn-warning btn-sm" onclick="distributeProfitAccounting(${p.id})">Distribusi Otomatis</button></td></tr>`).join(''); b.innerHTML = `<div class="card"><h4>Siap Didistribusikan</h4><p>Sistem akan membagi rata berdasarkan jumlah nasabah lolos per marketing.</p><div class="table-responsive"><table><thead><tr><th>Nominal</th><th>Aksi</th></tr></thead><tbody>${rows || '<tr><td colspan="2">Kosong</td></tr>'}</tbody></table></div></div>`; }
-            else if(id === 'dompet_marketing') { t.innerText = "Dompet Saya"; b.innerHTML = `<div class="card"><h3>Pendapatan SHU</h3><p>Total pendapatan insentif Anda bulan ini: <b>Rp 1.500.000 (Simulasi)</b></p></div>`; }
+            else if(id === 'dompet_marketing') { 
+    t.innerText = "Dompet Saya (" + activeUser.user + ")"; 
+    
+    // Cari uang yang tipe-nya 'Insentif' dan penerimanya adalah user yang login
+    let myIncentives = dbArusKas.filter(x => x.type === 'Insentif' && x.recipient === activeUser.user);
+    
+    // Hitung Total
+    let totalDapat = myIncentives.reduce((a, b) => a + parseInt(b.amount), 0);
+    
+    // Buat Tabel Riwayat
+    let rows = myIncentives.map(x => `
+        <tr>
+            <td>${new Date(x.date).toLocaleDateString()}</td>
+            <td>${x.desc}</td>
+            <td style="color:green; font-weight:bold;">Rp ${parseInt(x.amount).toLocaleString()}</td>
+        </tr>
+    `).join('');
+
+    b.innerHTML = `
+    <div class="card" style="background:var(--primary-gradient); color:white; text-align:center; padding:30px;">
+        <small>Total Pendapatan Insentif</small>
+        <h1 style="font-size:2.5rem; margin-top:10px;">Rp ${totalDapat.toLocaleString()}</h1>
+    </div>
+    
+    <div class="card">
+        <h4>Riwayat Penerimaan</h4>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tanggal</th>
+                        <th>Keterangan</th>
+                        <th>Nominal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rows || '<tr><td colspan="3" style="text-align:center">Belum ada dana masuk.</td></tr>'}
+                </tbody>
+            </table>
+        </div>
+    </div>`; 
+}
             else if(id === 'kas_pusat') { t.innerText = "Kas Induk BMT (Pusat)"; let totalIuran = dbSimpananWajib.reduce((a,b)=>a+parseInt(b.amount), 0); let totalProfitUnit = parseInt(settings.shu.profit || 0); let pengeluaran = dbArusKas.filter(x => x.unit === 'induk' && x.type === 'Keluar'); let totalKeluar = pengeluaran.reduce((a,b)=>a+parseInt(b.amount), 0); let saldoAkhir = (totalIuran + totalProfitUnit) - totalKeluar; let rowsKeluar = pengeluaran.map(x => `<tr><td data-label="Tgl">${new Date(x.date).toLocaleDateString()}</td><td data-label="Ket">${x.desc}</td><td data-label="Jml" style="color:red">Rp ${parseInt(x.amount).toLocaleString()}</td></tr>`).join(''); b.innerHTML = `<div class="card" style="background:#e3f2fd;"><h4><i class="fas fa-plus-circle"></i> Tambah Modal BMT</h4><div class="form-vertical" style="display:flex; gap:10px;"><input id="modal-in-amt" type="number" class="form-control" placeholder="Nominal Modal"><button class="btn btn-success" onclick="let a = document.getElementById('modal-in-amt').value;if(a){ dbArusKas.push({date:Date.now(), unit:'induk', type:'Masuk', amount:a, desc:'Suntikan Modal'}); saveToCloud(); page('kas_pusat'); }">Setor</button></div></div><div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); gap:15px; margin-bottom:20px;"><div class="card" style="background:var(--secondary-gradient); color:#0f3d3e;"><h3>Saldo Kas BMT</h3><h2>Rp ${saldoAkhir.toLocaleString()}</h2></div><div class="card"><h3>Total Iuran</h3><h3 style="color:var(--primary)">+ Rp ${totalIuran.toLocaleString()}</h3></div><div class="card"><h3>Profit Unit</h3><h3 style="color:var(--primary)">+ Rp ${totalProfitUnit.toLocaleString()}</h3></div><div class="card"><h3>Pengeluaran</h3><h3 style="color:#c0392b">- Rp ${totalKeluar.toLocaleString()}</h3></div></div><div class="card"><h4>Catat Pengeluaran Pusat</h4><div class="form-vertical" style="display:flex; gap:10px; flex-wrap:wrap;"><input id="k-induk-amt" type="number" class="form-control" placeholder="Nominal (Rp)" style="flex:1;"><input id="k-induk-desc" class="form-control" placeholder="Keterangan Pengeluaran" style="flex:2;"><button class="btn btn-danger" onclick="saveKasInduk()">Simpan</button></div></div><div class="card"><div style="display:flex; justify-content:space-between; margin-bottom:15px;"><h4>Riwayat Pengeluaran</h4><button class="btn btn-primary" onclick="generatePDF('printable-area', 'Laporan_Kas_Pusat'); printLaporanKas('induk');"><i class="fas fa-print"></i> PDF</button></div><div class="table-responsive"><table><thead><tr><th>Tanggal</th><th>Keterangan</th><th>Nominal</th></tr></thead><tbody>${rowsKeluar}</tbody></table></div></div>`; }
             else if(id === 'approval_pusat') { t.innerText = "Persetujuan Pusat (Ketua)"; let danaPending = dbDana.filter(d => d.status === 'Pending').map(d => `<tr><td data-label="Tgl">${new Date(d.date).toLocaleDateString()}</td><td data-label="Tipe">DANA UNIT</td><td data-label="Ket">${d.desc} (${d.unit.toUpperCase()})</td><td data-label="Jml">Rp ${parseInt(d.amount).toLocaleString()}</td><td data-label="Aksi"><button class="btn btn-sm btn-success" onclick="accDana('${d.id}')">SETUJUI</button></td></tr>`).join(''); let sarprasPending = dbSarpras.map((s,i) => s.status==='Pending' ? `<tr><td data-label="Tgl">-</td><td data-label="Tipe">SARPRAS</td><td data-label="Ket">${s.item} - ${s.alasan}</td><td data-label="Jml">-</td><td data-label="Aksi"><button class="btn btn-sm btn-success" onclick="accSarpras(${i})">SETUJUI</button></td></tr>` : '').join(''); let content = danaPending + sarprasPending; if(content === '') content = '<tr><td colspan="5" style="text-align:center;">Tidak ada permintaan tertunda.</td></tr>'; b.innerHTML = `<div class="card"><h4>Permintaan Menunggu Persetujuan Ketua</h4><div class="table-responsive"><table><thead><tr><th>Tanggal</th><th>Tipe</th><th>Keterangan</th><th>Nominal</th><th>Aksi</th></tr></thead><tbody>${content}</tbody></table></div></div>`; }
             else if(id === 'manajemen_anggota') { t.innerText = "Manajemen Anggota Tetap"; let rows = dbUsers.filter(u => u.role !== 'admin').map((u,i) => `<tr><td data-label="Foto"><img src="${u.photo||'https://cdn-icons-png.flaticon.com/512/1077/1077114.png'}" class="user-thumb" style="width:40px;height:40px;border-radius:50%;"></td><td data-label="User">${u.user}</td><td data-label="Role">${u.role}</td><td data-label="Aksi"><span class="badge" style="background:#e8f5e9; color:#2e7d32; padding:5px 10px; border-radius:15px;">Aktif</span></td></tr>`).join(''); b.innerHTML = `<div class="card"><h4>Daftar Anggota Tetap & Staff</h4><div class="table-responsive"><table><thead><tr><th>Foto</th><th>Nama</th><th>Jabatan</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table></div></div>`; }
