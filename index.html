@@ -971,7 +971,7 @@
             let d = dbNasabah.find(x => x.id == id);
             if (!d) return alert("Data tidak ditemukan");
 
-            // --- DATA PEMBIAYAAN ---
+            // --- DATA NASABAH ---
             let uName = d.unit === 'sps' ? 'MUDHARABAH (BAGI HASIL)' : (d.unit === 'kms' ? 'MURABAHAH (JUAL BELI)' : 'RAHN (GADAI)');
             let tpl = d.unit === 'sps' ? settings.templates.sps : (d.unit === 'kms' ? settings.templates.kms : settings.templates.gadai);
             let margin = parseInt(d.plafond) * (settings.margins[d.unit] / 100);
@@ -984,44 +984,45 @@
             let photoSrc = (d.foto && d.foto.length > 50) ? d.foto : "https://cdn-icons-png.flaticon.com/512/1077/1077114.png";
             let logoSrc = settings.logo || "https://cdn-icons-png.flaticon.com/512/2317/2317968.png";
 
-            // --- HTML STRUKTUR (LAYOUT TABEL 3 KOLOM) ---
+            // --- HTML STRUKTUR (UKURAN F4 / FOLIO) ---
+            // Lebar 200mm (Kertas F4 lebar 215mm dikurangi margin)
             let html = `
-            <div id="akad-final" style="width: 190mm; background: white; font-family: Arial, sans-serif; color: #000; font-size: 10px; line-height: 1.1;">
+            <div id="akad-final" style="width: 200mm; background: white; font-family: Arial, sans-serif; color: #000; font-size: 11px; line-height: 1.2;">
                 
                 <style>
                     .no-break { page-break-inside: avoid; }
                     table { width: 100%; border-collapse: collapse; }
-                    td { vertical-align: top; padding: 2px; }
+                    td { vertical-align: top; padding: 3px; }
                 </style>
 
                 <div class="no-break" style="border-bottom: 2px double #000; padding-bottom: 5px; margin-bottom: 15px; display:flex; align-items:center;">
-                    <img src="${logoSrc}" style="width:12mm; height:12mm; object-fit:contain; margin-right:10px;">
+                    <img src="${logoSrc}" style="width:15mm; height:15mm; object-fit:contain; margin-right:10px;">
                     <div style="flex:1;">
-                        <div style="font-size: 14px; font-weight: 900; text-transform: uppercase;">${settings.nama}</div>
-                        <div style="font-size: 9px;">${settings.alamat}</div>
-                        <div style="font-size: 9px;">Izin: ${settings.izin}</div>
+                        <div style="font-size: 16px; font-weight: 900; text-transform: uppercase;">${settings.nama}</div>
+                        <div style="font-size: 10px;">${settings.alamat}</div>
+                        <div style="font-size: 10px;">Izin: ${settings.izin}</div>
                     </div>
                 </div>
 
-                <div class="no-break" style="text-align: center; margin-bottom: 15px;">
-                    <b style="font-size: 12px; text-decoration: underline;">PERJANJIAN PEMBIAYAAN ${uName}</b><br>
-                    <span style="font-size: 9px;">Nomor: ${autoNum}</span>
+                <div class="no-break" style="text-align: center; margin-bottom: 20px;">
+                    <b style="font-size: 13px; text-decoration: underline;">PERJANJIAN PEMBIAYAAN ${uName}</b><br>
+                    <span style="font-size: 10px;">Nomor: ${autoNum}</span>
                 </div>
 
-                <div style="margin-bottom: 10px;">Pada <b>${tglSekarang}</b>, disepakati perjanjian antara:</div>
+                <div style="margin-bottom: 10px;">Pada hari ini <b>${tglSekarang}</b>, telah disepakati perjanjian antara:</div>
 
-                <div class="no-break" style="border: 1px solid #000; padding: 5px; margin-bottom: 15px;">
+                <div class="no-break" style="border: 1px solid #000; padding: 8px; margin-bottom: 20px;">
                     <table border="0">
                         <tr>
-                            <td width="25mm" align="center" style="vertical-align:middle; padding-right:10px; border-right:1px solid #eee;">
-                                <img src="${photoSrc}" style="width: 20mm; height: 25mm; object-fit: cover; border:1px solid #999; display:block;">
-                                <div style="font-size:7px; margin-top:3px;">PIHAK PERTAMA</div>
+                            <td width="30mm" align="center" style="border-right:1px solid #ddd; padding-right:10px;">
+                                <img src="${photoSrc}" style="width: 25mm; height: 30mm; object-fit: cover; border:1px solid #999; display:block;">
+                                <div style="font-size:8px; margin-top:3px;">PIHAK PERTAMA</div>
                             </td>
 
                             <td style="padding-left:10px;">
                                 <table border="0">
                                     <tr>
-                                        <td width="80">Nama Lengkap</td>
+                                        <td width="100">Nama Lengkap</td>
                                         <td width="10">:</td>
                                         <td><b>${d.nama.toUpperCase()}</b></td>
                                     </tr>
@@ -1041,7 +1042,7 @@
                                         <td>${d.wa}</td>
                                     </tr>
                                 </table>
-                                <div style="margin-top:5px; font-style:italic; font-size:9px; border-top:1px dashed #ccc; padding-top:3px;">
+                                <div style="margin-top:8px; font-style:italic; font-size:10px; border-top:1px dashed #ccc; padding-top:3px;">
                                     Bertindak atas nama diri sendiri selaku <b>PIHAK PERTAMA (NASABAH)</b>.
                                 </div>
                             </td>
@@ -1051,8 +1052,8 @@
 
                 <div style="margin-bottom: 10px;">Serta Manager Unit mewakili <b>${settings.nama}</b> selaku <b>PIHAK KEDUA</b>.</div>
 
-                <div class="no-break" style="margin-bottom: 15px;">
-                    <table border="1" cellpadding="5" style="text-align: center; font-size: 10px;">
+                <div class="no-break" style="margin-bottom: 20px;">
+                    <table border="1" cellpadding="5" style="text-align: center; font-size: 11px;">
                         <tr style="background-color: #eee;">
                             <th>PLAFOND</th>
                             <th>TENOR</th>
@@ -1068,11 +1069,11 @@
                     </table>
                 </div>
 
-                <div class="no-break" style="border: 1px solid #000; padding: 5px; font-size: 9px; text-align: justify; margin-bottom: 20px;">
+                <div class="no-break" style="border: 1px solid #000; padding: 8px; font-size: 10px; text-align: justify; margin-bottom: 30px;">
                     <b>KETENTUAN AKAD:</b><br>
                     ${tpl.replace(/\n/g, '<br>')}
-                    <br>1. Nasabah wajib membayar angsuran tepat waktu.
-                    <br>2. Segala perselisihan akan diselesaikan secara kekeluargaan.
+                    <br>1. Nasabah wajib membayar angsuran tepat waktu sesuai jadwal.
+                    <br>2. Segala perselisihan akan diselesaikan secara kekeluargaan / musyawarah.
                 </div>
 
                 <div class="no-break">
@@ -1080,37 +1081,39 @@
                         <tr>
                             <td width="33%">
                                 <div style="margin-bottom:5px;">PIHAK PERTAMA</div>
-                                <div style="border:1px dashed #bbb; width:40px; height:40px; margin:0 auto; display:flex; align-items:center; justify-content:center; font-size:7px; color:#aaa;">METERAI</div>
+                                <div style="border:1px dashed #bbb; width:50px; height:50px; margin:0 auto; display:flex; align-items:center; justify-content:center; font-size:8px; color:#aaa;">METERAI</div>
                                 <br><u style="font-weight:bold;">${d.nama.toUpperCase()}</u>
                             </td>
                             <td width="33%">
-                                <div style="margin-bottom:40px;">SAKSI</div>
+                                <div style="margin-bottom:50px;">SAKSI</div>
                                 <u>${d.inputBy || '....................'}</u>
                             </td>
                             <td width="33%">
-                                <div style="margin-bottom:40px;">PIHAK KEDUA</div>
+                                <div style="margin-bottom:50px;">PIHAK KEDUA</div>
                                 <u>( Manager Unit )</u>
                             </td>
                         </tr>
                     </table>
                 </div>
 
-                <div style="font-size: 8px; color: #888; margin-top: 15px; text-align: right;">
-                    Dicetak: ${new Date().toLocaleString()}
+                <div style="font-size: 9px; color: #888; margin-top: 20px; text-align: right;">
+                    Dicetak: ${new Date().toLocaleString()} (Ukuran F4)
                 </div>
             </div>`;
 
-            // --- EKSEKUSI CETAK (ANTI POTONG) ---
+            // --- EKSEKUSI CETAK (SETTINGAN F4) ---
             const area = document.getElementById('printable-area');
             area.innerHTML = html;
             area.style.display = 'block';
 
             const opt = {
-                margin:       [5, 5, 5, 5],
-                filename:     `Akad_${d.nama.replace(/\s/g,'_')}.pdf`,
+                margin:       [5, 5, 5, 5], // Margin aman
+                filename:     `Akad_F4_${d.nama.replace(/\s/g,'_')}.pdf`,
                 image:        { type: 'jpeg', quality: 0.98 },
                 html2canvas:  { scale: 2, useCORS: true }, 
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                // KUNCI UTAMA: Format Ukuran [Lebar, Tinggi] dalam mm
+                // 215mm x 330mm adalah ukuran standar F4 / Folio di Indonesia
+                jsPDF:        { unit: 'mm', format: [215, 330], orientation: 'portrait' },
                 pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
             };
 
