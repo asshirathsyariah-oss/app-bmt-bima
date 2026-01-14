@@ -748,7 +748,7 @@
             else if(id === 'billing') {
                 t.innerText = "Tagihan & Pembayaran";
                 
-                // FILTER LOGIC SAMA SEPERTI DASHBOARD
+                // Filter: Hanya tampilkan nasabah milik Marketing tersebut
                 let myClients = dbNasabah.filter(x => {
                     let isUnit = x.unit === activeApp;
                     let isAppr = x.status === 'Approved';
@@ -763,25 +763,27 @@
                     let totalMargin = p * (marginPersen / 100); 
                     let totalHutang = p + totalMargin; 
                     let angsuran = totalHutang / tenor;
-                    let statusBadge = x.payStatus === 'Lunas' ? '<span class="badge" style="background:#d4edda; color:green">Lunas</span>' : '<span class="badge" style="background:#fff3cd; color:#856404">Berjalan</span>';
+                    
+                    // --- PANGGIL FUNGSI LOGIKA BARU DI SINI ---
+                    let statusBadge = getStatusPeriode(x);
                     
                     return `<tr>
                         <td data-label="Nama"><b>${x.nama}</b><br><small>${x.wa}</small></td>
                         <td data-label="Status">${statusBadge}</td>
-                        <td data-label="Angsuran">Rp ${parseInt(angsuran).toLocaleString()} <small>/ ${x.tenorType}</small></td>
+                        <td data-label="Angsuran">Rp ${parseInt(angsuran).toLocaleString()}</td>
                         <td data-label="Aksi" style="display:flex; gap:5px;">
-                            <button class="btn btn-warning btn-sm" onclick="kirimWA('${x.id}', ${parseInt(angsuran)})"><i class="fab fa-whatsapp"></i> Tagih</button> 
-                            <button class="btn btn-success btn-sm" onclick="bayar('${x.id}', ${parseInt(angsuran)})"><i class="fas fa-money-bill-wave"></i> Bayar</button>
+                            <button class="btn btn-warning btn-sm" onclick="kirimWA('${x.id}', ${parseInt(angsuran)})">Tagih</button> 
+                            <button class="btn btn-success btn-sm" onclick="bayar('${x.id}', ${parseInt(angsuran)})">Bayar</button>
                         </td>
                     </tr>`;
                 }).join('');
 
                 b.innerHTML = `<div class="card">
-                    <h4>Daftar Tagihan ${activeUser.role === 'MARKETING' ? '(Nasabah Saya)' : '(Semua Nasabah)'}</h4>
+                    <h4>Daftar Tagihan (Nasabah Saya)</h4>
                     <div class="table-responsive">
                         <table>
-                            <thead><tr><th>Nasabah</th><th>Status</th><th>Nominal Angsuran</th><th>Aksi</th></tr></thead>
-                            <tbody>${rows || '<tr><td colspan="4">Belum ada nasabah aktif.</td></tr>'}</tbody>
+                            <thead><tr><th>Nasabah</th><th>Status</th><th>Angsuran</th><th>Aksi</th></tr></thead>
+                            <tbody>${rows || '<tr><td colspan="4">Tidak ada data.</td></tr>'}</tbody>
                         </table>
                     </div>
                 </div>`;
@@ -865,7 +867,40 @@
                 b.innerHTML = `<div class="card"><h3>Laba Rugi Unit (Margin: ${marginPersen}%)</h3><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:15px"><div class="card" style="background:var(--primary);color:white"><small>Total Plafond</small><h3>${totalPlafond.toLocaleString()}</h3></div><div class="card" style="border:1px solid orange"><small>Potensi Laba</small><h3 style="color:orange">${totalPotensiLaba.toLocaleString()}</h3></div><div class="card" style="background:#e8f5e9"><small>Laba Terealisasi</small><h3 style="color:green">${totalLabaCair.toLocaleString()}</h3></div></div><div class="table-responsive"><table><thead><tr><th>No</th><th>Nama</th><th>Plafond</th><th>Laba</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
             }    
             else if(id==='approval') { t.innerText="Approval Pengajuan"; let rows = dbNasabah.filter(x => x.status === 'Pending').map(x => { let isUnitMatch = (x.unit === activeApp) || (activeApp === 'induk'); let bgStyle = isUnitMatch ? '' : 'background:#fff5f5;'; let unitLabel = isUnitMatch ? `<b>${x.unit.toUpperCase()}</b>` : `<b style="color:red">${x.unit.toUpperCase()} (Beda Unit)</b>`; let actionBtn = `<button class="btn btn-success btn-sm" onclick="approve('${x.id}', ${x.plafond})">ACC</button> <button class="btn btn-danger btn-sm" onclick="reject('${x.id}')">Tolak</button>`; return `<tr style="${bgStyle}"><td data-label="Unit">${unitLabel}</td><td data-label="Nama">${x.nama}</td><td data-label="Plafond">Rp ${parseInt(x.plafond).toLocaleString()}</td><td data-label="Marketing">${x.inputBy || '-'}</td><td data-label="Aksi" style="display:flex; gap:5px; justify-content:flex-end;">${actionBtn}</td></tr>`; }).join(''); b.innerHTML=`<div class="card"><div style="background:#e3f2fd; padding:10px; border-radius:5px; margin-bottom:10px; font-size:0.85rem;"><i class="fas fa-info-circle"></i> Manager login di: <b>${activeApp.toUpperCase()}</b>. Baris merah milik unit lain.</div><h4>Daftar Pending</h4><div class="table-responsive"><table><thead><tr><th>Unit</th><th>Nama</th><th>Plafond</th><th>Marketing</th><th>Aksi</th></tr></thead><tbody>${rows || '<tr><td colspan="5" style="text-align:center; padding:20px;">Belum ada data masuk.</td></tr>'}</tbody></table></div></div>`; }
-            else if(id === 'laporan_tunggakan') { t.innerText = "Monitoring Pembayaran"; let rows = dbNasabah.filter(x => x.unit === activeApp && x.status === 'Approved' && x.payStatus !== 'Lunas').map(x => { let isUnpaid = x.payStatus !== 'Lunas'; let rowClass = isUnpaid ? 'row-danger' : ''; let actionBtn = isUnpaid ? `<button class="btn btn-danger btn-sm" onclick="waMarketing('${x.inputBy}', '${x.nama}')"><i class="fab fa-whatsapp"></i> Tegur Marketing</button>` : `<span class="badge" style="background:#d4edda; color:#155724;">Aman</span>`; return `<tr class="${rowClass}"><td data-label="Nama">${x.nama}</td><td data-label="WA Nasabah">${x.wa}</td><td data-label="Marketing">${x.inputBy || '-'}</td><td data-label="Status">${x.payStatus}</td><td data-label="Aksi">${actionBtn}</td></tr>`; }).join(''); b.innerHTML=`<div class="card"><h4>Nasabah Aktif (Belum Lunas)</h4><p>Baris <span style="color:#c0392b; font-weight:bold">MERAH</span> menandakan macet.</p><div class="table-responsive"><table><thead><tr><th>Nama</th><th>WA</th><th>Marketing</th><th>Status</th><th>Aksi</th></tr></thead><tbody>${rows}</tbody></table></div></div>`; }
+            else if(id === 'laporan_tunggakan') { 
+                t.innerText = "Monitoring Pembayaran"; 
+                
+                // Manager melihat semua nasabah yang belum Lunas Total
+                let rows = dbNasabah.filter(x => x.unit === activeApp && x.status === 'Approved' && x.payStatus !== 'Lunas').map(x => {
+                    
+                    // --- PANGGIL FUNGSI LOGIKA BARU DI SINI ---
+                    let statusBadge = getStatusPeriode(x);
+
+                    // Warnai baris tabel jadi merah muda jika statusnya "Terlambat" atau "BELUM LUNAS"
+                    let isLate = statusBadge.includes("Terlambat") || statusBadge.includes("BELUM LUNAS");
+                    let rowClass = isLate ? 'row-danger' : ''; 
+                    
+                    return `<tr class="${rowClass}">
+                        <td data-label="Nama"><b>${x.nama}</b></td>
+                        <td data-label="Marketing">${x.inputBy || '-'}</td>
+                        <td data-label="Status">${statusBadge}</td>
+                        <td data-label="Aksi">
+                            <button class="btn btn-danger btn-sm" onclick="waMarketing('${x.inputBy}', '${x.nama}')"><i class="fab fa-whatsapp"></i> Tegur</button>
+                        </td>
+                    </tr>`; 
+                }).join(''); 
+                
+                b.innerHTML=`<div class="card">
+                    <h4>Monitoring Status Pembayaran</h4>
+                    <p><small>Warna Kuning Muncul: H-2 (Mingguan) atau H-10 (Bulanan)</small></p>
+                    <div class="table-responsive">
+                        <table>
+                            <thead><tr><th>Nama</th><th>Marketing</th><th>Status</th><th>Aksi</th></tr></thead>
+                            <tbody>${rows || '<tr><td colspan="4">Semua nasabah aman / lunas.</td></tr>'}</tbody>
+                        </table>
+                    </div>
+                </div>`; 
+            }
             else if(id === 'laporan_detail') { t.innerText = "Arsip & Detail Nasabah"; renderManagerArsip(b); }
             else if(id === 'id_card_maker') { t.innerText = "Pembuat Kartu Pegawai"; let userOpts = dbUsers.map(u => `<option value="${u.user}">${u.user} - ${u.role}</option>`).join(''); b.innerHTML = `<div class="card"><div style="display:flex; flex-wrap:wrap; gap:20px;"><div style="flex:1; min-width:300px;"><h4>Editor Data</h4><div class="form-vertical"><label>Pilih Data</label><select class="form-control" onchange="autoFillIDCard(this.value)"><option value="">-- Pilih User --</option>${userOpts}</select><hr><label>Nama</label><input id="idc-name" class="form-control" placeholder="Nama" onkeyup="updateIDPreview()"><label>Jabatan</label><input id="idc-role" class="form-control" placeholder="Jabatan" onkeyup="updateIDPreview()"><label>NIP</label><input id="idc-nip" class="form-control" placeholder="NIP" onkeyup="updateIDPreview()"><hr><label>Foto</label><input type="file" class="form-control" onchange="updateIDPhoto(this)"><label>Background</label><input type="file" class="form-control" onchange="updateIDBg(this)"></div></div><div style="flex:1; min-width:300px; display:flex; flex-direction:column; align-items:center;"><h4>Preview</h4><div id="id-card-final" class="id-card-preview-container" style="background: white; width: 320px; height: 200px; border: 1px solid #ccc; margin: 20px auto; position: relative; overflow: hidden; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); background-size: cover; background-position: center; color: #333;"><div class="id-card-content" style="position: relative; width: 100%; height: 100%; z-index: 2; padding: 10px; display: flex; align-items: center;"><img id="prev-photo" src="https://cdn-icons-png.flaticon.com/512/1077/1077114.png" class="id-card-photo" style="width: 80px; height: 100px; background: #ddd; object-fit: cover; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"><div class="id-card-info" style="margin-left: 15px;"><h3 style="margin:0; font-size:16px; color:var(--primary); text-transform:uppercase;" id="prev-name">NAMA</h3><p style="margin:0; font-size:12px; font-weight:bold; color:var(--secondary);" id="prev-role">JABATAN</p><p style="margin:5px 0 0 0; font-size:10px;">ID: <span id="prev-nip">000000</span></p></div><div style="position:absolute; top:10px; right:10px; text-align:right;"><img src="${settings.logo}" style="width:30px;"><div style="font-size:8px; font-weight:bold; color:var(--primary);">${settings.nama}</div></div></div></div><button class="btn btn-primary" style="margin-top:20px;" onclick="generatePDF('id-card-final', 'ID_Card')"><i class="fas fa-print"></i> Cetak</button></div></div></div>`; }
             else if(id === 'setting_margin') { 
@@ -963,16 +998,39 @@
 
         // --- NEW PAYMENT FUNCTION ---
         function bayar(id, angsuran) { 
-            let index = dbNasabah.findIndex(x => x.id == id); if (index === -1) return; let d = dbNasabah[index];
-            if(confirm(`Terima pembayaran angsuran dari ${d.nama} sebesar Rp ${angsuran.toLocaleString()}?`)) {
+            let index = dbNasabah.findIndex(x => x.id == id); 
+            if (index === -1) return; 
+            let d = dbNasabah[index];
+
+            if(confirm(`Terima pembayaran angsuran dari ${d.nama} sebesar Rp ${angsuran.toLocaleString()}?\n\n(Ini akan memperbarui status LUNAS untuk periode ini)`)) {
+                
+                // 1. Catat Transaksi Keuangan
                 dbArusKas.push({ date: Date.now(), unit: activeApp, type: 'Masuk', amount: angsuran, desc: `Angsuran a.n ${d.nama}` });
-                let isLunas = confirm("Apakah nasabah ini sudah MELUNASI seluruh hutangnya?\n\nKlik OKE jika LUNAS.\nKlik BATAL jika hanya bayar angsuran biasa.");
+                
+                // 2. UPDATE TANGGAL JATUH TEMPO (Maju 1 Bulan/Minggu)
+                let currentDue = d.nextDueDate ? new Date(d.nextDueDate) : new Date(); // Ambil jadwal lama atau hari ini
+                
+                if(d.tenorType === 'Minggu') {
+                    currentDue.setDate(currentDue.getDate() + 7); // Tambah 7 hari
+                } else {
+                    currentDue.setMonth(currentDue.getMonth() + 1); // Tambah 1 bulan
+                }
+                
+                // Simpan tanggal baru ke database
+                dbNasabah[index].nextDueDate = currentDue.getTime();
+
+                // 3. Cek Pelunasan Total (Opsional)
+                let isLunas = confirm("Apakah nasabah ini sudah MELUNASI SELURUH TOTAL HUTANGNYA (Selesai Kontrak)?\n\nKlik BATAL jika hanya bayar angsuran bulanan biasa.");
                 if(isLunas) { dbNasabah[index].payStatus = 'Lunas'; }
+
                 saveToCloud(); 
+                
+                // Kirim WA
                 let sapaan = d.gender === 'L' ? 'Bapak' : 'Ibu';
-                let msg = settings.pesanBayar.replace('{sapaan}', sapaan).replace('{nama}', d.nama).replace('{tagihan}', 'Rp ' + parseInt(angsuran).toLocaleString()) + `\n\nSisa Status: ${isLunas ? 'LUNAS' : 'Belum Lunas'}`;
+                let msg = settings.pesanBayar.replace('{sapaan}', sapaan).replace('{nama}', d.nama).replace('{tagihan}', 'Rp ' + parseInt(angsuran).toLocaleString()) + `\n\nJatuh Tempo Berikutnya: ${currentDue.toLocaleDateString()}`;
                 openWA(d.wa, msg);
-                alert("Pembayaran berhasil dicatat di Kas & Kwitansi dikirim.");
+                
+                alert("Pembayaran berhasil! Tanggal jatuh tempo diperbarui.");
                 page('billing'); 
             }
         }
@@ -997,8 +1055,41 @@
         function tagihIuranWA(user) { let targetUser = dbUsers.find(x => x.user === user); let wa = targetUser ? targetUser.noHP : ''; if(!wa) wa = prompt("Masukkan Nomor WA " + user + " (628...):"); let amount = prompt("Edit Nominal Tagihan:", parseInt(settings.simpananWajib)); if(!amount) return; let msg = (settings.pesanIuran || "Segera bayar iuran.").replace('{sapaan}', 'Bapak/Ibu').replace('{nama}', user).replace('{tagihan}', 'Rp ' + parseInt(amount).toLocaleString()); if(wa) { openWA(wa, msg); } }
         
         function subNas() { 
-            let d = { id:Date.now(), unit:activeApp, nama:document.getElementById('i-nm').value, gender:document.getElementById('i-jk').value, nik:document.getElementById('i-nik').value, alamat:document.getElementById('i-al').value, wa:document.getElementById('i-wa').value, email:document.getElementById('i-em').value, plafond:document.getElementById('i-pl').value, tenor:document.getElementById('i-tn').value, tenorType:document.getElementById('i-tenor-type').value, dp:document.getElementById('i-dp')?.value||0, jaminan: document.getElementById('i-jam')?.value||'-', status:'Pending', payStatus:'Belum', noSurat:'-', foto:tempFoto, ktp: tempKTPPhoto, inputBy: activeUser ? activeUser.user : 'Unknown' }; 
-            dbNasabah.push(d); saveToCloud(); alert('Saved'); page('input'); 
+            // Hitung Jatuh Tempo Pertama (Default 1 Bulan/Minggu dari sekarang)
+            let type = document.getElementById('i-tenor-type').value;
+            let firstDue = new Date();
+            if(type === 'Minggu') firstDue.setDate(firstDue.getDate() + 7);
+            else firstDue.setMonth(firstDue.getMonth() + 1);
+
+            let d = { 
+                id: Date.now(), 
+                unit: activeApp, 
+                nama: document.getElementById('i-nm').value, 
+                gender: document.getElementById('i-jk').value, 
+                nik: document.getElementById('i-nik').value, 
+                alamat: document.getElementById('i-al').value, 
+                wa: document.getElementById('i-wa').value, 
+                email: document.getElementById('i-em').value, 
+                plafond: document.getElementById('i-pl').value, 
+                tenor: document.getElementById('i-tenor').value, 
+                tenorType: type, 
+                dp: document.getElementById('i-dp')?.value||0, 
+                jaminan: document.getElementById('i-jam')?.value||'-', 
+                status: 'Pending', 
+                payStatus: 'Belum', 
+                noSurat: '-', 
+                foto: tempFoto, 
+                ktp: tempKTPPhoto, 
+                inputBy: activeUser ? activeUser.user : 'Unknown',
+                
+                // DATA BARU: Tanggal Jatuh Tempo Berikutnya
+                nextDueDate: firstDue.getTime() 
+            }; 
+            
+            dbNasabah.push(d); 
+            saveToCloud(); 
+            alert('Saved'); 
+            page('input'); 
         }
 
         function waMarketing(marketingName, nasabahName) { let targetUser = dbUsers.find(x => x.user === marketingName); let wa = targetUser ? targetUser.noHP : ''; if(!wa) wa = prompt(`Masukkan Nomor WA Marketing (${marketingName}):`); let msg = `Assalamu'alaikum ${marketingName}, tolong segera follow-up nasabah atas nama ${nasabahName} karena status pembayaran bulan ini menunggak/macet. Terima kasih.`; if(wa) openWA(wa, msg); }
@@ -1253,6 +1344,39 @@
 
             // 4. Kabari pengguna
             alert("BERHASIL! Settingan Margin baru sudah tersimpan.");
+        }
+        // FUNGSI PINTAR: Cek Status (Revisi Mingguan 2 Hari, Bulanan 10 Hari)
+        function getStatusPeriode(x) {
+            // 1. Cek Lunas Total
+            if(x.payStatus === 'Lunas') return '<span class="badge" style="background:#d4edda; color:green">LUNAS TOTAL</span>';
+
+            // 2. Hitung Tanggal
+            // Jika nasabah lama belum punya nextDueDate, anggap 30 hari dari ID (tanggal daftar)
+            let dueDate = x.nextDueDate ? new Date(x.nextDueDate) : new Date(x.id + (30*24*60*60*1000));
+            let today = new Date();
+            
+            // Hitung selisih waktu
+            let diffTime = dueDate - today; 
+            // Konversi ke Hari (Pembulatan ke atas)
+            let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+
+            // 3. TENTUKAN BATAS PERINGATAN (THRESHOLD)
+            // Jika Mingguan = 2 hari, Jika Bulanan = 10 hari
+            let batasPeringatan = (x.tenorType === 'Minggu') ? 2 : 10;
+
+            // 4. LOGIKA STATUS WARNA-WARNI
+            if (diffDays < 0) {
+                // Terlambat (Merah)
+                return `<span class="badge" style="background:#f8d7da; color:#721c24">Terlambat ${Math.abs(diffDays)} Hari</span>`;
+            } 
+            else if (diffDays <= batasPeringatan) {
+                // Masuk Masa Tagih (Kuning)
+                return `<span class="badge" style="background:#fff3cd; color:#856404; font-weight:bold;">BELUM LUNAS<br><small>H-${diffDays} Jatuh Tempo</small></span>`;
+            } 
+            else {
+                // Masih Aman (Hijau)
+                return `<span class="badge" style="background:#e8f5e9; color:#2e7d32">Lunas Periode Ini<br><small>Tempo: ${dueDate.toLocaleDateString()}</small></span>`;
+            }
         }
     </script>
 </body>
