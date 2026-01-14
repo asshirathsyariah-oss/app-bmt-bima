@@ -832,27 +832,33 @@
                     return isUnit && isAppr && isMine;
                 });
 
-                let rows = myClients.map(x => {
-                    let p = parseInt(x.plafond); 
-                    let tenor = parseInt(x.tenor); 
-                    let marginPersen = settings.margins[activeApp] || 10;
-                    let totalMargin = p * (marginPersen / 100); 
-                    let totalHutang = p + totalMargin; 
-                    let angsuran = totalHutang / tenor;
-                    
-                    // --- PANGGIL FUNGSI LOGIKA BARU DI SINI ---
-                    let statusBadge = getStatusPeriode(x);
-                    
-                    return `<tr>
-                        <td data-label="Nama"><b>${x.nama}</b><br><small>${x.wa}</small></td>
-                        <td data-label="Status">${statusBadge}</td>
-                        <td data-label="Angsuran">Rp ${parseInt(angsuran).toLocaleString()}</td>
-                        <td data-label="Aksi" style="display:flex; gap:5px;">
-                            <button class="btn btn-warning btn-sm" onclick="kirimWA('${x.id}', ${parseInt(angsuran)})">Tagih</button> 
-                            <button class="btn btn-success btn-sm" onclick="bayar('${x.id}', ${parseInt(angsuran)})">Bayar</button>
-                        </td>
-                    </tr>`;
-                }).join('');
+                JavaScript
+
+// ... kode sebelumnya di page('billing') ...
+
+let rows = myClients.map(x => {
+    let p = parseInt(x.plafond); 
+    let marginPersen = settings.margins[activeApp] || 0; // Fix margin ambil dari settings
+    let totalMargin = p * (marginPersen / 100); 
+    let totalHutang = p + totalMargin; 
+    let angsuran = totalHutang / parseInt(x.tenor);
+    
+    let statusBadge = getStatusPeriode(x);
+    
+    // TAMPILAN BARU: DUA TOMBOL (TAGIH & BAYAR & LUNAS)
+    return `<tr>
+        <td data-label="Nama"><b>${x.nama}</b><br><small>${x.wa}</small></td>
+        <td data-label="Status">${statusBadge}</td>
+        <td data-label="Angsuran">Rp ${parseInt(angsuran).toLocaleString()}</td>
+        <td data-label="Aksi" style="display:flex; gap:5px; flex-wrap:wrap;">
+            <button class="btn btn-warning btn-sm" onclick="kirimWA('${x.id}', ${parseInt(angsuran)})"><i class="fab fa-whatsapp"></i></button> 
+            
+            <button class="btn btn-success btn-sm" onclick="bayar('${x.id}', ${parseInt(angsuran)})">Bayar</button>
+            
+            <button class="btn btn-primary btn-sm" style="background:#6f42c1; border:none;" onclick="prosesPelunasan('${x.id}', ${totalHutang})">LUNAS</button>
+        </td>
+    </tr>`;
+}).join('');
 
                 b.innerHTML = `<div class="card">
                     <h4>Daftar Tagihan (Nasabah Saya)</h4>
@@ -1160,42 +1166,74 @@
 
         // --- NEW PAYMENT FUNCTION ---
         function bayar(id, angsuran) { 
-            let index = dbNasabah.findIndex(x => x.id == id); 
-            if (index === -1) return; 
-            let d = dbNasabah[index];
+    let index = dbNasabah.findIndex(x => x.id == id); 
+    if (index === -1) return; 
+    let d = dbNasabah[index];
 
-            if(confirm(`Terima pembayaran angsuran dari ${d.nama} sebesar Rp ${angsuran.toLocaleString()}?\n\n(Ini akan memperbarui status LUNAS untuk periode ini)`)) {
-                
-                // 1. Catat Transaksi Keuangan
-                dbArusKas.push({ date: Date.now(), unit: activeApp, type: 'Masuk', amount: angsuran, desc: `Angsuran a.n ${d.nama}` });
-                
-                // 2. UPDATE TANGGAL JATUH TEMPO (Maju 1 Bulan/Minggu)
-                let currentDue = d.nextDueDate ? new Date(d.nextDueDate) : new Date(); // Ambil jadwal lama atau hari ini
-                
-                if(d.tenorType === 'Minggu') {
-                    currentDue.setDate(currentDue.getDate() + 7); // Tambah 7 hari
-                } else {
-                    currentDue.setMonth(currentDue.getMonth() + 1); // Tambah 1 bulan
-                }
-                
-                // Simpan tanggal baru ke database
-                dbNasabah[index].nextDueDate = currentDue.getTime();
-
-                // 3. Cek Pelunasan Total (Opsional)
-                let isLunas = confirm("Apakah nasabah ini sudah MELUNASI SELURUH TOTAL HUTANGNYA (Selesai Kontrak)?\n\nKlik BATAL jika hanya bayar angsuran bulanan biasa.");
-                if(isLunas) { dbNasabah[index].payStatus = 'Lunas'; }
-
-                saveToCloud(); 
-                
-                // Kirim WA
-                let sapaan = d.gender === 'L' ? 'Bapak' : 'Ibu';
-                let msg = settings.pesanBayar.replace('{sapaan}', sapaan).replace('{nama}', d.nama).replace('{tagihan}', 'Rp ' + parseInt(angsuran).toLocaleString()) + `\n\nJatuh Tempo Berikutnya: ${currentDue.toLocaleDateString()}`;
-                openWA(d.wa, msg);
-                
-                alert("Pembayaran berhasil! Tanggal jatuh tempo diperbarui.");
-                page('billing'); 
-            }
+    // HANYA UNTUK BAYAR CICILAN BIASA
+    if(confirm(`Terima pembayaran ANGSURAN dari ${d.nama} sebesar Rp ${angsuran.toLocaleString()}?`)) {
+        
+        // 1. Catat Transaksi
+        dbArusKas.push({ date: Date.now(), unit: activeApp, type: 'Masuk', amount: angsuran, desc: `Angsuran a.n ${d.nama}` });
+        
+        // 2. Majukan Tanggal Jatuh Tempo
+        let currentDue = d.nextDueDate ? new Date(d.nextDueDate) : new Date(); 
+        if(d.tenorType === 'Minggu') {
+            currentDue.setDate(currentDue.getDate() + 7);
+        } else {
+            currentDue.setMonth(currentDue.getMonth() + 1);
         }
+        dbNasabah[index].nextDueDate = currentDue.getTime();
+
+        saveToCloud(); 
+        
+        // WA Bukti Bayar
+        let sapaan = d.gender === 'L' ? 'Bapak' : 'Ibu';
+        let msg = settings.pesanBayar.replace('{sapaan}', sapaan).replace('{nama}', d.nama).replace('{tagihan}', 'Rp ' + parseInt(angsuran).toLocaleString()) + `\n\nJatuh Tempo Berikutnya: ${currentDue.toLocaleDateString()}`;
+        openWA(d.wa, msg);
+        
+        alert("Angsuran Diterima. Jadwal diperbarui.");
+        page('billing'); 
+    }
+}
+        // --- FUNGSI BARU: PELUNASAN TOTAL ---
+function prosesPelunasan(id, totalHutangAwal) {
+    let index = dbNasabah.findIndex(x => x.id == id);
+    if (index === -1) return;
+    let d = dbNasabah[index];
+
+    // 1. Konfirmasi Awal
+    let inputBayar = prompt(`PELUNASAN TOTAL a.n ${d.nama}\n\nMasukkan Nominal Pelunasan (Sisa Hutang):`, "0");
+    
+    if (!inputBayar || parseInt(inputBayar) <= 0) return; // Batal jika kosong
+
+    if (confirm(`Yakin memproses PELUNASAN untuk ${d.nama} sebesar Rp ${parseInt(inputBayar).toLocaleString()}?\n\nStatus nasabah akan berubah menjadi LUNAS (Selesai).`)) {
+        
+        // 2. Catat Uang Masuk (Tipe Khusus: Pelunasan)
+        dbArusKas.push({ 
+            date: Date.now(), 
+            unit: activeApp, 
+            type: 'Masuk', 
+            amount: parseInt(inputBayar), 
+            desc: `Pelunasan Dini a.n ${d.nama}` 
+        });
+
+        // 3. Update Status Nasabah jadi LUNAS
+        dbNasabah[index].payStatus = 'Lunas';
+        
+        // (Opsional) Hapus tagihan berikutnya karena sudah lunas
+        dbNasabah[index].nextDueDate = null;
+
+        saveToCloud();
+        
+        // 4. Kirim WA Terima Kasih
+        let msg = `Alhamdulillah. Terima kasih Bapak/Ibu ${d.nama}, pembiayaan Anda telah LUNAS sebesar Rp ${parseInt(inputBayar).toLocaleString()}. Semoga berkah.`;
+        openWA(d.wa, msg);
+
+        alert("Pelunasan Berhasil! Nasabah kini masuk ke Arsip Lunas.");
+        page('billing');
+    }
+}
 
         function deleteLunas(id) { if(confirm("Hapus permanen?")) { let idx = dbNasabah.findIndex(x => x.id == id); dbNasabah.splice(idx, 1); saveToCloud(); page('laporan_detail'); } }
         function printArsipLunas() { let lunas = dbNasabah.filter(x => x.unit === activeApp && x.payStatus === 'Lunas'); let rows = lunas.map((x,i) => `<tr><td>${i+1}</td><td>${x.nama}</td><td>${x.unit.toUpperCase()}</td><td>Rp ${parseInt(x.plafond).toLocaleString()}</td></tr>`).join(''); let html = `<div class="paper"><div class="bank-header"><img src="${settings.logo}" class="bank-logo"><div class="bank-info"><h1>${settings.nama}</h1><p>ARSIP NASABAH LUNAS</p></div></div><div class="doc-body"><table class="fin-table"><thead><tr><th>No</th><th>Nama</th><th>Unit</th><th>Plafond</th></tr></thead><tbody>${rows}</tbody></table><br><div style="text-align:right">Manager Unit</div></div></div>`; document.getElementById('printable-area').innerHTML = html; }
