@@ -824,53 +824,58 @@
             else if(id === 'billing') {
                 t.innerText = "Tagihan & Pembayaran";
                 
-                // Filter: Hanya tampilkan nasabah milik Marketing tersebut
+                // 1. FILTER NASABAH (Hanya tampilkan nasabah milik Marketing tersebut)
                 let myClients = dbNasabah.filter(x => {
                     let isUnit = x.unit === activeApp;
                     let isAppr = x.status === 'Approved';
+                    // Jika login sebagai MARKETING, hanya lihat data inputannya sendiri
+                    // Jika MANAGER, lihat semua data unit
                     let isMine = (activeUser.role === 'MARKETING') ? (x.inputBy === activeUser.user) : true;
                     return isUnit && isAppr && isMine;
                 });
 
-                JavaScript
+                // 2. BUAT BARIS TABEL
+                let rows = myClients.map(x => {
+                    let p = parseInt(x.plafond); 
+                    let tenor = parseInt(x.tenor); 
+                    
+                    // Ambil margin (cegah error jika settings belum siap)
+                    let marginPersen = (settings.margins && settings.margins[activeApp]) ? settings.margins[activeApp] : 0;
+                    
+                    let totalMargin = p * (marginPersen / 100); 
+                    let totalHutang = p + totalMargin; 
+                    let angsuran = totalHutang / tenor;
+                    
+                    // Pastikan fungsi getStatusPeriode sudah ada (jika belum, dianggap status biasa)
+                    let statusBadge = (typeof getStatusPeriode === 'function') ? getStatusPeriode(x) : '<span class="badge">Cek Status</span>';
+                    
+                    return `<tr>
+                        <td data-label="Nama"><b>${x.nama}</b><br><small>${x.wa}</small></td>
+                        <td data-label="Status">${statusBadge}</td>
+                        <td data-label="Angsuran">Rp ${parseInt(angsuran).toLocaleString()}</td>
+                        <td data-label="Aksi">
+                            <div style="display:flex; gap:5px; flex-wrap:wrap;">
+                                <button class="btn btn-warning btn-sm" onclick="kirimWA('${x.id}', ${parseInt(angsuran)})">
+                                    <i class="fab fa-whatsapp"></i>
+                                </button> 
+                                <button class="btn btn-success btn-sm" onclick="bayar('${x.id}', ${parseInt(angsuran)})">Bayar</button>
+                                <button class="btn btn-primary btn-sm" style="background:#6f42c1; border:none;" onclick="prosesPelunasan('${x.id}', ${totalHutang})">Lunas</button>
+                            </div>
+                        </td>
+                    </tr>`;
+                }).join('');
 
-// ... kode sebelumnya di page('billing') ...
-
-let rows = myClients.map(x => {
-    let p = parseInt(x.plafond); 
-    let marginPersen = settings.margins[activeApp] || 0; // Fix margin ambil dari settings
-    let totalMargin = p * (marginPersen / 100); 
-    let totalHutang = p + totalMargin; 
-    let angsuran = totalHutang / parseInt(x.tenor);
-    
-    let statusBadge = getStatusPeriode(x);
-    
-    // TAMPILAN BARU: DUA TOMBOL (TAGIH & BAYAR & LUNAS)
-    return `<tr>
-        <td data-label="Nama"><b>${x.nama}</b><br><small>${x.wa}</small></td>
-        <td data-label="Status">${statusBadge}</td>
-        <td data-label="Angsuran">Rp ${parseInt(angsuran).toLocaleString()}</td>
-        <td data-label="Aksi" style="display:flex; gap:5px; flex-wrap:wrap;">
-            <button class="btn btn-warning btn-sm" onclick="kirimWA('${x.id}', ${parseInt(angsuran)})"><i class="fab fa-whatsapp"></i></button> 
-            
-            <button class="btn btn-success btn-sm" onclick="bayar('${x.id}', ${parseInt(angsuran)})">Bayar</button>
-            
-            <button class="btn btn-primary btn-sm" style="background:#6f42c1; border:none;" onclick="prosesPelunasan('${x.id}', ${totalHutang})">LUNAS</button>
-        </td>
-    </tr>`;
-}).join('');
-
+                // 3. TAMPILKAN KE LAYAR (Ini bagian yang mungkin hilang tadi)
                 b.innerHTML = `<div class="card">
                     <h4>Daftar Tagihan (Nasabah Saya)</h4>
                     <div class="table-responsive">
                         <table>
                             <thead><tr><th>Nasabah</th><th>Status</th><th>Angsuran</th><th>Aksi</th></tr></thead>
-                            <tbody>${rows || '<tr><td colspan="4">Tidak ada data.</td></tr>'}</tbody>
+                            <tbody>${rows || '<tr><td colspan="4" style="text-align:center">Tidak ada data tagihan.</td></tr>'}</tbody>
                         </table>
                     </div>
                 </div>`;
             }
-
             else if (id === 'manage_access') {
                 t.innerText = "Atur Hak Akses Menu";
                 
