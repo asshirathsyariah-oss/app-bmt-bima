@@ -790,7 +790,45 @@
             alert("Pengaturan Hak Akses Tersimpan!\n\nUser target HARUS Logout dan Login ulang agar perubahan aktif.");
         }
         function saveAnggotaLoan() { let amt = document.getElementById('ang-amt').value; let ten = document.getElementById('ang-ten').value; let type = document.getElementById('ang-type').value; if(!amt || !ten) return alert("Lengkapi Data!"); dbNasabah.push({ id: Date.now(), unit: 'sps', nama: activeUser.user, plafond: amt, tenor: ten, tenorType: type, status: 'Pending', payStatus: 'Belum', inputBy: 'Self-Service', noSurat: '-', ktp: '', foto: '' }); saveToCloud(); alert("Pengajuan Terkirim ke Manager SPS"); page('home'); }
-        function saveTabungan() { let nama = document.getElementById('t-nm').value; let setoran = document.getElementById('t-setoran').value; let tenorType = document.getElementById('t-tenor-type').value; let tenor = document.getElementById('t-tenor').value; if(!nama || !setoran) return alert("Data belum lengkap"); dbTabungan.push({ id: Date.now(), unit: activeApp, nama: nama, setoranAwal: setoran, tenorType: tenorType, tenor: tenor, saldo: setoran, inputBy: activeUser.user, date: Date.now() }); dbArusKas.push({date:Date.now(), unit: activeApp, type:'Masuk', amount: 5000, desc: `Adm Buka Rek ${nama}`}); saveToCloud(); alert("Rekening Tabungan Berhasil Dibuat"); page('input_tabungan'); }
+        function saveTabungan() { 
+    let nama = document.getElementById('t-nm').value; 
+    let setoran = document.getElementById('t-setoran').value; 
+    let tenorType = document.getElementById('t-tenor-type').value; 
+    let tenor = document.getElementById('t-tenor').value; 
+    
+    // Ambil Admin dari Input (Default 5000)
+    let elAdm = document.getElementById('t-adm');
+    let biayaAdmin = elAdm ? (parseInt(elAdm.value) || 0) : 5000;
+
+    if(!nama || !setoran) return alert("Data belum lengkap"); 
+    
+    dbTabungan.push({ 
+        id: Date.now(), 
+        unit: activeApp, 
+        nama: nama, 
+        setoranAwal: setoran, 
+        tenorType: tenorType, 
+        tenor: tenor, 
+        saldo: setoran, 
+        inputBy: activeUser.user, 
+        date: Date.now() 
+    }); 
+    
+    // Uang Admin Masuk ke KAS UNIT
+    if(biayaAdmin > 0) {
+        dbArusKas.push({
+            date: Date.now(), 
+            unit: activeApp, 
+            type: 'Masuk', 
+            amount: biayaAdmin, 
+            desc: `Pendapatan Adm Buka Rek ${nama}`
+        }); 
+    }
+
+    saveToCloud(); 
+    alert("Rekening Berhasil Dibuat. Admin masuk ke Kas Unit."); 
+    page('input_tabungan'); 
+}
 
         // --- PAGE CONTROLLER (ROUTER) ---
         function page(id) {
@@ -1122,7 +1160,38 @@
                     b.innerHTML=`<div class="card" style="max-width:600px"><div class="form-vertical"><label>Data Diri</label><input id="i-nm" class="form-control" placeholder="Nama Lengkap"><select id="i-jk" class="form-control"><option value="">-- Pilih Jenis Kelamin --</option><option value="L">Laki-laki</option><option value="P">Perempuan</option></select><input id="i-nik" class="form-control" placeholder="NIK"><input id="i-al" class="form-control" placeholder="Alamat"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><input id="i-wa" class="form-control" placeholder="No. WA"><input id="i-em" class="form-control" placeholder="Email"></div><label>Pengajuan</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><input id="i-pl" class="form-control" placeholder="Plafond (Rp)"><input id="i-tn" class="form-control" placeholder="Lama Tenor (Angka)"></div><label>Tipe Tenor</label>${tenorOpt}${ex}<hr><div class="form-group"><label>Foto KTP</label><div class="ktp-frame"><input type="file" onchange="readKTPPhoto(this)" style="position:relative; z-index:2;"></div></div><div class="form-group"><label>Foto Wajah</label><input type="file" onchange="readFoto(this)"></div><button class="btn btn-primary" onclick="subNas()">Simpan Data</button></div></div>`; 
                 }
             }
-            else if(id==='input_tabungan') { t.innerText="Input Tabungan"; let tenorOpt = `<select id="t-tenor-type" class="form-control"><option value="Harian">Harian</option><option value="Minggu">Mingguan</option><option value="Bulan">Bulanan</option></select>`; b.innerHTML=`<div class="card" style="max-width:600px"><div class="form-vertical"><h4>Buka Rekening</h4><input id="t-nm" class="form-control" placeholder="Nama"><input id="t-setoran" type="number" class="form-control" placeholder="Setoran Awal (Rp)"><label>Periode</label>${tenorOpt}<input id="t-tenor" class="form-control" placeholder="Lama Menabung (Angka)"><button class="btn btn-success" onclick="saveTabungan()">Buka Rekening</button></div></div><div class="card"><h4>Cetak Buku</h4><div class="table-responsive"><table><thead><tr><th>Nama</th><th>Saldo</th><th>Aksi</th></tr></thead><tbody>${dbTabungan.map(t => `<tr><td>${t.nama}</td><td>Rp ${parseInt(t.saldo).toLocaleString()}</td><td><button class="btn btn-sm btn-primary" onclick="printBukuTabungan('${t.id}')">PDF Buku</button></td></tr>`).join('')}</tbody></table></div></div>`; }
+            else if(id==='input_tabungan') { 
+                t.innerText="Input Tabungan"; 
+                let tenorOpt = `<select id="t-tenor-type" class="form-control"><option value="Harian">Harian</option><option value="Minggu">Mingguan</option><option value="Bulan">Bulanan</option></select>`; 
+                
+                b.innerHTML=`
+                <div class="card" style="max-width:600px">
+                    <div class="form-vertical">
+                        <h4>Buka Rekening</h4>
+                        <input id="t-nm" class="form-control" placeholder="Nama Nasabah">
+                        <input id="t-setoran" type="number" class="form-control" placeholder="Setoran Awal (Rp)">
+                        
+                        <label>Periode Menabung</label>
+                        ${tenorOpt}
+                        <input id="t-tenor" class="form-control" placeholder="Lama Menabung (Angka)">
+                        
+                        <label style="color:green; font-weight:bold;">Biaya Admin (Masuk Unit)</label>
+                        <input id="t-adm" type="number" class="form-control" placeholder="Contoh: 5000" value="5000">
+                        <hr>
+                        
+                        <button class="btn btn-success" onclick="saveTabungan()">Buka Rekening</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <h4>Daftar Rekening</h4>
+                    <div class="table-responsive">
+                        <table>
+                            <thead><tr><th>Nama</th><th>Saldo</th><th>Aksi</th></tr></thead>
+                            <tbody>${dbTabungan.map(t => `<tr><td>${t.nama}</td><td>Rp ${parseInt(t.saldo).toLocaleString()}</td><td><button class="btn btn-sm btn-primary" onclick="printBukuTabungan('${t.id}')">PDF Buku</button></td></tr>`).join('')}</tbody>
+                        </table>
+                    </div>
+                </div>`; 
+            }
             else if(id==='identitas') { t.innerText="Identitas"; b.innerHTML=`<div class="card"><h4>Identitas Lembaga</h4><div class="form-vertical"><label>Nama BMT</label><input id="s-nm" class="form-control" value="${settings.nama}"><label>Nomor Izin</label><input id="s-iz" class="form-control" value="${settings.izin}"><label>Alamat Lengkap</label><input id="s-al" class="form-control" value="${settings.alamat}"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><label>Email</label><input id="s-em" class="form-control" value="${settings.email}"></div><div><label>WA</label><input id="s-wa" class="form-control" value="${settings.wa}"></div></div><hr><label><b>Logo Baru:</b></label><input type="file" onchange="updateLogo(this)"><label><b>Wallpaper:</b></label><input type="file" onchange="updateWall(this)"><button class="btn btn-primary" onclick="saveID()">Simpan</button></div></div>`; }
             else if(id==='home' && activeApp==='induk') { t.innerText="Dashboard Induk"; let prof = parseInt(settings.shu.profit); let totalAsset = dbDana.reduce((a,b)=>a+parseInt(b.amount),0); let shuAnggotaTotal = prof * (settings.shu.p_nasabah / 100); let totalPinjamanAll = dbNasabah.filter(x=>x.status==='Approved').reduce((a,b)=>a+parseInt(b.plafond),0); let shuRows = dbNasabah.filter(x=>x.status==='Approved').map(x => { let share = (parseInt(x.plafond) / totalPinjamanAll) * shuAnggotaTotal; if(isNaN(share)) share = 0; return `<tr><td data-label="Nama">${x.nama}</td><td data-label="Pinjaman">Rp ${parseInt(x.plafond).toLocaleString()}</td><td data-label="SHU">Rp ${share.toLocaleString(undefined, {maximumFractionDigits:0})}</td></tr>`; }).join(''); b.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(250px,1fr));gap:20px;margin-bottom:20px"><div class="card" style="background:var(--primary-gradient);color:white"><h3>SHU Berjalan</h3><h2>Rp ${prof.toLocaleString()}</h2></div><div class="card" style="background:var(--secondary-gradient);color:#0f3d3e"><h3>Total Aset</h3><h2>Rp ${totalAsset.toLocaleString()}</h2></div></div><div class="card"><h3>Estimasi SHU Anggota</h3><p>Alokasi: <b>Rp ${shuAnggotaTotal.toLocaleString()}</b></p><div class="table-responsive"><table><thead><tr><th>Nama</th><th>Pinjaman</th><th>Est. SHU</th></tr></thead><tbody>${shuRows || '<tr><td colspan="3">Data kosong.</td></tr>'}</tbody></table></div></div>`; }
             else if(id==='home') { 
@@ -1568,18 +1637,64 @@ function prosesPelunasan(id, totalHutangAwal) {
         function delUser(i) { dbUsers.splice(i,1); saveToCloud(); page('users'); }
         function approve(id, nominal) { 
             // 1. Hitung Total Modal Masuk dari Pusat
+        function approve(id, nominal) { 
+            // --- 1. POPUP INPUT BIAYA ADMIN ---
+            // Manager bisa isi 0 jika tidak ada, atau 50000, 100000, dst.
+            let inputAdmin = prompt("Masukkan Biaya Administrasi (Masuk ke Kas Unit):", "0");
+            if (inputAdmin === null) return; // Batal jika tekan Cancel
+            let biayaAdmin = parseInt(inputAdmin) || 0;
+
+            // --- 2. CEK LIMIT DANA (Sama seperti sebelumnya) ---
             let masuk = dbDana.filter(x => x.unit === activeApp && x.status === 'Approved').reduce((a,b)=>a+parseInt(b.amount),0); 
-            
-            // 2. PERBAIKAN: Hanya hitung nasabah yang BELUM LUNAS (Status Aktif)
-            // Nasabah yang 'payStatus' === 'Lunas' tidak akan dihitung, sehingga Limit aman
             let keluar = dbNasabah.filter(x => x.unit === activeApp && x.status === 'Approved' && x.payStatus !== 'Lunas').reduce((a,b)=>a+parseInt(b.plafond),0); 
-            
             let limitPersen = settings.limits[activeApp] || 100; 
             
-            // Cek apakah (Uang Terpakai + Pengajuan Baru) melebihi (Modal x Limit%)
+            // Rumus Sisa Kuota: (Modal + Angsuran Masuk + Pendapatan Admin) - (Pinjaman Cair)
+            // Agar simpel, kita pakai logika Limit Modal vs Pinjaman Aktif saja dulu
             if(keluar + parseInt(nominal) > masuk * (limitPersen / 100)) {
-                return alert(`GAGAL: Limit Kredit Unit ${limitPersen}% Sudah Penuh!\n\nTerpakai: Rp ${keluar.toLocaleString()}\nSisa Kuota: Rp ${(masuk*(limitPersen/100) - keluar).toLocaleString()}`);
+                return alert(`GAGAL: Limit Kredit Unit ${limitPersen}% Sudah Penuh!\nTerpakai: Rp ${keluar.toLocaleString()}`);
             }
+
+            // --- 3. PROSES ACC ---
+            let i = dbNasabah.findIndex(x => x.id == id); 
+            let d = dbNasabah[i];
+            
+            d.status = 'Approved'; 
+            d.noSurat = `BIMA/${settings.codes[activeApp]}/${Math.floor(Math.random()*1000)}/2026`; 
+            
+            // Generate Akun Login Nasabah
+            let nasabahUser = d.nama.replace(/\s/g, '').toLowerCase();
+            dbUsers.push({ user: nasabahUser, password: '123', role: 'nasabah', app: 'induk', photo: d.foto });
+
+            // --- 4. PENCATATAN KEUANGAN OTOMATIS (SISTEM KUNCI) ---
+            
+            // A. Uang Keluar (Pencairan Pinjaman)
+            dbArusKas.push({
+                date: Date.now(),
+                unit: activeApp,      // <--- KUNCI: Tetap di Unit (SPS/KMS/Gadai)
+                type: 'Keluar',
+                amount: nominal,
+                desc: `Pencairan Pembiayaan a.n ${d.nama}`
+            });
+
+            // B. Uang Masuk (Biaya Administrasi) -> MASUK KE KAS UNIT
+            if(biayaAdmin > 0) {
+                dbArusKas.push({
+                    date: Date.now(),
+                    unit: activeApp,  // <--- KUNCI: Masuk ke Dompet Unit, BUKAN PUSAT
+                    type: 'Masuk',
+                    amount: biayaAdmin,
+                    desc: `Pendapatan Admin Akad a.n ${d.nama}`
+                });
+            }
+
+            saveToCloud(); 
+            page('approval'); 
+            
+            // Info ke Manager
+            let danaDiterima = parseInt(nominal) - biayaAdmin;
+            alert(`BERHASIL DI-ACC!\n\nPlafond: Rp ${parseInt(nominal).toLocaleString()}\nAdmin Unit: Rp ${biayaAdmin.toLocaleString()}\n\nDana yang Diberikan ke Nasabah: Rp ${danaDiterima.toLocaleString()}`);
+        }
 
             // Proses ACC
             let i=dbNasabah.findIndex(x=>x.id==id); 
