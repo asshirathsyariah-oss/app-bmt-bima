@@ -1260,17 +1260,18 @@ function prosesPelunasan(id, totalHutangAwal) {
         function saveSimpananWajib() { let u = document.getElementById('sw-user').value; let amt = settings.simpananWajib; dbSimpananWajib.push({date: Date.now(), user: u, amount: amt}); saveToCloud(); alert("Pembayaran Iuran Diterima!"); page('simpanan_wajib'); }
         function tagihIuranWA(user) { let targetUser = dbUsers.find(x => x.user === user); let wa = targetUser ? targetUser.noHP : ''; if(!wa) wa = prompt("Masukkan Nomor WA " + user + " (628...):"); let amount = prompt("Edit Nominal Tagihan:", parseInt(settings.simpananWajib)); if(!amount) return; let msg = (settings.pesanIuran || "Segera bayar iuran.").replace('{sapaan}', 'Bapak/Ibu').replace('{nama}', user).replace('{tagihan}', 'Rp ' + parseInt(amount).toLocaleString()); if(wa) { openWA(wa, msg); } }
         // --- HAPUS function subNas() YANG LAMA, GANTI DENGAN INI ---
+        // --- HAPUS function subNas() YANG LAMA, GANTI DENGAN INI ---
+
         function subNas() {
-    // 1. Fungsi Pembantu: Mengambil nilai dengan AMAN (Anti-Crash)
-    // Jika kolom tidak ditemukan, dia akan mengembalikan text kosong atau default
+    // Fungsi Pembantu: Mengambil nilai dengan AMAN
     const getVal = (id, defaultValue = '') => {
         let el = document.getElementById(id);
         return el ? el.value : defaultValue;
     };
 
     try {
-        // Ambil data menggunakan fungsi aman di atas
-        let type = getVal('i-tenor-type', 'Bulan'); // Default Bulan jika error
+        // Ambil Tipe Tenor (Bulan/Minggu)
+        let type = getVal('i-tenor-type', 'Bulan'); 
         
         // Hitung Tanggal Jatuh Tempo
         let firstDue = new Date();
@@ -1285,21 +1286,28 @@ function prosesPelunasan(id, totalHutangAwal) {
         // Susun Data Nasabah
         let d = { 
             id: Date.now(), 
-            unit: activeApp || 'umum', // Jaga-jaga jika activeApp kosong
+            unit: activeApp || 'umum', 
             
-            // KITA PAKAI getVal UNTUK SEMUA KOLOM (BIAR TIDAK ADA YANG NULL)
+            // --- DATA DIRI ---
             nama: getVal('i-nm', 'Tanpa Nama'), 
             gender: getVal('i-jk', 'L'), 
             nik: getVal('i-nik', '-'), 
             alamat: getVal('i-al', '-'), 
             wa: getVal('i-wa', '-'), 
             email: getVal('i-em', '-'), 
+            
+            // --- DATA PENGAJUAN (YANG DIPERBAIKI) ---
             plafond: getVal('i-pl', '0'), 
-            tenor: getVal('i-tenor', '0'), 
+            
+            // PERBAIKAN UTAMA DI SINI:
+            // Dulu 'i-tenor' (salah), Sekarang 'i-tn' (benar sesuai HTML)
+            tenor: getVal('i-tn', '0'), 
+            
             tenorType: type, 
             dp: getVal('i-dp', '0'),           
             jaminan: getVal('i-jam', '-'),     
             
+            // --- STATUS ---
             status: 'Pending', 
             payStatus: 'Belum', 
             noSurat: '-', 
@@ -1316,12 +1324,10 @@ function prosesPelunasan(id, totalHutangAwal) {
         page('input'); // Refresh halaman input
 
     } catch (e) {
-        // Jika masih error (sangat kecil kemungkinannya), kita akan tahu penyebabnya
         alert("SISTEM ERROR: " + e.message);
         console.error(e);
     }
 }
-
         function waMarketing(marketingName, nasabahName) { let targetUser = dbUsers.find(x => x.user === marketingName); let wa = targetUser ? targetUser.noHP : ''; if(!wa) wa = prompt(`Masukkan Nomor WA Marketing (${marketingName}):`); let msg = `Assalamu'alaikum ${marketingName}, tolong segera follow-up nasabah atas nama ${nasabahName} karena status pembayaran bulan ini menunggak/macet. Terima kasih.`; if(wa) openWA(wa, msg); }
         function kirimWA(id, angsuran) { let d = dbNasabah.find(x => x.id == id); let sapaan = d.gender === 'L' ? 'Bapak' : 'Ibu'; let tglJatuhTempo = new Date(); tglJatuhTempo.setDate(tglJatuhTempo.getDate() + 5); let tglStr = tglJatuhTempo.toLocaleDateString('id-ID'); let editAngsuran = prompt("Nominal Tagihan:", angsuran); if(!editAngsuran) return; let msg = settings.pesanTagih.replace('{sapaan}', sapaan).replace('{nama}', d.nama).replace('{tagihan}', 'Rp ' + parseInt(editAngsuran).toLocaleString()).replace('{tanggal}', tglStr); openWA(d.wa, msg); }
         
