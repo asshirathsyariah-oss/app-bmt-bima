@@ -357,7 +357,25 @@
         }
         const db = firebase.database();
 
-        const defaultUsers = [{user:'ketua',role:'ketua',app:'induk',password:'123', photo:''}, {user:'haura app',role:'admin',app:'induk',password:'12345', photo:''}, {user:'bendahara',role:'bendahara',app:'induk',password:'123', photo:''}, {user:'sekretaris',role:'sekretaris',app:'induk',password:'123', photo:''}, {user:'anggota',role:'anggota',app:'induk',password:'123', photo:''}, {user:'manager',role:'manager',app:'unit',unitScope:'sps',password:'123', photo:''}, {user:'nasabah_demo',role:'nasabah',app:'induk',password:'123', photo:''}];
+        const defaultUsers = [
+    {
+        user:'ketua', role:'ketua', app:'induk', password:'123', 
+        photo:'https://cdn-icons-png.flaticon.com/512/3135/3135768.png' // Foto Ketua
+    }, 
+    {
+        user:'haura app', role:'admin', app:'induk', password:'12345', 
+        photo:'https://cdn-icons-png.flaticon.com/512/3135/3135715.png' // Foto Admin
+    }, 
+    {
+        user:'bendahara', role:'bendahara', app:'induk', password:'123', 
+        photo:'https://cdn-icons-png.flaticon.com/512/3135/3135823.png' // Foto Bendahara
+    },
+    // ... user lainnya silakan diisi linknya jika mau
+    {user:'sekretaris', role:'sekretaris', app:'induk', password:'123', photo:''}, 
+    {user:'anggota', role:'anggota', app:'induk', password:'123', photo:''}, 
+    {user:'manager', role:'manager', app:'unit', unitScope:'sps', password:'123', photo:''}, 
+    {user:'nasabah_demo', role:'nasabah', app:'induk', password:'123', photo:''}
+];
         
         const defaultConfig = { 
             nama: "BMT BINA INSAN ASSIROT", izin: "518/BH/KWK/2025", alamat: "Jl. Jendral Sudirman No. 45", wa: "08123456789", email: "info@bmt.co.id", logo: "https://cdn-icons-png.flaticon.com/512/2317/2317968.png", 
@@ -601,7 +619,16 @@
             try {
                 document.getElementById('user-role-display').innerText = activeUser.role; document.getElementById('user-name-display').innerText = activeUser.user;
                 let fotoProfil = activeUser.photo || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
-                document.getElementById('header-profile-pic').src = fotoProfil;
+                // Update Foto Profil di Header
+                let imgEl = document.getElementById('header-profile-pic');
+                if(imgEl) {
+                    // Jika user punya foto, pakai. Jika tidak, pakai default.
+                    if(activeUser.photo && activeUser.photo !== "") {
+                        imgEl.src = activeUser.photo;
+                    } else {
+                        imgEl.src = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+                    }
+                }
                 let m = document.getElementById('menu-container'); m.innerHTML = ''; 
                 let notifCount = dbInstruksi ? dbInstruksi.filter(x => x.toRole && x.toRole.toUpperCase() === activeUser.role && !x.read).length : 0;
                 let badge = notifCount > 0 ? `<span class="badge" style="background:red; color:white; padding:2px 6px; border-radius:50%; font-size:10px; margin-left:auto;">${notifCount}</span>` : '';
