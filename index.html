@@ -1261,42 +1261,67 @@ function prosesPelunasan(id, totalHutangAwal) {
         function tagihIuranWA(user) { let targetUser = dbUsers.find(x => x.user === user); let wa = targetUser ? targetUser.noHP : ''; if(!wa) wa = prompt("Masukkan Nomor WA " + user + " (628...):"); let amount = prompt("Edit Nominal Tagihan:", parseInt(settings.simpananWajib)); if(!amount) return; let msg = (settings.pesanIuran || "Segera bayar iuran.").replace('{sapaan}', 'Bapak/Ibu').replace('{nama}', user).replace('{tagihan}', 'Rp ' + parseInt(amount).toLocaleString()); if(wa) { openWA(wa, msg); } }
         
         function subNas() { 
-            // Hitung Jatuh Tempo Pertama (Default 1 Bulan/Minggu dari sekarang)
-            let type = document.getElementById('i-tenor-type').value;
-            let firstDue = new Date();
-            if(type === 'Minggu') firstDue.setDate(firstDue.getDate() + 7);
-            else firstDue.setMonth(firstDue.getMonth() + 1);
+    try {
+        // --- 1. AMBIL DATA DENGAN CARA AMAN (CEK DULU APAKAH ELEMENT ADA) ---
+        
+        // Cek Tenor Type
+        let elType = document.getElementById('i-tenor-type');
+        let type = elType ? elType.value : 'Bulan'; // Default Bulan jika error
 
-            let d = { 
-                id: Date.now(), 
-                unit: activeApp, 
-                nama: document.getElementById('i-nm').value, 
-                gender: document.getElementById('i-jk').value, 
-                nik: document.getElementById('i-nik').value, 
-                alamat: document.getElementById('i-al').value, 
-                wa: document.getElementById('i-wa').value, 
-                email: document.getElementById('i-em').value, 
-                plafond: document.getElementById('i-pl').value, 
-                tenor: document.getElementById('i-tenor').value, 
-                tenorType: type, 
-                dp: document.getElementById('i-dp')?.value||0, 
-                jaminan: document.getElementById('i-jam')?.value||'-', 
-                status: 'Pending', 
-                payStatus: 'Belum', 
-                noSurat: '-', 
-                foto: (typeof tempFoto !== 'undefined') ? tempFoto : "", 
-                ktp: (typeof tempKTPPhoto !== 'undefined') ? tempKTPPhoto : "", 
-                inputBy: activeUser ? activeUser.user : 'Unknown',
-                
-                // DATA BARU: Tanggal Jatuh Tempo Berikutnya
-                nextDueDate: firstDue.getTime() 
-            }; 
-            
-            dbNasabah.push(d); 
-            saveToCloud(); 
-            alert('Saved'); 
-            page('input'); 
-        }
+        // Cek DP (Hanya ada di KMS, unit lain null)
+        let elDP = document.getElementById('i-dp');
+        let valDP = elDP ? elDP.value : 0; 
+
+        // Cek Jaminan (Hanya ada di Gadai, unit lain null)
+        let elJam = document.getElementById('i-jam');
+        let valJam = elJam ? elJam.value : '-';
+
+        // --- 2. HITUNG TANGGAL JATUH TEMPO ---
+        let firstDue = new Date();
+        if(type === 'Minggu') firstDue.setDate(firstDue.getDate() + 7);
+        else firstDue.setMonth(firstDue.getMonth() + 1);
+
+        // --- 3. PASTIKAN VARIABEL FOTO AMAN ---
+        // Menggunakan pengecekan typeof agar tidak error jika variabel belum dibuat
+        let fotoFinal = (typeof tempFoto !== 'undefined') ? tempFoto : '';
+        let ktpFinal = (typeof tempKTPPhoto !== 'undefined') ? tempKTPPhoto : '';
+        let userFinal = activeUser ? activeUser.user : 'Unknown';
+
+        // --- 4. SUSUN DATA ---
+        let d = { 
+            id: Date.now(), 
+            unit: activeApp, 
+            nama: document.getElementById('i-nm').value, 
+            gender: document.getElementById('i-jk').value, 
+            nik: document.getElementById('i-nik').value, 
+            alamat: document.getElementById('i-al').value, 
+            wa: document.getElementById('i-wa').value, 
+            email: document.getElementById('i-em').value, 
+            plafond: document.getElementById('i-pl').value, 
+            tenor: document.getElementById('i-tenor').value, 
+            tenorType: type, 
+            dp: valDP,           // <-- Menggunakan nilai aman
+            jaminan: valJam,     // <-- Menggunakan nilai aman
+            status: 'Pending', 
+            payStatus: 'Belum', 
+            noSurat: '-', 
+            foto: fotoFinal,     
+            ktp: ktpFinal,       
+            inputBy: userFinal,
+            nextDueDate: firstDue.getTime() 
+        }; 
+
+        // --- 5. EKSEKUSI SIMPAN ---
+        dbNasabah.push(d); 
+        saveToCloud(); 
+        alert('DATA BERHASIL DISIMPAN!'); 
+        page('input'); 
+
+    } catch (e) {
+        // Jika masih error, pesan ini akan muncul di layar HP Anda
+        alert("GAGAL SIMPAN: " + e.message);
+    }
+}
 
         function waMarketing(marketingName, nasabahName) { let targetUser = dbUsers.find(x => x.user === marketingName); let wa = targetUser ? targetUser.noHP : ''; if(!wa) wa = prompt(`Masukkan Nomor WA Marketing (${marketingName}):`); let msg = `Assalamu'alaikum ${marketingName}, tolong segera follow-up nasabah atas nama ${nasabahName} karena status pembayaran bulan ini menunggak/macet. Terima kasih.`; if(wa) openWA(wa, msg); }
         function kirimWA(id, angsuran) { let d = dbNasabah.find(x => x.id == id); let sapaan = d.gender === 'L' ? 'Bapak' : 'Ibu'; let tglJatuhTempo = new Date(); tglJatuhTempo.setDate(tglJatuhTempo.getDate() + 5); let tglStr = tglJatuhTempo.toLocaleDateString('id-ID'); let editAngsuran = prompt("Nominal Tagihan:", angsuran); if(!editAngsuran) return; let msg = settings.pesanTagih.replace('{sapaan}', sapaan).replace('{nama}', d.nama).replace('{tagihan}', 'Rp ' + parseInt(editAngsuran).toLocaleString()).replace('{tanggal}', tglStr); openWA(d.wa, msg); }
