@@ -968,142 +968,135 @@
         function printLaporanKas(unitScope) { let title = unitScope === 'induk' ? 'LAPORAN ARUS KAS PUSAT (BMT)' : `LAPORAN KAS UNIT ${unitScope.toUpperCase()}`; let transactions = unitScope === 'induk' ? dbArusKas.filter(x => x.unit === 'induk') : dbArusKas.filter(x => x.unit === unitScope); let rows = transactions.map(x => `<tr><td>${new Date(x.date).toLocaleDateString()}</td><td>${x.type}</td><td>${x.desc}</td><td>Rp ${parseInt(x.amount).toLocaleString()}</td></tr>`).join(''); let html = `<div class="paper"><div class="bank-header"><img src="${settings.logo}" class="bank-logo"><div class="bank-info"><h1>${settings.nama}</h1><p>${title}</p></div></div><div class="doc-body"><br><table class="fin-table"><thead><tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Nominal</th></tr></thead><tbody>${rows || '<tr><td colspan="4" style="text-align:center">Tidak ada data transaksi.</td></tr>'}</tbody></table><br><br><div style="display:flex; justify-content:space-between; margin-top:50px;"><div style="text-align:center;">Mengetahui,<br>Pimpinan<br><br><br><br>(....................)</div><div style="text-align:center;">Dibuat Oleh,<br>${activeUser.role}<br><br><br><br>(${activeUser.user})</div></div></div><div class="doc-footer">Dicetak resmi dari sistem ${settings.nama} pada ${new Date().toLocaleString()}</div></div>`; document.getElementById('printable-area').innerHTML = html; }
 
         function printAkad(id) {
-    let d = dbNasabah.find(x => x.id == id);
-    if (!d) return alert("Data tidak ditemukan");
+            let d = dbNasabah.find(x => x.id == id);
+            if (!d) return alert("Data tidak ditemukan");
 
-    // Persiapan Data
-    let uName = d.unit === 'sps' ? 'MUDHARABAH (BAGI HASIL)' : (d.unit === 'kms' ? 'MURABAHAH (JUAL BELI)' : 'RAHN (GADAI)');
-    let tpl = d.unit === 'sps' ? settings.templates.sps : (d.unit === 'kms' ? settings.templates.kms : settings.templates.gadai);
-    let margin = parseInt(d.plafond) * (settings.margins[d.unit] / 100);
-    let totalTotal = parseInt(d.plafond) + margin;
-    let angsuran = totalTotal / parseInt(d.tenor);
-    
-    // Format Tanggal & Nomor
-    let tglSekarang = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-    let autoNum = d.noSurat !== '-' ? d.noSurat : `0${Math.floor(Math.random() * 100)}/AKAD-BMT/${new Date().getMonth()+1}/${new Date().getFullYear()}`;
-    let photoSrc = d.foto ? d.foto : "https://cdn-icons-png.flaticon.com/512/1077/1077114.png";
-    let logoSrc = settings.logo || "https://cdn-icons-png.flaticon.com/512/2317/2317968.png";
+            // --- PERSIAPAN DATA ---
+            let uName = d.unit === 'sps' ? 'MUDHARABAH (BAGI HASIL)' : (d.unit === 'kms' ? 'MURABAHAH (JUAL BELI)' : 'RAHN (GADAI)');
+            let tpl = d.unit === 'sps' ? settings.templates.sps : (d.unit === 'kms' ? settings.templates.kms : settings.templates.gadai);
+            let margin = parseInt(d.plafond) * (settings.margins[d.unit] / 100);
+            let totalTotal = parseInt(d.plafond) + margin;
+            let angsuran = totalTotal / parseInt(d.tenor);
+            
+            let tglSekarang = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+            let autoNum = d.noSurat !== '-' ? d.noSurat : `0${Math.floor(Math.random() * 100)}/AKAD/${new Date().getFullYear()}`;
+            
+            // Cek Foto (Pakai default jika kosong/error)
+            let photoSrc = (d.foto && d.foto.length > 50) ? d.foto : "https://cdn-icons-png.flaticon.com/512/1077/1077114.png";
+            let logoSrc = settings.logo || "https://cdn-icons-png.flaticon.com/512/2317/2317968.png";
 
-    // --- HTML STRUKTUR KAKU (TABLE BASED) ---
-    // Width 790px adalah lebar ideal untuk A4 portrait di html2pdf scale 2
-    let html = `
-    <div id="akad-final" style="width: 790px; background: white; padding: 30px; font-family: 'Times New Roman', Times, serif; color: #000; box-sizing: border-box; font-size: 11pt; line-height: 1.3;">
-        
-        <table width="100%" style="border-bottom: 3px double #000; padding-bottom: 10px; margin-bottom: 15px;">
-            <tr>
-                <td width="80" align="left" valign="middle"><img src="${logoSrc}" width="75" height="75" style="object-fit: contain;"></td>
-                <td align="center" valign="middle">
-                    <div style="font-size: 16pt; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;">${settings.nama}</div>
-                    <div style="font-size: 10pt;">${settings.alamat}</div>
-                    <div style="font-size: 9pt;">Izin: ${settings.izin} | Email: ${settings.email}</div>
-                </td>
-                <td width="80"></td> </tr>
-        </table>
-
-        <div style="text-align: center; margin-bottom: 20px;">
-            <div style="font-size: 12pt; font-weight: bold; text-decoration: underline;">SURAT PERJANJIAN AKAD ${uName}</div>
-            <div style="font-size: 10pt;">Nomor: ${autoNum}</div>
-        </div>
-
-        <div style="text-align: justify; margin-bottom: 10px;">
-            Pada hari ini <b>${tglSekarang}</b>, bertempat di kantor ${settings.nama}, telah disepakati perjanjian pembiayaan antara:
-        </div>
-
-        <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border: 1px solid #000; margin-bottom: 15px;">
-            <tr>
-                <td width="130" align="center" valign="top" style="padding: 10px; border-right: 1px solid #000; background-color: #f4f4f4;">
-                    <div style="width: 3cm; height: 4cm; background: #fff; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-                        <img src="${photoSrc}" style="width: 100%; height: 100%; object-fit: cover;">
-                    </div>
-                    <div style="font-size: 8pt; margin-top: 5px;">PIHAK PERTAMA</div>
-                </td>
+            // --- HTML STRUKTUR PADAT (A4 FORMAT) ---
+            // Kita gunakan font lebih kecil (10pt) dan table layout agar tidak lari
+            let html = `
+            <div id="akad-final" style="width: 100%; font-family: 'Times New Roman', serif; color: #000; font-size: 10pt; line-height: 1.2;">
                 
-                <td valign="top" style="padding: 10px;">
-                    <table width="100%" cellpadding="3" cellspacing="0" border="0">
-                        <tr><td width="100">Nama Lengkap</td><td width="10">:</td><td><b>${d.nama.toUpperCase()}</b></td></tr>
-                        <tr><td>NIK / KTP</td><td>:</td><td>${d.nik}</td></tr>
-                        <tr><td>Alamat</td><td>:</td><td>${d.alamat}</td></tr>
-                        <tr><td>No. HP / WA</td><td>:</td><td>${d.wa}</td></tr>
-                    </table>
-                    <div style="margin-top: 5px; font-style: italic; font-size: 10pt;">Bertindak atas nama diri sendiri selaku <b>(PIHAK PERTAMA/NASABAH)</b>.</div>
-                </td>
-            </tr>
-        </table>
+                <table width="100%" style="border-bottom: 3px double #000; padding-bottom: 5px; margin-bottom: 10px;">
+                    <tr>
+                        <td width="15%" align="center"><img src="${logoSrc}" style="width:60px; height:60px; object-fit:contain;"></td>
+                        <td width="85%" align="center">
+                            <div style="font-size: 14pt; font-weight: 900; text-transform: uppercase;">${settings.nama}</div>
+                            <div style="font-size: 9pt;">${settings.alamat}</div>
+                            <div style="font-size: 9pt;">Izin: ${settings.izin} | Email: ${settings.email}</div>
+                        </td>
+                    </tr>
+                </table>
 
-        <div style="text-align: justify; margin-bottom: 15px;">
-            Serta Pimpinan Cabang/Manager yang bertindak mewakili <b>${settings.nama}</b>, selanjutnya disebut sebagai <b>PIHAK KEDUA (BMT)</b>.
-        </div>
+                <div style="text-align: center; margin-bottom: 15px;">
+                    <b style="font-size: 11pt; text-decoration: underline;">SURAT PERJANJIAN AKAD ${uName}</b><br>
+                    <span>Nomor: ${autoNum}</span>
+                </div>
 
-        <table width="100%" border="1" cellspacing="0" cellpadding="5" style="border-collapse: collapse; text-align: center; margin-bottom: 15px; font-size: 10pt;">
-            <tr style="background-color: #eee; font-weight: bold;">
-                <td>PLAFOND</td>
-                <td>TENOR</td>
-                <td>MARGIN/JASA</td>
-                <td>ANGSURAN</td>
-            </tr>
-            <tr>
-                <td>Rp ${parseInt(d.plafond).toLocaleString()}</td>
-                <td>${d.tenor} ${d.tenorType}</td>
-                <td>Rp ${parseInt(margin).toLocaleString()}</td>
-                <td style="font-weight: bold;">Rp ${parseInt(angsuran).toLocaleString()}</td>
-            </tr>
-        </table>
+                <div style="text-align: justify; margin-bottom: 10px;">
+                    Pada hari ini <b>${tglSekarang}</b>, bertempat di kantor ${settings.nama}, telah disepakati perjanjian antara:
+                </div>
 
-        <div style="border: 1px solid #000; padding: 10px; font-size: 10pt; text-align: justify; margin-bottom: 25px;">
-            <b>KETENTUAN DAN SYARAT AKAD:</b><br>
-            ${tpl.replace(/\n/g, '<br>')}
-            <br>1. Nasabah berjanji melunasi kewajiban tepat waktu sesuai jadwal.
-            <br>2. Apabila terjadi wanprestasi, akan diselesaikan secara musyawarah atau hukum syariah.
-        </div>
+                <table width="100%" border="0" cellspacing="0" cellpadding="2" style="border: 1px solid #000; margin-bottom: 10px;">
+                    <tr>
+                        <td width="20%" align="center" valign="top" style="padding: 5px; border-right: 1px solid #000; background: #f9f9f9;">
+                            <img src="${photoSrc}" style="width: 2.5cm; height: 3.5cm; object-fit: cover; border: 1px solid #ddd; background: #fff;">
+                            <div style="font-size: 8pt; margin-top: 2px;">PIHAK PERTAMA</div>
+                        </td>
+                        <td width="80%" valign="top" style="padding: 5px 10px;">
+                            <table width="100%">
+                                <tr><td width="25%">Nama</td><td width="2%">:</td><td><b>${d.nama.toUpperCase()}</b></td></tr>
+                                <tr><td>NIK</td><td>:</td><td>${d.nik}</td></tr>
+                                <tr><td>Alamat</td><td>:</td><td>${d.alamat}</td></tr>
+                                <tr><td>No. HP</td><td>:</td><td>${d.wa}</td></tr>
+                            </table>
+                            <div style="margin-top: 5px; font-style: italic; font-size: 9pt;">
+                                Bertindak atas nama diri sendiri selaku <b>(PIHAK PERTAMA / NASABAH)</b>.
+                            </div>
+                        </td>
+                    </tr>
+                </table>
 
-        <table width="100%" border="0" cellspacing="0" cellpadding="0">
-            <tr>
-                <td width="35%" align="center" valign="bottom">
-                    <div style="margin-bottom: 5px;">PIHAK PERTAMA (Nasabah)</div>
-                    
-                    <div style="border: 2px dashed #999; width: 65px; height: 65px; margin: 5px auto; display: flex; align-items: center; justify-content: center; font-size: 7pt; color: #999; font-weight: bold; text-align: center;">
-                        TEMPEL<br>E-METERAI<br>DI SINI
-                    </div>
+                <div style="text-align: justify; margin-bottom: 10px;">
+                    Serta Pimpinan Cabang/Manager yang bertindak mewakili <b>${settings.nama}</b>, selanjutnya disebut sebagai <b>PIHAK KEDUA (BMT)</b>.
+                </div>
 
-                    <div style="font-weight: bold; text-decoration: underline; margin-top: 5px;">${d.nama.toUpperCase()}</div>
-                </td>
+                <table width="100%" border="1" cellspacing="0" cellpadding="4" style="border-collapse: collapse; text-align: center; margin-bottom: 10px; font-size: 9pt;">
+                    <tr style="background-color: #eee;">
+                        <th>PLAFOND</th>
+                        <th>TENOR</th>
+                        <th>MARGIN/JASA</th>
+                        <th>ANGSURAN</th>
+                    </tr>
+                    <tr>
+                        <td>Rp ${parseInt(d.plafond).toLocaleString()}</td>
+                        <td>${d.tenor} ${d.tenorType}</td>
+                        <td>Rp ${parseInt(margin).toLocaleString()}</td>
+                        <td style="font-weight: bold;">Rp ${parseInt(angsuran).toLocaleString()}</td>
+                    </tr>
+                </table>
 
-                <td width="30%" align="center" valign="bottom">
-                    <div style="margin-bottom: 75px;">SAKSI (Marketing)</div>
-                    <div style="text-decoration: underline;">${d.inputBy || '....................'}</div>
-                </td>
+                <div style="border: 1px solid #000; padding: 8px; font-size: 9pt; text-align: justify; margin-bottom: 20px; background: #fff;">
+                    <b>KETENTUAN DAN SYARAT AKAD:</b><br>
+                    ${tpl.replace(/\n/g, '<br>')}
+                    <br>1. Nasabah berjanji melunasi kewajiban tepat waktu sesuai jadwal.
+                    <br>2. Apabila terjadi wanprestasi, akan diselesaikan secara musyawarah.
+                </div>
 
-                <td width="35%" align="center" valign="bottom">
-                    <div style="margin-bottom: 75px;">PIHAK KEDUA (BMT)</div>
-                    <div style="text-decoration: underline;">(    Manager Unit    )</div>
-                </td>
-            </tr>
-        </table>
+                <table width="100%" border="0" style="margin-top: 10px;">
+                    <tr>
+                        <td width="33%" align="center" valign="bottom">
+                            <div style="margin-bottom: 5px;">PIHAK PERTAMA</div>
+                            <div style="border: 1px dashed #999; width: 50px; height: 50px; display:flex; align-items:center; justify-content:center; font-size:7pt; color:#aaa; margin:0 auto;">E-Meterai</div>
+                            <br>
+                            <u><b>${d.nama.toUpperCase()}</b></u>
+                        </td>
+                        <td width="33%" align="center" valign="bottom">
+                            <div style="margin-bottom: 60px;">SAKSI (Marketing)</div>
+                            <u>${d.inputBy || '....................'}</u>
+                        </td>
+                        <td width="33%" align="center" valign="bottom">
+                            <div style="margin-bottom: 60px;">PIHAK KEDUA</div>
+                            <u>(   Manager Unit   )</u>
+                        </td>
+                    </tr>
+                </table>
 
-        <div style="text-align: right; font-size: 8pt; color: #888; margin-top: 20px; border-top: 1px solid #eee; padding-top: 2px;">
-            Dicetak oleh Sistem ${settings.nama} pada ${new Date().toLocaleString()}
-        </div>
-    </div>
-    `;
+                <div style="font-size: 8pt; color: #888; margin-top: 15px; text-align: right;">
+                    Dicetak: ${new Date().toLocaleString()}
+                </div>
+            </div>
+            `;
 
-    // Render ke Elemen Tersembunyi
-    const area = document.getElementById('printable-area');
-    area.innerHTML = html;
-    area.style.display = 'block'; // Tampilkan sebentar untuk dirender
+            // --- EKSEKUSI CETAK PDF ---
+            // Kita set margin kecil (5mm) agar muat banyak
+            const area = document.getElementById('printable-area');
+            area.innerHTML = html;
+            
+            const opt = {
+                margin:       5, // Margin tipis
+                filename:     `Akad_${d.nama.replace(/\s/g,'_')}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true }, 
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
 
-    // Setting PDF A4 Strict
-    const opt = {
-        margin:       10, // Margin aman 10mm
-        filename:     `Akad_${d.nama.replace(/\s/g,'_')}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true, logging: false }, 
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-
-    html2pdf().set(opt).from(document.getElementById('akad-final')).save().then(() => {
-        area.style.display = 'none'; // Sembunyikan lagi
-    });
-}
+            html2pdf().set(opt).from(area).save();
+        }
+   
         function printBukuTabungan(id) { let d = dbNasabah.find(x => x.id == id); let html = `<div id="buku-tabungan" style="width:100%; font-family:monospace; padding:20px; border:1px solid #ccc;"> <h3 style="text-align:center">BUKU TABUNGAN ${activeApp.toUpperCase()}</h3> <table style="width:100%; margin-top:20px;"> <tr><td>No. Rekening</td><td>: ${d.id}</td></tr> <tr><td>Nama</td><td>: ${d.nama.toUpperCase()}</td></tr> <tr><td>Alamat</td><td>: ${d.alamat || '-'}</td></tr> <tr><td>Tanggal Buka</td><td>: ${new Date(d.id).toLocaleDateString()}</td></tr> </table> <table style="width:100%; border:1px solid black; border-collapse:collapse; margin-top:20px;"> <tr style="background:#eee;"> <th style="border:1px solid black; padding:5px;">TGL</th> <th style="border:1px solid black; padding:5px;">SANDI</th> <th style="border:1px solid black; padding:5px;">DEBET</th> <th style="border:1px solid black; padding:5px;">KREDIT</th> <th style="border:1px solid black; padding:5px;">SALDO</th> </tr> <tr> <td style="border:1px solid black; padding:5px;">${new Date().toLocaleDateString()}</td> <td style="border:1px solid black; padding:5px;">01 (Setor)</td> <td style="border:1px solid black; padding:5px;">0</td> <td style="border:1px solid black; padding:5px;">${parseInt(d.saldo).toLocaleString()}</td> <td style="border:1px solid black; padding:5px;">${parseInt(d.saldo).toLocaleString()}</td> </tr></table></div>`; document.getElementById('printable-area').innerHTML = html; generatePDF('buku-tabungan', `Tabungan_${d.nama}`); }
 
         function addUser() { 
