@@ -456,6 +456,7 @@
         let idCardTempPhoto = "https://cdn-icons-png.flaticon.com/512/1077/1077114.png";
         let tempUserPhoto = '';
         let tempKTPPhoto = '';
+        let tempFoto = '';
 
         document.addEventListener('DOMContentLoaded', async function() {
             loadSession();
@@ -1283,8 +1284,8 @@ function prosesPelunasan(id, totalHutangAwal) {
                 status: 'Pending', 
                 payStatus: 'Belum', 
                 noSurat: '-', 
-                foto: tempFoto, 
-                ktp: tempKTPPhoto, 
+                foto: (typeof tempFoto !== 'undefined') ? tempFoto : "", 
+                ktp: (typeof tempKTPPhoto !== 'undefined') ? tempKTPPhoto : "", 
                 inputBy: activeUser ? activeUser.user : 'Unknown',
                 
                 // DATA BARU: Tanggal Jatuh Tempo Berikutnya
