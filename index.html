@@ -1612,9 +1612,9 @@ function prosesPelunasan(id, totalHutangAwal) {
             let photoSrc = (d.foto && d.foto.length > 50) ? d.foto : "https://cdn-icons-png.flaticon.com/512/1077/1077114.png";
             let logoSrc = settings.logo || "https://cdn-icons-png.flaticon.com/512/2317/2317968.png";
 
-            // --- HTML STRUKTUR (UKURAN F4 / FOLIO) ---
+            // --- HTML STRUKTUR (FULL WIDTH 100%) ---
             let html = `
-            <div id="akad-final" style="width: 215mm; background: white; font-family: Arial, sans-serif; color: #000; font-size: 11px; line-height: 1.2;">
+            <div id="akad-final" style="width: 100%; background: white; font-family: Arial, sans-serif; color: #000; font-size: 11px; line-height: 1.2;">
                 
                 <style>
                     .no-break { page-break-inside: avoid; }
@@ -1728,14 +1728,16 @@ function prosesPelunasan(id, totalHutangAwal) {
                 </div>
             </div>`;
 
-            // --- EKSEKUSI CETAK (SETTINGAN F4 DESKTOP MODE) ---
+            // --- EKSEKUSI CETAK (SETTINGAN PRESISI F4) ---
             const area = document.getElementById('printable-area');
             area.innerHTML = html;
             area.style.display = 'block';
             
-            // Paksa container agar selebar kertas F4 sungguhan, bukan lebar HP
-            area.style.width = '215mm'; 
-            area.style.margin = '0 auto';
+            // PERBAIKAN UTAMA:
+            // Lebar Kertas F4 (215mm) - Margin Kiri (5mm) - Margin Kanan (5mm) = 205mm
+            // Kita set width container pas 205mm agar simetris & tidak terpotong.
+            area.style.width = '205mm'; 
+            area.style.margin = '0 auto'; // Pastikan container di tengah
 
             const opt = {
                 margin:       [5, 5, 5, 5], 
@@ -1744,18 +1746,16 @@ function prosesPelunasan(id, totalHutangAwal) {
                 html2canvas:  { 
                     scale: 2, 
                     useCORS: true,
-                    // MANTRA ANTI-GEPENG:
-                    windowWidth: 1200,  // Pura-pura layar desktop
-                    width: 900          // Lebar area canvas (sedikit lebih besar dari A4)
+                    windowWidth: 1200,  // Tampilan Desktop
+                    width: 800          // Lebar Canvas Render
                 }, 
-                // Ukuran F4 (Folio)
                 jsPDF:        { unit: 'mm', format: [215, 330], orientation: 'portrait' },
                 pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
             };
 
             html2pdf().set(opt).from(area).save().then(() => {
                 area.style.display = 'none';
-                area.style.width = ''; // Reset
+                area.style.width = ''; 
             }).catch(e => {
                 alert("Gagal cetak: " + e.message);
                 area.style.display = 'none';
