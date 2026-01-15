@@ -1599,77 +1599,61 @@ function prosesPelunasan(id, totalHutangAwal) {
             let d = dbNasabah.find(x => x.id == id);
             if (!d) return alert("Data tidak ditemukan");
 
-            // --- DATA NASABAH ---
+            // --- DATA VARIABLES ---
             let uName = d.unit === 'sps' ? 'MUDHARABAH (BAGI HASIL)' : (d.unit === 'kms' ? 'MURABAHAH (JUAL BELI)' : 'RAHN (GADAI)');
             let tpl = d.unit === 'sps' ? settings.templates.sps : (d.unit === 'kms' ? settings.templates.kms : settings.templates.gadai);
             let margin = parseInt(d.plafond) * (settings.margins[d.unit] / 100);
             let totalTotal = parseInt(d.plafond) + margin;
             let angsuran = totalTotal / parseInt(d.tenor);
-            
             let tglSekarang = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
             let autoNum = d.noSurat !== '-' ? d.noSurat : `0${Math.floor(Math.random() * 100)}/AKAD/${new Date().getFullYear()}`;
-            
             let photoSrc = (d.foto && d.foto.length > 50) ? d.foto : "https://cdn-icons-png.flaticon.com/512/1077/1077114.png";
             let logoSrc = settings.logo || "https://cdn-icons-png.flaticon.com/512/2317/2317968.png";
 
-            // --- HTML STRUKTUR (FULL WIDTH 100%) ---
+            // --- HTML STRUKTUR (FIXED PIXEL WIDTH) ---
+            // Kita gunakan width: 750px agar konsisten di HP maupun Laptop
             let html = `
-            <div id="akad-final" style="width: 100%; background: white; font-family: Arial, sans-serif; color: #000; font-size: 11px; line-height: 1.2;">
+            <div id="akad-print-container" style="width: 750px; background: white; font-family: 'Times New Roman', serif; color: #000; padding: 20px;">
                 
                 <style>
                     .no-break { page-break-inside: avoid; }
-                    table { width: 100%; border-collapse: collapse; }
-                    td { vertical-align: top; padding: 3px; }
+                    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+                    td { vertical-align: top; padding: 4px; }
+                    .header-title { font-size: 18px; font-weight: bold; text-transform: uppercase; }
+                    .header-sub { font-size: 12px; }
                 </style>
 
-                <div class="no-break" style="border-bottom: 2px double #000; padding-bottom: 5px; margin-bottom: 15px; display:flex; align-items:center;">
-                    <img src="${logoSrc}" style="width:15mm; height:15mm; object-fit:contain; margin-right:10px;">
-                    <div style="flex:1;">
-                        <div style="font-size: 16px; font-weight: 900; text-transform: uppercase;">${settings.nama}</div>
-                        <div style="font-size: 10px;">${settings.alamat}</div>
-                        <div style="font-size: 10px;">Izin: ${settings.izin}</div>
+                <div class="no-break" style="border-bottom: 3px double #000; padding-bottom: 10px; margin-bottom: 20px; display:flex; align-items:center;">
+                    <img src="${logoSrc}" style="width:80px; height:80px; object-fit:contain; margin-right:20px;">
+                    <div style="flex:1; text-align:center;">
+                        <div class="header-title">${settings.nama}</div>
+                        <div class="header-sub">${settings.alamat}</div>
+                        <div class="header-sub">Izin: ${settings.izin}</div>
                     </div>
                 </div>
 
-                <div class="no-break" style="text-align: center; margin-bottom: 20px;">
-                    <b style="font-size: 13px; text-decoration: underline;">PERJANJIAN PEMBIAYAAN ${uName}</b><br>
-                    <span style="font-size: 10px;">Nomor: ${autoNum}</span>
+                <div class="no-break" style="text-align: center; margin-bottom: 25px;">
+                    <b style="font-size: 16px; text-decoration: underline;">PERJANJIAN PEMBIAYAAN ${uName}</b><br>
+                    <span style="font-size: 12px;">Nomor: ${autoNum}</span>
                 </div>
 
-                <div style="margin-bottom: 10px;">Pada hari ini <b>${tglSekarang}</b>, telah disepakati perjanjian antara:</div>
+                <div style="margin-bottom: 15px; font-size: 14px;">Pada hari ini <b>${tglSekarang}</b>, telah disepakati perjanjian antara:</div>
 
-                <div class="no-break" style="border: 1px solid #000; padding: 8px; margin-bottom: 20px;">
+                <div class="no-break" style="border: 1px solid #000; padding: 15px; margin-bottom: 20px;">
                     <table border="0">
                         <tr>
-                            <td width="30mm" align="center" style="border-right:1px solid #ddd; padding-right:10px;">
-                                <img src="${photoSrc}" style="width: 25mm; height: 30mm; object-fit: cover; border:1px solid #999; display:block;">
-                                <div style="font-size:8px; margin-top:3px;">PIHAK PERTAMA</div>
+                            <td width="100" align="center" style="border-right:1px solid #ddd; padding-right:15px;">
+                                <img src="${photoSrc}" style="width: 3cm; height: 4cm; object-fit: cover; border:1px solid #333; display:block;">
+                                <div style="font-size:10px; margin-top:5px;">PIHAK PERTAMA</div>
                             </td>
-
-                            <td style="padding-left:10px;">
+                            <td style="padding-left:15px;">
                                 <table border="0">
-                                    <tr>
-                                        <td width="100">Nama Lengkap</td>
-                                        <td width="10">:</td>
-                                        <td><b>${d.nama.toUpperCase()}</b></td>
-                                    </tr>
-                                    <tr>
-                                        <td>NIK</td>
-                                        <td>:</td>
-                                        <td>${d.nik}</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Alamat</td>
-                                        <td>:</td>
-                                        <td>${d.alamat}</td>
-                                    </tr>
-                                    <tr>
-                                        <td>No. HP/WA</td>
-                                        <td>:</td>
-                                        <td>${d.wa}</td>
-                                    </tr>
+                                    <tr><td width="120">Nama Lengkap</td><td width="10">:</td><td><b>${d.nama.toUpperCase()}</b></td></tr>
+                                    <tr><td>NIK</td><td>:</td><td>${d.nik}</td></tr>
+                                    <tr><td>Alamat</td><td>:</td><td>${d.alamat}</td></tr>
+                                    <tr><td>No. HP/WA</td><td>:</td><td>${d.wa}</td></tr>
                                 </table>
-                                <div style="margin-top:8px; font-style:italic; font-size:10px; border-top:1px dashed #ccc; padding-top:3px;">
+                                <div style="margin-top:10px; font-style:italic; font-size:12px; border-top:1px dashed #ccc; padding-top:5px;">
                                     Bertindak atas nama diri sendiri selaku <b>PIHAK PERTAMA (NASABAH)</b>.
                                 </div>
                             </td>
@@ -1677,11 +1661,11 @@ function prosesPelunasan(id, totalHutangAwal) {
                     </table>
                 </div>
 
-                <div style="margin-bottom: 10px;">Serta Manager Unit mewakili <b>${settings.nama}</b> selaku <b>PIHAK KEDUA</b>.</div>
+                <div style="margin-bottom: 15px; font-size: 14px;">Serta Manager Unit mewakili <b>${settings.nama}</b> selaku <b>PIHAK KEDUA</b>.</div>
 
-                <div class="no-break" style="margin-bottom: 20px;">
-                    <table border="1" cellpadding="5" style="text-align: center; font-size: 11px;">
-                        <tr style="background-color: #eee;">
+                <div class="no-break" style="margin-bottom: 25px;">
+                    <table border="1" cellpadding="8" style="text-align: center; font-size: 13px;">
+                        <tr style="background-color: #f0f0f0;">
                             <th>PLAFOND</th>
                             <th>TENOR</th>
                             <th>MARGIN/JASA</th>
@@ -1696,7 +1680,7 @@ function prosesPelunasan(id, totalHutangAwal) {
                     </table>
                 </div>
 
-                <div class="no-break" style="border: 1px solid #000; padding: 8px; font-size: 10px; text-align: justify; margin-bottom: 30px;">
+                <div class="no-break" style="border: 1px solid #000; padding: 15px; font-size: 12px; text-align: justify; margin-bottom: 40px;">
                     <b>KETENTUAN AKAD:</b><br>
                     ${tpl.replace(/\n/g, '<br>')}
                     <br>1. Nasabah wajib membayar angsuran tepat waktu sesuai jadwal.
@@ -1704,62 +1688,60 @@ function prosesPelunasan(id, totalHutangAwal) {
                 </div>
 
                 <div class="no-break">
-                    <table border="0" style="text-align:center;">
+                    <table border="0" style="text-align:center; font-size:12px;">
                         <tr>
                             <td width="33%">
-                                <div style="margin-bottom:5px;">PIHAK PERTAMA</div>
-                                <div style="border:1px dashed #bbb; width:50px; height:50px; margin:0 auto; display:flex; align-items:center; justify-content:center; font-size:8px; color:#aaa;">METERAI</div>
-                                <br><u style="font-weight:bold;">${d.nama.toUpperCase()}</u>
+                                <div style="margin-bottom:10px;">PIHAK PERTAMA</div>
+                                <div style="border:1px dashed #bbb; width:60px; height:60px; margin:0 auto 10px auto; display:flex; align-items:center; justify-content:center; font-size:9px; color:#aaa;">METERAI</div>
+                                <u style="font-weight:bold;">${d.nama.toUpperCase()}</u>
                             </td>
                             <td width="33%">
-                                <div style="margin-bottom:50px;">SAKSI</div>
+                                <div style="margin-bottom:70px;">SAKSI</div>
                                 <u>${d.inputBy || '....................'}</u>
                             </td>
                             <td width="33%">
-                                <div style="margin-bottom:50px;">PIHAK KEDUA</div>
+                                <div style="margin-bottom:70px;">PIHAK KEDUA</div>
                                 <u>( Manager Unit )</u>
                             </td>
                         </tr>
                     </table>
                 </div>
 
-                <div style="font-size: 9px; color: #888; margin-top: 20px; text-align: right;">
-                    Dicetak: ${new Date().toLocaleString()} (Ukuran F4)
+                <div style="font-size: 10px; color: #888; margin-top: 30px; text-align: right;">
+                    Dicetak Otomatis: ${new Date().toLocaleString()}
                 </div>
             </div>`;
 
-            // --- EKSEKUSI CETAK (SETTINGAN PRESISI F4) ---
+            // --- PROSES CETAK ---
             const area = document.getElementById('printable-area');
             area.innerHTML = html;
-            area.style.display = 'block';
             
-            // PERBAIKAN UTAMA:
-            // Lebar Kertas F4 (215mm) - Margin Kiri (5mm) - Margin Kanan (5mm) = 205mm
-            // Kita set width container pas 205mm agar simetris & tidak terpotong.
-            area.style.width = '205mm'; 
-            area.style.margin = '0 auto'; // Pastikan container di tengah
+            // 1. Reset Gaya Area
+            area.style.display = 'flex';
+            area.style.justifyContent = 'center'; // Memastikan posisi di tengah
+            area.style.background = '#555';       // Background gelap biar kelihatan kertasnya
+            area.style.padding = '20px';
+
+            const elementToPrint = document.getElementById('akad-print-container');
 
             const opt = {
-                margin:       [5, 5, 5, 5], 
-                filename:     `Akad_F4_${d.nama.replace(/\s/g,'_')}.pdf`,
+                margin:       [10, 10, 10, 10], // Margin PDF (bukan HTML)
+                filename:     `Akad_${d.nama.replace(/\s/g,'_')}.pdf`,
                 image:        { type: 'jpeg', quality: 0.98 },
                 html2canvas:  { 
                     scale: 2, 
                     useCORS: true,
-                    windowWidth: 1200,  // Tampilan Desktop
-                    width: 650          // Lebar Canvas Render
+                    windowWidth: 1200 // Memaksa browser merender layout Desktop
+                    // JANGAN PAKAI 'width' DI SINI, BIARKAN OTOMATIS
                 }, 
-                jsPDF:        { unit: 'mm', format: [215, 330], orientation: 'portrait' },
-                pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+                jsPDF:        { unit: 'mm', format: [215, 330], orientation: 'portrait' } // Ukuran F4
             };
 
-            html2pdf().set(opt).from(area).save().then(() => {
+            html2pdf().set(opt).from(elementToPrint).save().then(() => {
+                area.style.display = 'none'; // Sembunyikan lagi setelah selesai
+            }).catch(err => {
+                alert("Gagal cetak: " + err);
                 area.style.display = 'none';
-                area.style.width = ''; 
-            }).catch(e => {
-                alert("Gagal cetak: " + e.message);
-                area.style.display = 'none';
-                
             });
         }
                             
