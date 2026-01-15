@@ -651,25 +651,40 @@
         function generatePDF(elementId, filename) {
             const element = document.getElementById(elementId);
             
-            // 1. SIMPAN STATUS ASLI & PAKSA TAMPIL
-            // Kita harus membuat elemen terlihat agar html2pdf bisa membacanya
+            // 1. SIMPAN STATUS ASLI
             const originalDisplay = element.style.display;
-            element.style.display = 'block'; 
+            
+            // 2. PAKSA TAMPIL & SET LEBAR FIX (Agar tabel tidak gepeng di HP)
+            element.style.display = 'block';
+            element.style.width = '800px'; // Paksa lebar seukuran kertas A4 desktop
+            element.style.maxWidth = 'none';
+            element.style.margin = '0 auto';
+            element.style.backgroundColor = 'white';
 
             let wm = element.querySelector('.watermark');
             if(wm) wm.style.display = 'none';
 
-            html2pdf().set({ 
-                margin: 10, 
-                filename: filename + '.pdf', 
-                image: { type: 'jpeg', quality: 0.98 }, 
-                html2canvas: { scale: 2, useCORS: true }, // useCORS membantu memuat gambar eksternal
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
-            }).from(element).save().then(() => { 
+            // 3. SETTINGAN KHUSUS "DESKTOP MODE"
+            const opt = {
+                margin: 10,
+                filename: filename + '.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { 
+                    scale: 2, 
+                    useCORS: true,
+                    // INI KUNCINYA: Memaksa render seolah-olah di layar komputer lebar
+                    windowWidth: 1200, 
+                    width: 800 
+                }, 
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save().then(() => { 
                 if(wm) wm.style.display = 'block';
                 
-                // 2. SEMBUNYIKAN KEMBALI SETELAH SELESAI
+                // 4. KEMBALIKAN TAMPILAN SEPERTI SEMULA
                 element.style.display = originalDisplay || 'none'; 
+                element.style.width = ''; // Hapus paksaan lebar tadi
             });
         }
 
@@ -1706,25 +1721,26 @@ function prosesPelunasan(id, totalHutangAwal) {
             </div>`;
 
             // --- EKSEKUSI CETAK (SETTINGAN F4) ---
-            const area = document.getElementById('printable-area');
-            area.innerHTML = html;
-            area.style.display = 'block';
-
             const opt = {
-                margin:       [5, 5, 5, 5], // Margin aman
+                margin:       [5, 5, 5, 5], 
                 filename:     `Akad_F4_${d.nama.replace(/\s/g,'_')}.pdf`,
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true }, 
-                // KUNCI UTAMA: Format Ukuran [Lebar, Tinggi] dalam mm
-                // 215mm x 330mm adalah ukuran standar F4 / Folio di Indonesia
+                html2canvas:  { 
+                    scale: 2, 
+                    useCORS: true,
+                    // MANTRA ANTI-GEPENG:
+                    windowWidth: 1200,  // Pura-pura layar desktop
+                    width: 900          // Lebar area canvas (sedikit lebih besar dari A4)
+                }, 
+                // Ukuran F4 (Folio)
                 jsPDF:        { unit: 'mm', format: [215, 330], orientation: 'portrait' },
                 pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
             };
 
             html2pdf().set(opt).from(area).save().then(() => {
                 area.style.display = 'none';
+                area.style.width = ''; // Reset
             });
-        }
                                     
         function printBukuTabungan(id) { let d = dbNasabah.find(x => x.id == id); let html = `<div id="buku-tabungan" style="width:100%; font-family:monospace; padding:20px; border:1px solid #ccc;"> <h3 style="text-align:center">BUKU TABUNGAN ${activeApp.toUpperCase()}</h3> <table style="width:100%; margin-top:20px;"> <tr><td>No. Rekening</td><td>: ${d.id}</td></tr> <tr><td>Nama</td><td>: ${d.nama.toUpperCase()}</td></tr> <tr><td>Alamat</td><td>: ${d.alamat || '-'}</td></tr> <tr><td>Tanggal Buka</td><td>: ${new Date(d.id).toLocaleDateString()}</td></tr> </table> <table style="width:100%; border:1px solid black; border-collapse:collapse; margin-top:20px;"> <tr style="background:#eee;"> <th style="border:1px solid black; padding:5px;">TGL</th> <th style="border:1px solid black; padding:5px;">SANDI</th> <th style="border:1px solid black; padding:5px;">DEBET</th> <th style="border:1px solid black; padding:5px;">KREDIT</th> <th style="border:1px solid black; padding:5px;">SALDO</th> </tr> <tr> <td style="border:1px solid black; padding:5px;">${new Date().toLocaleDateString()}</td> <td style="border:1px solid black; padding:5px;">01 (Setor)</td> <td style="border:1px solid black; padding:5px;">0</td> <td style="border:1px solid black; padding:5px;">${parseInt(d.saldo).toLocaleString()}</td> <td style="border:1px solid black; padding:5px;">${parseInt(d.saldo).toLocaleString()}</td> </tr></table></div>`; document.getElementById('printable-area').innerHTML = html; generatePDF('buku-tabungan', `Tabungan_${d.nama}`); }
 
