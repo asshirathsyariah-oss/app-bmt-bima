@@ -658,7 +658,7 @@
             
             // 2. PAKSA TAMPIL & SET LEBAR FIX (Agar tabel tidak gepeng di HP)
             element.style.display = 'block';
-            element.style.width = '800px'; // Paksa lebar seukuran kertas A4 desktop
+            element.style.width = '1200px'; // Paksa lebar seukuran kertas A4 desktop
             element.style.maxWidth = 'none';
             element.style.margin = '0 auto';
             element.style.backgroundColor = 'white';
@@ -675,8 +675,8 @@
                     scale: 2, 
                     useCORS: true,
                     // INI PENTING: Memaksa render seolah-olah di layar komputer lebar
-                    windowWidth: 1200, 
-                    width: 800 
+                    windowWidth: 800, 
+                    width: 1200 
                 }, 
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
