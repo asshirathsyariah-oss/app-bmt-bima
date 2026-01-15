@@ -401,7 +401,7 @@
             'BENDAHARA': ['inbox_ketua', 'kas_pusat', 'simpanan_wajib', 'distribusi_modal', 'distribusi_profit'],
             'MANAGER': ['approval', 'laporan_tunggakan', 'laporan_detail', 'req_sarpras', 'setting_margin', 'monitoring_kinerja', 'terima_profit_manager', 'laporan_laba_unit'],
             'MARKETING': ['input', 'input_tabungan', 'cetak', 'billing', 'dompet_marketing'],
-            'ACCOUNTING': ['arus_kas', 'dana_unit', 'distribusi_insentif']
+            'ACCOUNTING': ['arus_kas', 'dana_unit', 'verifikasi_bayar', 'distribusi_insentif']
         };
 
         const allMenus = [
@@ -444,7 +444,8 @@
             {id: 'arus_kas', name: 'Buku Kas Unit'},
             {id: 'dana_unit', name: 'Manajemen Dana Unit'},
             {id: 'distribusi_insentif', name: 'Distribusi Insentif'}, 
-            {id: 'laporan_laba_unit', name: 'Laporan Laba Rugi Unit'}
+            {id: 'laporan_laba_unit', name: 'Laporan Laba Rugi Unit'}, 
+            {id: 'verifikasi_bayar', name: 'Verifikasi Pembayaran'}
         ];
 
         let settings = defaultConfig;
@@ -1078,61 +1079,50 @@
             else if(id === 'acc_profit_ketua') { t.innerText = "ACC Distribusi Profit (Ketua)"; let rows = dbProfitFlow.filter(p => p.status === 'Pending Ketua').map(p => `<tr><td>${p.targetUnit}</td><td>Rp ${parseInt(p.amount).toLocaleString()}</td><td><button class="btn btn-success btn-sm" onclick="approveProfitKetua(${p.id})">ACC</button></td></tr>`).join(''); b.innerHTML = `<div class="card"><h4>Menunggu Persetujuan</h4><div class="table-responsive"><table><thead><tr><th>Unit</th><th>Nominal</th><th>Aksi</th></tr></thead><tbody>${rows || '<tr><td colspan="3">Tidak ada data</td></tr>'}</tbody></table></div></div>`; }
             else if(id === 'terima_profit_manager') { t.innerText = "Terima Dana SHU (Manager)"; let rows = dbProfitFlow.filter(p => p.status === 'Pending Manager' && p.targetUnit === activeApp).map(p => `<tr><td>Rp ${parseInt(p.amount).toLocaleString()}</td><td><button class="btn btn-primary btn-sm" onclick="acceptProfitManager(${p.id})">Terima Dana</button></td></tr>`).join(''); b.innerHTML = `<div class="card"><h4>Dana Masuk dari Pusat</h4><div class="table-responsive"><table><thead><tr><th>Nominal</th><th>Aksi</th></tr></thead><tbody>${rows || '<tr><td colspan="2">Kosong</td></tr>'}</tbody></table></div></div>`; }
             else if(id === 'distribusi_insentif') { 
+                t.innerText = "Laporan Distribusi Insentif Marketing"; 
+                
+                // 1. Ambil data Insentif dari Arus Kas (Type: 'Insentif')
+                // Filter hanya data yang tipenya 'Insentif'
+                let insentifData = dbArusKas.filter(x => x.type === 'Insentif');
+                
+                // 2. Buat Tampilan Tabel
+                let rows = insentifData.map(x => `
+                    <tr>
+                        <td>${new Date(x.date).toLocaleDateString()}</td>
+                        <td><b>${x.recipient}</b></td> <td>${x.unit.toUpperCase()}</td>
+                        <td>${x.desc}</td>
+                        <td style="color:green; font-weight:bold;">Rp ${parseInt(x.amount).toLocaleString()}</td>
+                    </tr>
+                `).join('');
+            
+                b.innerHTML = `
+                <div class="card" style="background:var(--primary-gradient); color:white;">
+                    <small>Total Insentif Tersalurkan</small>
+                    <h1 style="margin-top:5px;">Rp ${insentifData.reduce((a,b)=>a+parseInt(b.amount),0).toLocaleString()}</h1>
+                </div>
+
+                <div class="card">
+                    <h4>Riwayat Pembagian Bonus/Insentif</h4>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr><th>Tanggal</th><th>Marketing</th><th>Unit</th><th>Keterangan</th><th>Nominal</th></tr>
+                            </thead>
+                            <tbody>${rows || '<tr><td colspan="5" style="text-align:center">Belum ada data insentif dibagikan.</td></tr>'}</tbody>
+                        </table>
+                    </div>
+                </div>`; 
+            }
+            else if(id === 'verifikasi_bayar') {
     t.innerText = "Verifikasi Pembayaran Nasabah";
+    // ... (Paste kode lama 'distribusi_insentif' di sini) ...
     // Mengambil data kiriman nasabah dari database instruksi
     let listVerif = dbInstruksi.filter(i => i.toRole === 'ACCOUNTING' && i.message.includes('KONFIRMASI BAYAR'));
-    
-    let rows = listVerif.map(v => `
-        <div class="card" style="display: flex; gap: 15px; align-items: center; border-left: 5px solid var(--secondary);">
-            <img src="${v.buktiFoto}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 5px; cursor: pointer;" onclick="window.open(this.src)">
-            <div style="flex: 1;">
-                <b style="color:var(--primary)">${v.sender.toUpperCase()}</b><br>
-                <small>${v.message}</small><br>
-                <small style="color:#888;">${new Date(v.id).toLocaleString()}</small>
-            </div>
-            <button class="btn btn-success btn-sm" onclick="terimaBayarNasabah('${v.id}')">
-                <i class="fas fa-check"></i> TERIMA
-            </button>
-        </div>
-    `).join('');
-    
-    b.innerHTML = `
-        <div class="card" style="background:#e3f2fd; margin-bottom:15px;">
-            <i class="fas fa-info-circle"></i> Klik gambar untuk memperbesar kuitansi. Klik <b>TERIMA</b> untuk memotong hutang nasabah secara otomatis.
-        </div>
-        ${rows || '<div class="card" style="text-align:center;">Tidak ada bukti bayar baru.</div>'}
-    `;
-}
-            else if(id === 'dompet_marketing') { 
-    t.innerText = "Dompet Saya (" + activeUser.user + ")"; 
-    
-    // Cari uang Insentif milik user yang login
-    let myIncentives = dbArusKas.filter(x => x.type === 'Insentif' && x.recipient === activeUser.user);
-    let totalDapat = myIncentives.reduce((a, b) => a + parseInt(b.amount), 0);
-    
-    let rows = myIncentives.map(x => `
-        <tr>
-            <td>${new Date(x.date).toLocaleDateString()}</td>
-            <td>${x.desc}</td>
-            <td style="color:green; font-weight:bold;">Rp ${parseInt(x.amount).toLocaleString()}</td>
-        </tr>
-    `).join('');
 
-    b.innerHTML = `
-    <div class="card" style="background:var(--primary-gradient); color:white; text-align:center; padding:30px;">
-        <small>Total Pendapatan Insentif</small>
-        <h1 style="font-size:2.5rem; margin-top:10px;">Rp ${totalDapat.toLocaleString()}</h1>
-    </div>
-    
-    <div class="card">
-        <h4>Riwayat Penerimaan</h4>
-        <div class="table-responsive">
-            <table>
-                <thead><tr><th>Tanggal</th><th>Keterangan</th><th>Nominal</th></tr></thead>
-                <tbody>${rows || '<tr><td colspan="3" style="text-align:center">Belum ada dana masuk.</td></tr>'}</tbody>
-            </table>
-        </div>
-    </div>`; 
+    // ... Lanjutkan sisa kode render tampilan bukti bayar ...
+    let rows = listVerif.map(v => `...`).join(''); // (Kode render yang lama)
+
+    b.innerHTML = `...`; // (Kode HTML yang lama)
 }
             else if(id === 'kas_pusat') { t.innerText = "Kas Induk BMT (Pusat)"; let totalIuran = dbSimpananWajib.reduce((a,b)=>a+parseInt(b.amount), 0); let totalProfitUnit = parseInt(settings.shu.profit || 0); let pengeluaran = dbArusKas.filter(x => x.unit === 'induk' && x.type === 'Keluar'); let totalKeluar = pengeluaran.reduce((a,b)=>a+parseInt(b.amount), 0); let saldoAkhir = (totalIuran + totalProfitUnit) - totalKeluar; let rowsKeluar = pengeluaran.map(x => `<tr><td data-label="Tgl">${new Date(x.date).toLocaleDateString()}</td><td data-label="Ket">${x.desc}</td><td data-label="Jml" style="color:red">Rp ${parseInt(x.amount).toLocaleString()}</td></tr>`).join(''); b.innerHTML = `<div class="card" style="background:#e3f2fd;"><h4><i class="fas fa-plus-circle"></i> Tambah Modal BMT</h4><div class="form-vertical" style="display:flex; gap:10px;"><input id="modal-in-amt" type="number" class="form-control" placeholder="Nominal Modal"><button class="btn btn-success" onclick="let a = document.getElementById('modal-in-amt').value;if(a){ dbArusKas.push({date:Date.now(), unit:'induk', type:'Masuk', amount:a, desc:'Suntikan Modal'}); saveToCloud(); page('kas_pusat'); }">Setor</button></div></div><div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); gap:15px; margin-bottom:20px;"><div class="card" style="background:var(--secondary-gradient); color:#0f3d3e;"><h3>Saldo Kas BMT</h3><h2>Rp ${saldoAkhir.toLocaleString()}</h2></div><div class="card"><h3>Total Iuran</h3><h3 style="color:var(--primary)">+ Rp ${totalIuran.toLocaleString()}</h3></div><div class="card"><h3>Profit Unit</h3><h3 style="color:var(--primary)">+ Rp ${totalProfitUnit.toLocaleString()}</h3></div><div class="card"><h3>Pengeluaran</h3><h3 style="color:#c0392b">- Rp ${totalKeluar.toLocaleString()}</h3></div></div><div class="card"><h4>Catat Pengeluaran Pusat</h4><div class="form-vertical" style="display:flex; gap:10px; flex-wrap:wrap;"><input id="k-induk-amt" type="number" class="form-control" placeholder="Nominal (Rp)" style="flex:1;"><input id="k-induk-desc" class="form-control" placeholder="Keterangan Pengeluaran" style="flex:2;"><button class="btn btn-danger" onclick="saveKasInduk()">Simpan</button></div></div><div class="card"><div style="display:flex; justify-content:space-between; margin-bottom:15px;"><h4>Riwayat Pengeluaran</h4><button class="btn btn-primary" onclick="generatePDF('printable-area', 'Laporan_Kas_Pusat'); printLaporanKas('induk');"><i class="fas fa-print"></i> PDF</button></div><div class="table-responsive"><table><thead><tr><th>Tanggal</th><th>Keterangan</th><th>Nominal</th></tr></thead><tbody>${rowsKeluar}</tbody></table></div></div>`; }
             else if(id === 'approval_pusat') { t.innerText = "Persetujuan Pusat (Ketua)"; let danaPending = dbDana.filter(d => d.status === 'Pending').map(d => `<tr><td data-label="Tgl">${new Date(d.date).toLocaleDateString()}</td><td data-label="Tipe">DANA UNIT</td><td data-label="Ket">${d.desc} (${d.unit.toUpperCase()})</td><td data-label="Jml">Rp ${parseInt(d.amount).toLocaleString()}</td><td data-label="Aksi"><button class="btn btn-sm btn-success" onclick="accDana('${d.id}')">SETUJUI</button></td></tr>`).join(''); let sarprasPending = dbSarpras.map((s,i) => s.status==='Pending' ? `<tr><td data-label="Tgl">-</td><td data-label="Tipe">SARPRAS</td><td data-label="Ket">${s.item} - ${s.alasan}</td><td data-label="Jml">-</td><td data-label="Aksi"><button class="btn btn-sm btn-success" onclick="accSarpras(${i})">SETUJUI</button></td></tr>` : '').join(''); let content = danaPending + sarprasPending; if(content === '') content = '<tr><td colspan="5" style="text-align:center;">Tidak ada permintaan tertunda.</td></tr>'; b.innerHTML = `<div class="card"><h4>Permintaan Menunggu Persetujuan Ketua</h4><div class="table-responsive"><table><thead><tr><th>Tanggal</th><th>Tipe</th><th>Keterangan</th><th>Nominal</th><th>Aksi</th></tr></thead><tbody>${content}</tbody></table></div></div>`; }
