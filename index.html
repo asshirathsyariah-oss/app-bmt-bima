@@ -531,7 +531,14 @@
         function updateLogo(input) { if(input.files[0]) { resizeImage(input.files[0], (res) => { settings.logo = res; document.getElementById('gw-logo').src = res; saveToCloud(); alert("Logo Diperbarui!"); renderIdentitas(); }, 300); } }
         function updateWall(input) { if(input.files[0]) resizeImage(input.files[0], (res) => { settings.wallpaper = res; alert("Wallpaper Siap! Simpan."); }, 1000); }
         function readFoto(input) { if(input.files[0]) resizeImage(input.files[0], (res) => { tempFoto = res; alert("Foto Siap!"); }, 300); }
-        function readUserPhoto(input) { if(input.files[0]) resizeImage(input.files[0], (res) => { tempUserPhoto = res; alert("Foto Pegawai Siap!"); }, 300); }
+        function readUserPhoto(input) { 
+    if(input.files[0]) {
+        resizeImage(input.files[0], (res) => { 
+            tempUserPhoto = res; // Simpan ke variabel global
+            document.getElementById('p-user').src = res; // Tampilkan preview di lingkaran
+        }, 300); 
+    } 
+}
         function readKTPPhoto(input) { 
             if(input.files[0]) {
                 resizeImage(input.files[0], (res) => { tempKTPPhoto = res; }, 400); 
@@ -1219,8 +1226,92 @@
                         <h1 style="margin:10px 0;">Rp ${totalPlafond.toLocaleString()}</h1>
                     </div>
                 </div>`; 
+
+            else if(id==='users') { 
+                t.innerText="Manajemen Pengguna"; 
+                
+                // Menampilkan daftar user yang sudah ada
+                let rows = dbUsers.map((u, i) => `
+                    <tr>
+                        <td data-label="Foto">
+                            <img src="${u.photo || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">
+                        </td>
+                        <td data-label="User"><b>${u.user}</b></td>
+                        <td data-label="Role">${u.role.toUpperCase()}</td>
+                        <td data-label="Unit">${u.unitScope ? u.unitScope.toUpperCase() : (u.app ? u.app.toUpperCase() : 'INDUK')}</td>
+                        <td data-label="Aksi">
+                            <button class="btn btn-danger btn-sm" onclick="delUser(${i})"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>`).join('');
+
+                b.innerHTML = `
+                <div class="card" style="max-width:600px; margin: 0 auto 25px auto;">
+                    <div class="form-vertical">
+                        <h4 style="text-align:center; margin-bottom:20px;">Tambah Pengguna Baru</h4>
+                        
+                        <div onclick="document.getElementById('f-user').click()" style="width:100px; height:100px; border:2px dashed var(--secondary); border-radius:50%; margin: 0 auto 15px; cursor:pointer; overflow:hidden; display:flex; align-items:center; justify-content:center; background:#f9f9f9;">
+                            <img id="p-user" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" style="width:100%; height:100%; object-fit:cover;">
+                        </div>
+                        <input type="file" id="f-user" style="display:none" accept="image/*" onchange="readUserPhoto(this)">
+                        <center><small style="color:#666;">Klik lingkaran untuk upload foto</small></center>
+                        <br>
+
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                            <div>
+                                <label>Username</label>
+                                <input id="n-u" class="form-control" placeholder="Contoh: ahmad_bmt">
+                            </div>
+                            <div>
+                                <label>Password</label>
+                                <input id="n-p" type="text" class="form-control" placeholder="Password">
+                            </div>
+                        </div>
+
+                        <label>Jabatan / Role</label>
+                        <select id="n-r" class="form-control" onchange="toggleUnitSelect(this.value)">
+                            <option value="ketua">Ketua (Pusat)</option>
+                            <option value="manager">Manager Unit</option>
+                            <option value="marketing">Marketing</option>
+                            <option value="accounting">Accounting</option>
+                            <option value="admin">Admin Sistem</option>
+                            <option value="bendahara">Bendahara Pusat</option>
+                            <option value="sekretaris">Sekretaris Pusat</option>
+                            <option value="nasabah">Nasabah</option>
+                        </select>
+
+                        <div id="unit-selector-box" class="hidden">
+                            <label>Pilih Unit Kerja</label>
+                            <select id="n-unit" class="form-control">
+                                <option value="sps">Simpan Pinjam (SPS)</option>
+                                <option value="kms">Kredit Kendaraan (KMS)</option>
+                                <option value="gadai">Gadai Syariah</option>
+                            </select>
+                        </div>
+
+                        <button class="btn btn-primary" onclick="addUser()" style="width:100%; padding:12px; font-weight:bold; margin-top:10px;">
+                            <i class="fas fa-user-plus"></i> SIMPAN PENGGUNA
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h4>Daftar Seluruh Pengguna</h4>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Foto</th>
+                                    <th>Username</th>
+                                    <th>Role</th>
+                                    <th>Cakupan</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rows || '<tr><td colspan="5" style="text-align:center;">Belum ada user.</td></tr>'}</tbody>
+                        </table>
+                    </div>
+                </div>`;
             }
-            else if(id==='users') { t.innerText="Manajemen Pengguna"; let rows=dbUsers.map((u,i)=>`<tr><td data-label="Foto"><img src="${u.photo||'https://cdn-icons-png.flaticon.com/512/1077/1077114.png'}" class="user-thumb" style="width:40px;height:40px;border-radius:50%;"></td><td data-label="User">${u.user}</td><td data-label="Role">${u.role}</td><td data-label="Unit">${u.unitScope ? u.unitScope.toUpperCase() : u.app.toUpperCase()}</td><td data-label="Aksi"><button class="btn btn-danger btn-sm" onclick="delUser(${i})">Del</button></td></tr>`).join(''); b.innerHTML=`<div class="card" style="max-width:600px;"><h4>Tambah User</h4><div class="form-vertical"><label>Identitas</label><input id="n-nama" class="form-control" placeholder="Nama"><input id="n-hp" class="form-control" placeholder="HP"><input id="n-tgl" type="date" class="form-control"><textarea id="n-al" class="form-control" placeholder="Alamat"></textarea><hr><label>Akun</label><input id="n-u" class="form-control" placeholder="Username"><select id="n-r" class="form-control" onchange="toggleUnitSelect(this.value)"><option value="anggota">Anggota</option><option value="admin">Admin</option><option value="bendahara">Bendahara</option><option value="sekretaris">Sekretaris</option><option value="marketing">Marketing</option><option value="manager">Manager</option><option value="accounting">Accounting</option><option value="nasabah">Nasabah</option></select><select id="n-unit" class="form-control hidden"><option value="sps">Simpan Pinjam (SPS)</option><option value="kms">Kredit Motor (KMS)</option><option value="gadai">Gadai Syariah</option></select><input id="n-p" type="text" class="form-control" placeholder="Password"><label>Foto</label><input type="file" class="form-control" onchange="readUserPhoto(this)"><button class="btn btn-primary" onclick="addUser()">Simpan User</button></div></div><div class="card"><div class="table-responsive"><table><thead><tr><th>Foto</th><th>User</th><th>Role</th><th>App</th><th>Aksi</th></tr></thead><tbody>${rows}</tbody></table></div></div>`; }
             else if(id==='monitoring_pegawai') { t.innerText="Monitoring"; let logs = dbPresensi.map(p => `<tr><td data-label="Waktu">${new Date(p.time).toLocaleString()}</td><td data-label="Nama">${p.user}</td><td data-label="Status">${p.type}</td><td data-label="Ket">${p.ket||'-'}</td></tr>`).join(''); let users = dbUsers.filter(u=>['manager','marketing','accounting'].includes(u.role)).map(u=>`<tr><td data-label="Nama">${u.user}</td><td data-label="Role">${u.role}</td><td data-label="ID"><button class="btn btn-sm btn-primary" onclick="printIDCard('${u.user}','${u.role}')">ID Card</button></td></tr>`).join(''); b.innerHTML=`<div class="card"><h3>Laporan Kehadiran</h3><button class="btn btn-success" onclick="generatePDF('printable-area', 'Laporan_Presensi'); printLaporanPresensi()">Cetak PDF</button><div class="table-responsive"><table><thead><tr><th>Waktu</th><th>Nama</th><th>Status</th><th>Ket</th></tr></thead><tbody>${logs}</tbody></table></div></div><div class="card"><h3>Cetak ID Pegawai</h3><div class="table-responsive"><table><thead><tr><th>Nama</th><th>Jabatan</th><th>Aksi</th></tr></thead><tbody>${users}</tbody></table></div></div>`; }
             else if(id==='laporan_pusat') { t.innerText="Pusat Laporan"; let sar=dbSarpras.map((s,i)=>`<tr><td data-label="Unit">${s.unit}</td><td data-label="Item">${s.item}</td><td data-label="Status">${s.status}</td><td data-label="Aksi">${s.status=='Pending'?`<button class="btn btn-success btn-sm" onclick="accSarpras(${i})">ACC</button>`:''}</td></tr>`).join(''); b.innerHTML=`<div class="card"><h3>Laporan & Database</h3><div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;"><button class="btn btn-success" onclick="generatePDF('printable-area', 'Laporan_Sarpras'); printLaporanSarpras()">Laporan Sarpras</button><button class="btn btn-primary" onclick="generatePDF('printable-area', 'Database_Nasabah'); printDatabaseNasabah()">Database Nasabah</button></div><div class="table-responsive"><table><thead><tr><th>Unit</th><th>Item</th><th>Status</th><th>Aksi</th></tr></thead><tbody>${sar}</tbody></table></div></div>`; }
             else if(id==='distribusi_modal') { t.innerText="Penyaluran & Limit"; let pendings = dbDana.filter(d => d.status === 'Pending').map((d,i) => `<tr><td data-label="Tgl">${new Date(d.date).toLocaleDateString()}</td><td data-label="Unit">${d.unit.toUpperCase()}</td><td data-label="Jml">Rp ${parseInt(d.amount).toLocaleString()}</td><td data-label="Aksi"><button class="btn btn-sm btn-success" onclick="accDana('${d.id}')">ACC</button></td></tr>`).join(''); let history = dbDana.filter(d => d.status === 'Approved').map(d => `<tr><td data-label="Tgl">${new Date(d.date).toLocaleDateString()}</td><td data-label="Unit">${d.unit.toUpperCase()}</td><td data-label="Jml">Rp ${parseInt(d.amount).toLocaleString()}</td><td data-label="Ket">${d.desc}</td>${activeUser.role==='BENDAHARA' && d.desc.includes('Modal Awal') ? `<td data-label="Aksi"><button class="btn btn-danger btn-sm" onclick="deleteModalAwal('${d.id}')">Hapus</button></td>` : ''}</tr>`).join(''); let addModalHtml = activeUser.role === 'BENDAHARA' ? `<h4>Tambah Modal Awal BMT</h4><div class="form-vertical" style="background:#e8f5e9; padding:15px; border-radius:8px; margin-bottom:20px;"><select id="bm-unit" class="form-control"><option value="sps">Simpan Pinjam</option><option value="kms">Kredit Motor</option><option value="gadai">Gadai Syariah</option></select><input id="bm-amt" type="number" class="form-control" placeholder="Jumlah Modal Awal (Rp)"><button class="btn btn-success" onclick="addModalAwal()"><i class="fas fa-plus-circle"></i> Tambah Modal Awal</button></div>` : ''; b.innerHTML = `<div class="card" style="border-left: 5px solid red;"><h4>Batasan Penggunaan Dana</h4><div class="form-vertical"><div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;"><div><label>Limit SPS (%)</label><input type="number" id="lim-sps" class="form-control" value="${settings.limits.sps}"></div><div><label>Limit KMS (%)</label><input type="number" id="lim-kms" class="form-control" value="${settings.limits.kms}"></div><div><label>Limit Gadai (%)</label><input type="number" id="lim-gadai" class="form-control" value="${settings.limits.gadai}"></div></div><button class="btn btn-danger" onclick="saveLimits()">Simpan & Kunci</button></div></div>${activeUser.role==='BENDAHARA' ? `<div class="card">${addModalHtml}</div>` : ''}<div class="card"><h4>Approval & Penyaluran <button class="btn btn-sm btn-primary" style="float:right" onclick="generatePDF('printable-area', 'Laporan_Penyaluran'); printLaporanPenyaluran()">Cetak Laporan</button></h4><div class="table-responsive"><table><thead><tr><th>Tgl</th><th>Unit</th><th>Nominal</th><th>Aksi</th></tr></thead><tbody>${pendings.length?pendings:'<tr><td colspan="4">Tidak ada pengajuan.</td></tr>'}</tbody></table></div><br><h4>Input Penyaluran Manual</h4><div class="form-vertical"><select id="m-unit" class="form-control"><option value="sps">Simpan Pinjam</option><option value="kms">Kredit Motor</option><option value="gadai">Gadai Syariah</option></select><input id="m-amount" type="number" class="form-control" placeholder="Nominal (Rp)"><input id="m-desc" class="form-control" placeholder="Ket"><button class="btn btn-primary" onclick="saveModal('Approved')">Salurkan</button></div></div><div class="card"><h4>Riwayat</h4><div class="table-responsive"><table><thead><tr><th>Tgl</th><th>Unit</th><th>Nominal</th><th>Ket</th>${activeUser.role==='BENDAHARA'?'<th>Aksi</th>':''}</tr></thead><tbody>${history}</tbody></table></div></div>`; }
@@ -1625,15 +1716,33 @@ function prosesPelunasan(id, totalHutangAwal) {
         function printBukuTabungan(id) { let d = dbNasabah.find(x => x.id == id); let html = `<div id="buku-tabungan" style="width:100%; font-family:monospace; padding:20px; border:1px solid #ccc;"> <h3 style="text-align:center">BUKU TABUNGAN ${activeApp.toUpperCase()}</h3> <table style="width:100%; margin-top:20px;"> <tr><td>No. Rekening</td><td>: ${d.id}</td></tr> <tr><td>Nama</td><td>: ${d.nama.toUpperCase()}</td></tr> <tr><td>Alamat</td><td>: ${d.alamat || '-'}</td></tr> <tr><td>Tanggal Buka</td><td>: ${new Date(d.id).toLocaleDateString()}</td></tr> </table> <table style="width:100%; border:1px solid black; border-collapse:collapse; margin-top:20px;"> <tr style="background:#eee;"> <th style="border:1px solid black; padding:5px;">TGL</th> <th style="border:1px solid black; padding:5px;">SANDI</th> <th style="border:1px solid black; padding:5px;">DEBET</th> <th style="border:1px solid black; padding:5px;">KREDIT</th> <th style="border:1px solid black; padding:5px;">SALDO</th> </tr> <tr> <td style="border:1px solid black; padding:5px;">${new Date().toLocaleDateString()}</td> <td style="border:1px solid black; padding:5px;">01 (Setor)</td> <td style="border:1px solid black; padding:5px;">0</td> <td style="border:1px solid black; padding:5px;">${parseInt(d.saldo).toLocaleString()}</td> <td style="border:1px solid black; padding:5px;">${parseInt(d.saldo).toLocaleString()}</td> </tr></table></div>`; document.getElementById('printable-area').innerHTML = html; generatePDF('buku-tabungan', `Tabungan_${d.nama}`); }
 
         function addUser() { 
-            let u=document.getElementById('n-u').value; let r=document.getElementById('n-r').value; let p=document.getElementById('n-p').value; 
-            let nama = document.getElementById('n-nama').value; let hp = document.getElementById('n-hp').value; let tgl = document.getElementById('n-tgl').value; let al = document.getElementById('n-al').value;
-            if(!u||!p)return alert("Username & Password Wajib!"); 
-            let a=['admin','bendahara','sekretaris','anggota'].includes(r)?'induk':'unit'; 
-            let us = document.getElementById('n-unit').value;
-            let finalScope = (r==='marketing'||r==='manager'||r==='accounting') ? us : null;
-            dbUsers.push({ user:u, role:r, app:a, password:p, photo: tempUserPhoto, unitScope: finalScope, namaLengkap: nama, noHP: hp, tglLahir: tgl, alamat: al }); 
-            tempUserPhoto = ''; saveToCloud(); alert('User Added! Bisa langsung login.'); page('users'); 
-        }
+    let u = document.getElementById('n-u').value; 
+    let r = document.getElementById('n-r').value; 
+    let p = document.getElementById('n-p').value; 
+    
+    if(!u || !p) return alert("Username & Password Wajib Diisi!"); 
+
+    // Penentuan App: Ketua/Admin/Sekretaris/Bendahara masuk 'induk', sisanya 'unit'
+    let appType = ['ketua', 'admin', 'bendahara', 'sekretaris', 'nasabah'].includes(r) ? 'induk' : 'unit'; 
+    
+    // Ambil Unit Scope jika Manager/Marketing/Accounting
+    let unitSel = document.getElementById('n-unit');
+    let scope = (appType === 'unit') ? unitSel.value : null;
+
+    dbUsers.push({ 
+        user: u, 
+        role: r, 
+        app: appType, 
+        password: p, 
+        photo: tempUserPhoto || '', // Gunakan foto yang diupload
+        unitScope: scope 
+    }); 
+
+    saveToCloud(); 
+    tempUserPhoto = ''; // Reset variable foto
+    alert('User ' + u + ' Berhasil Ditambahkan!'); 
+    page('users'); // Refresh halaman
+}
         function delUser(i) { dbUsers.splice(i,1); saveToCloud(); page('users'); }
         function approve(id, nominal) { 
             // 1. Hitung Total Modal Masuk dari Pusat
