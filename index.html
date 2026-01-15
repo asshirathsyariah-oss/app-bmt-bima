@@ -1747,7 +1747,7 @@ function prosesPelunasan(id, totalHutangAwal) {
                     scale: 2, 
                     useCORS: true,
                     windowWidth: 1200,  // Tampilan Desktop
-                    width: 900          // Lebar Canvas Render
+                    width: 650          // Lebar Canvas Render
                 }, 
                 jsPDF:        { unit: 'mm', format: [215, 330], orientation: 'portrait' },
                 pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
@@ -1759,7 +1759,7 @@ function prosesPelunasan(id, totalHutangAwal) {
             }).catch(e => {
                 alert("Gagal cetak: " + e.message);
                 area.style.display = 'none';
-                area.style.width = '';
+                
             });
         }
                             
