@@ -1713,6 +1713,1455 @@ function prosesPelunasan(id, totalHutangAwal) {
             </div>`;
 
             // --- PROSES CETAK ---
+            Perbaikan Data Hilang Akun Accounting
+Percakapan dengan Gemini
+Saya punya HTML, tapi kenpa distribusi instntif Untuk marketing hilang adi akun accounting
+
+Masalah data yang "hilang" di dashboard role tertentu (seperti Accounting) padahal data sudah diinput oleh role lain (Marketing), biasanya disebabkan oleh salah satu dari 3 hal berikut dalam kode JavaScript/HTML Anda.
+
+Karena Anda belum melampirkan kodenya, silakan periksa 3 poin utama ini terlebih dahulu:
+
+1. Cek Logika "Filtering" (Penyaringan Data)
+Di halaman Accounting, biasanya ada fungsi yang mengambil data dari database. Periksa apakah ada kode if yang tidak sengaja menyaring data marketing.
+
+Masalah Umum: Kode hanya menampilkan data jika status == 'approved', padahal data baru dari marketing statusnya masih pending.
+
+Contoh Kode yang harus diperiksa:
+
+JavaScript
+// Periksa bagian seperti ini di fungsi renderAccounting()
+if (data.divisi === 'marketing' && data.status === 'siap_cair') {
+   // Kode render tabel
+}
+// Jika data marketing belum punya status 'siap_cair', maka tidak akan muncul.
+2. Cek Struktur Object/Database
+Pastikan data yang disimpan oleh Marketing memiliki Key atau Field yang dibaca oleh halaman Accounting.
+
+Kasus: Halaman Accounting mencari field bernama nominal_insentif, tapi Marketing menyimpannya dengan nama jumlah_bonus. Karena namanya beda, hasilnya undefined atau kosong.
+
+Solusi: Samakan nama variabel saat save (di marketing) dan saat read (di accounting).
+
+3. Cek Izin Akses (Database Rules)
+Jika Anda menggunakan database seperti Firebase atau SQL:
+
+Pastikan akun Accounting memiliki izin untuk membaca path atau tabel tempat Marketing menyimpan data.
+
+Cek apakah data tersebut tersimpan di collection yang sama atau terpisah.
+
+Cara Debugging Cepat
+Coba tambahkan console.log di dalam fungsi yang memuat data di halaman Accounting untuk melihat apakah data mentahnya sebenarnya masuk atau tidak.
+
+JavaScript
+function loadDataAccounting() {
+    // ... proses ambil data ...
+    console.log("Data Mentah:", allData); // <-- Cek di Console Browser (F12)
+    
+    // ... proses filter ...
+    console.log("Data Setelah Filter:", filteredData); // <-- Apakah jadi kosong disini?
+}
+Langkah Selanjutnya: Boleh tolong tempelkan (paste) kode HTML dan JavaScript Anda di sini? Khususnya pada bagian:
+
+Fungsi penyimpanan data di sisi Marketing.
+
+Fungsi pemanggilan (render) data di sisi Accounting.
+
+Saya akan bantu koreksi di mana letak kesalahannya.
+
+Saya punya HTML, tapi kenpa distribusi instntif Untuk marketing hilang adi akun accounting l. analisis HTML saya itu
+
+Berdasarkan analisis file index (9).html yang Anda lampirkan, saya menemukan penyebab utama kenapa data Distribusi Insentif Marketing tidak muncul di akun Accounting.
+
+Masalahnya ada pada fungsi page(id). Menu dengan ID distribusi_insentif isinya tertukar atau tertimpa dengan fitur "Verifikasi Pembayaran Nasabah".
+
+Analisis Akar Masalah
+Logic yang Salah: Di dalam kode Anda, blok else if(id === 'distribusi_insentif') justru mengambil data dari dbInstruksi (pesan konfirmasi bayar dari nasabah), bukannya mengambil data Insentif dari dbArusKas.
+
+Judul Halaman: Bahkan judul halamannya tertulis: t.innerText = "Verifikasi Pembayaran Nasabah";. Ini membuktikan kodenya salah tempat.
+
+Solusi Perbaikan Code
+Cari bagian kode else if(id === 'distribusi_insentif') (sekitar baris 1025), lalu HAPUS blok tersebut dan GANTI dengan kode berikut ini agar Accounting bisa melihat daftar insentif yang sudah cair:
+
+JavaScript
+            else if(id === 'distribusi_insentif') { 
+                t.innerText = "Laporan Distribusi Insentif Marketing"; 
+                
+                // 1. Ambil data Insentif dari Arus Kas (Type: 'Insentif')
+                // Filter hanya data yang tipenya 'Insentif'
+                let insentifData = dbArusKas.filter(x => x.type === 'Insentif');
+                
+                // 2. Buat Tampilan Tabel
+                let rows = insentifData.map(x => `
+                    <tr>
+                        <td>${new Date(x.date).toLocaleDateString()}</td>
+                        <td><b>${x.recipient}</b></td> <td>${x.unit.toUpperCase()}</td>
+                        <td>${x.desc}</td>
+                        <td style="color:green; font-weight:bold;">Rp ${parseInt(x.amount).toLocaleString()}</td>
+                    </tr>
+                `).join('');
+            
+                b.innerHTML = `
+                <div class="card" style="background:var(--primary-gradient); color:white;">
+                    <small>Total Insentif Tersalurkan</small>
+                    <h1 style="margin-top:5px;">Rp ${insentifData.reduce((a,b)=>a+parseInt(b.amount),0).toLocaleString()}</h1>
+                </div>
+
+                <div class="card">
+                    <h4>Riwayat Pembagian Bonus/Insentif</h4>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr><th>Tanggal</th><th>Marketing</th><th>Unit</th><th>Keterangan</th><th>Nominal</th></tr>
+                            </thead>
+                            <tbody>${rows || '<tr><td colspan="5" style="text-align:center">Belum ada data insentif dibagikan.</td></tr>'}</tbody>
+                        </table>
+                    </div>
+                </div>`; 
+            }
+Tambahan: Kemana Fitur "Verifikasi Pembayaran" yang Tadi?
+Karena kode sebelumnya berisi fitur penting (Verifikasi Pembayaran Nasabah), Anda sebaiknya membuat menu baru untuk fitur tersebut agar tidak hilang.
+
+Tambahkan menu baru di allMenus (bagian atas script):
+
+JavaScript
+{id: 'verifikasi_bayar', name: 'Verifikasi Pembayaran'}, // Tambahkan ini
+Tambahkan izin akses untuk Accounting di defaultAccess:
+
+JavaScript
+'ACCOUNTING': ['arus_kas', 'dana_unit', 'distribusi_insentif', 'verifikasi_bayar'] // Tambahkan 'verifikasi_bayar'
+Lalu di bagian fungsi page(id), tambahkan blok baru untuk kode yang tadi Anda ganti (kode Verifikasi Pembayaran):
+
+JavaScript
+else if(id === 'verifikasi_bayar') {
+    t.innerText = "Verifikasi Pembayaran Nasabah";
+    // ... (Paste kode lama 'distribusi_insentif' di sini) ...
+    // Mengambil data kiriman nasabah dari database instruksi
+    let listVerif = dbInstruksi.filter(i => i.toRole === 'ACCOUNTING' && i.message.includes('KONFIRMASI BAYAR'));
+
+    // ... Lanjutkan sisa kode render tampilan bukti bayar ...
+    let rows = listVerif.map(v => `...`).join(''); // (Kode render yang lama)
+
+    b.innerHTML = `...`; // (Kode HTML yang lama)
+}
+Dengan cara ini, Menu Distribusi Insentif akan benar-benar menampilkan data bonus marketing, dan Menu Verifikasi Pembayaran akan berdiri sendiri untuk mengecek bukti transfer nasabah.
+
+Distirbusi insentif ini untuk markteingbkan berdasarkan jumlah nasabah
+
+Betul, Pak. Di sistem Bapak, perhitungan insentif berdasarkan jumlah nasabah sebenarnya sudah dilakukan di fungsi distributeProfitAccounting.
+
+Saat insentif dibagikan, sistem menyimpan keterangan seperti: "Bonus SHU (5 Nasabah)". Namun, tampilan di menu Accounting Bapak sebelumnya salah (tertukar dengan menu verifikasi).
+
+Silakan GANTI TOTAL bagian else if(id === 'distribusi_insentif') (sekitar baris 1025) dengan kode di bawah ini.
+
+Kode ini akan menampilkan tabel yang menunjukkan Nama Marketing, Jumlah Nasabah, dan Total Uang yang didapat.
+
+JavaScript
+            else if(id === 'distribusi_insentif') { 
+                t.innerText = "Laporan Insentif Marketing"; 
+                
+                // 1. Ambil data khusus tipe 'Insentif' dari Arus Kas
+                // Data ini otomatis tersimpan saat Menu Distribusi Profit dijalankan
+                let dataInsentif = dbArusKas.filter(x => x.type === 'Insentif');
+                
+                // 2. Hitung Total Uang Insentif yang sudah keluar
+                let totalInsentif = dataInsentif.reduce((a,b) => a + parseInt(b.amount), 0);
+
+                // 3. Render Tabel
+                // Kolom 'Keterangan' (x.desc) akan menampilkan "Bonus SHU (X Nasabah)"
+                let rows = dataInsentif.map(x => `
+                    <tr>
+                        <td>${new Date(x.date).toLocaleDateString()}</td>
+                        <td>
+                            <b>${x.recipient}</b><br>
+                            <small>${x.unit.toUpperCase()}</small>
+                        </td>
+                        <td>${x.desc}</td> <td style="color:green; font-weight:bold; text-align:right;">
+                            Rp ${parseInt(x.amount).toLocaleString()}
+                        </td>
+                    </tr>
+                `).join('');
+            
+                b.innerHTML = `
+                <div class="card" style="background:var(--primary-gradient); color:white;">
+                    <small>Total Insentif Dibagikan</small>
+                    <h1 style="margin-top:5px;">Rp ${totalInsentif.toLocaleString()}</h1>
+                    <p style="font-size:0.8rem; opacity:0.8;">Dana ini otomatis masuk ke Dompet Marketing masing-masing.</p>
+                </div>
+
+                <div class="card">
+                    <h4>Rincian Per Marketing</h4>
+                    <p>Insentif dihitung otomatis berdasarkan jumlah nasabah aktif saat pembagian SHU.</p>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Tanggal</th>
+                                    <th>Nama Marketing</th>
+                                    <th>Dasar Perhitungan (Nasabah)</th>
+                                    <th style="text-align:right;">Nominal Diterima</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rows || '<tr><td colspan="4" style="text-align:center">Belum ada data insentif.</td></tr>'}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>`; 
+            }
+Penjelasan Logika (Kenapa ini bekerja):
+Data di atas diambil dari fungsi distributeProfitAccounting (Baris 892 di kode asli Bapak) yang memiliki logika berikut:
+
+Hitung Nasabah: marketingCounts[c.inputBy]++ (Menghitung berapa nasabah milik marketing A, B, dst).
+
+Simpan Keterangan: desc: 'Bonus SHU (' + marketingCounts[mkt] + ' Nasabah)'.
+
+Jadi, dengan kode tampilan baru di atas, Accounting bisa melihat transparansi bahwa Marketing A dapat sekian Rupiah karena membawa sekian Nasabah.
+
+Dimana fungsi page id tempat kita taruh kode Verifikasi pembayaran
+
+Bapak bisa menaruh kode Verifikasi Pembayaran di dalam fungsi page(id), tepatnya di deretan else if lainnya.
+
+Agar rapi, saya sarankan Bapak menaruhnya tepat di bawah kode distribusi_insentif yang baru saja kita perbaiki.
+
+Berikut langkah-langkah lengkapnya agar fitur ini muncul dan berfungsi:
+
+Langkah 1: Daftarkan Menu Baru (Wajib)
+Cari variabel allMenus (di bagian atas kode), lalu tambahkan baris ini agar menunya muncul di sidebar Accounting:
+
+JavaScript
+// Di dalam array allMenus:
+{id: 'verifikasi_bayar', name: 'Verifikasi Pembayaran'},
+Langkah 2: Beri Izin Akses (Wajib)
+Cari variabel defaultAccess, lalu tambahkan 'verifikasi_bayar' ke bagian ACCOUNTING:
+
+JavaScript
+// Di dalam object defaultAccess:
+'ACCOUNTING': ['arus_kas', 'dana_unit', 'distribusi_insentif', 'verifikasi_bayar']
+Langkah 3: Taruh Kode Halaman (Logic)
+Sekarang ke fungsi function page(id). Cari bagian else if(id === 'distribusi_insentif') { ... } yang sudah diperbaiki tadi, lalu tepat di bawah kurung tutup }-nya, tempelkan kode ini:
+
+JavaScript
+            // --- INI KODE HALAMAN VERIFIKASI PEMBAYARAN ---
+            else if(id === 'verifikasi_bayar') {
+                t.innerText = "Verifikasi Pembayaran Nasabah";
+                
+                // Ambil data kiriman nasabah dari database instruksi
+                // Filter: Harus untuk ACCOUNTING dan pesannya mengandung 'KONFIRMASI BAYAR'
+                let listVerif = dbInstruksi.filter(i => i.toRole === 'ACCOUNTING' && i.message.includes('KONFIRMASI BAYAR'));
+                
+                let rows = listVerif.map(v => `
+                    <div class="card" style="display: flex; gap: 15px; align-items: center; border-left: 5px solid var(--secondary); margin-bottom: 10px;">
+                        <img src="${v.buktiFoto}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 5px; cursor: pointer;" onclick="window.open(this.src)">
+                        <div style="flex: 1;">
+                            <b style="color:var(--primary)">${v.sender.toUpperCase()}</b><br>
+                            <small>${v.message}</small><br>
+                            <small style="color:#888;">${new Date(v.id).toLocaleString()}</small>
+                        </div>
+                        <button class="btn btn-success btn-sm" onclick="terimaBayarNasabah('${v.id}')">
+                            <i class="fas fa-check"></i> TERIMA
+                        </button>
+                    </div>
+                `).join('');
+                
+                b.innerHTML = `
+                    <div class="card" style="background:#e3f2fd; margin-bottom:15px;">
+                        <i class="fas fa-info-circle"></i> Klik gambar untuk melihat bukti transfer. Klik <b>TERIMA</b> untuk memverifikasi dan update data nasabah otomatis.
+                    </div>
+                    ${rows || '<div class="card" style="text-align:center; padding:20px;">Tidak ada pengajuan verifikasi baru.</div>'}
+                `;
+            }
+Ringkasan Posisi: Fungsi page(id) Bapak akan terlihat urut seperti ini:
+
+else if(id === 'arus_kas') { ... }
+
+else if(id === 'dana_unit') { ... }
+
+else if(id === 'distribusi_insentif') { ... } (Kode Insentif Marketing yang baru)
+
+else if(id === 'verifikasi_bayar') { ... } (Kode di atas)
+
+Bukannya sudah ada kode Verifikasi pembayaran ini, perlu dihapus apa ndak
+
+Pertanyaan yang sangat jeli! Jawabannya: Kode lama yang ada di dalam distribusi_insentif itu JANGAN dihapus total, tapi DIPINDAHKAN.
+
+Kenapa? Karena kode yang ada saat ini (di file asli Bapak) itu salah kamar/salah tempat.
+
+Saat ini kondisinya begini:
+
+Bapak klik menu "Distribusi Insentif".
+
+Tapi yang muncul malah fitur "Verifikasi Pembayaran".
+
+Jadi, jika Bapak hanya menghapusnya, fitur verifikasinya akan hilang. Jika Bapak membiarkannya, fitur Insentifnya tidak akan punya tempat.
+
+Solusi: Lakukan "Tukar Guling"
+Kita akan memindahkan isinya ke tempat yang benar agar rapi.
+
+Langkah 1: KOSONGKAN kamar distribusi_insentif Hapus kode verifikasi yang ada di dalam else if(id === 'distribusi_insentif'), lalu isi dengan kode Laporan Insentif (yang menampilkan tabel bonus marketing) yang saya berikan sebelumnya.
+
+Langkah 2: BUAT kamar baru untuk verifikasi_bayar Buat blok else if baru (seperti panduan saya di atas), lalu masukkan logika/kode verifikasi pembayaran yang lama ke situ.
+
+Ringkasan Urutan Kodenya Nanti Jadi Begini:
+Pastikan urutan di dalam fungsi page(id) Bapak menjadi seperti ini supaya tidak bingung:
+
+JavaScript
+// ... (kode menu lain: arus_kas, dana_unit, dll) ...
+
+// 1. INI KAMAR UNTUK INSENTIF (Perbaikan Baru)
+// Dulu isinya salah (verifikasi), sekarang kita isi yang benar (laporan bonus).
+else if(id === 'distribusi_insentif') { 
+    t.innerText = "Laporan Insentif Marketing";
+    // ... (masukkan kode Laporan Insentif Marketing di sini) ...
+}
+
+// 2. INI KAMAR BARU UNTUK VERIFIKASI
+// Kita pindahkan kode lama yang "salah kamar" tadi ke sini.
+else if(id === 'verifikasi_bayar') {
+    t.innerText = "Verifikasi Pembayaran Nasabah";
+    // ... (masukkan kode Verifikasi Pembayaran di sini) ...
+}
+
+// ... (lanjut ke menu lain) ...
+Dengan cara ini, dua-duanya selamat:
+
+Fitur Insentif muncul dengan data yang benar.
+
+Fitur Verifikasi tetap ada tapi pindah ke menu baru yang lebih sesuai.
+
+Berarti langkah 3 tidak perlu?
+
+Tetap SANGAT PERLU, Pak. Jangan sampai terlewat.
+
+Alasannya sederhana: Kalau Bapak hanya mengerjakan Langkah 1 (Daftar Menu) dan Langkah 2 (Beri Izin), maka tombolnya memang akan muncul di layar Accounting.
+
+Tapi, saat tombol itu diklik, tidak akan terjadi apa-apa (layar kosong).
+
+Kenapa? Karena sistem belum tahu apa yang harus ditampilkan ketika ID verifikasi_bayar dipanggil. Sistem butuh Langkah 3 (Blok Kode Logic) untuk menjalankan perintahnya.
+
+Ilustrasi Mudahnya:
+Langkah 1 (Daftar Menu): Bapak memasang Papan Nama "Verifikasi" di pintu.
+
+Langkah 2 (Izin Akses): Bapak memberi Kunci Kamar ke staff Accounting.
+
+Langkah 3 (Kode Logic): Bapak Membangun Kamarnya & Memasukkan Perabotannya.
+
+Kalau Langkah 3 tidak dilakukan, staff Accounting bisa lihat pintunya, bisa buka pintunya, tapi begitu masuk kamarnya belum dibangun (alias error/kosong).
+
+Jadi, Urutan Pengerjaan Yang Benar:
+Silakan lakukan ini di fungsi page(id):
+
+Cari else if (id === 'distribusi_insentif').
+
+Hapus Isinya, ganti dengan kode Laporan Insentif (yang ada tabel uangnya).
+
+Buat Baris Baru di bawahnya (else if (id === 'verifikasi_bayar')).
+
+Paste (Tempel) kode Verifikasi Pembayaran (yang tadi dihapus dari poin 1) ke dalam blok baru ini.
+
+Ini contoh hasil akhirnya supaya tidak bingung:
+
+JavaScript
+// ... kode menu lain ...
+
+// INI HASIL LANGKAH PERBAIKAN (Insentif jadi benar)
+else if(id === 'distribusi_insentif') {
+    t.innerText = "Laporan Insentif Marketing";
+    // ... (masukkan kode Tabel Insentif Marketing di sini) ...
+}
+
+// INI HASIL LANGKAH 3 (Kamar baru untuk kode lama)
+else if(id === 'verifikasi_bayar') {
+    t.innerText = "Verifikasi Pembayaran";
+    // ... (masukkan kode Verifikasi Bukti Transfer di sini) ...
+}
+Sudah saya lakukan kenapa belum muncul menu veirfikais bayar di accoutjng
+
+Tenang Pak, ini masalah yang sangat umum terjadi saat update fitur.
+
+Penyebabnya sederhana: Sistem masih "mengingat" pengaturan lama dari Database, sehingga kode baru yang Bapak tulis di defaultAccess belum ter-update ke Cloud (Firebase).
+
+Untuk memunculkannya, Bapak harus memaksa sistem untuk membaca pengaturan baru. Pilih salah satu cara di bawah ini:
+
+CARA 1: Pakai Tombol "FIX AKSES" (Paling Cepat)
+Karena Bapak sudah mengupdate variabel defaultAccess di kodingan, Bapak perlu menekan tombol sakti ini agar database diperbarui:
+
+Logout dari aplikasi (kembali ke layar Login).
+
+Lihat di bagian bawah tombol Login, ada tombol berwarna ungu/biru bernama FIX AKSES (atau ikon Refresh).
+
+Klik tombol tersebut.
+
+Masukkan password admin (default di kode Bapak: hauraapp atau 12345 coba cek fungsi forceUpdatePermissions).
+
+Setelah muncul pesan "Berhasil Reset", silakan Login kembali sebagai Accounting. Menu pasti sudah muncul.
+
+CARA 2: Setting Manual via Admin (Lebih Aman)
+Jika Bapak takut mereset settingan lain, lakukan ini:
+
+Login sebagai ADMIN (Username: haura app, Pass: 12345).
+
+Buka Menu "Atur Hak Akses" (ikon tameng).
+
+Cari baris "Verifikasi Pembayaran" (menu baru Bapak).
+
+Centang kotak di kolom ACCOUNTING.
+
+Klik tombol SIMPAN PERUBAHAN di bawah.
+
+Logout Admin, lalu Login kembali sebagai Accounting.
+
+Checklist Pengecekan (Pastikan ini sudah ada di kode):
+Jika kedua cara di atas gagal, coba cek ulang 2 baris kode ini, jangan sampai ada typo:
+
+1. Di variabel allMenus (bagian atas): Pastikan ada baris ini:
+
+JavaScript
+{id: 'verifikasi_bayar', name: 'Verifikasi Pembayaran'},
+2. Di variabel defaultAccess (bagian ACCOUNTING): Pastikan ID-nya sama persis:
+
+JavaScript
+'ACCOUNTING': ['arus_kas', 'dana_unit', 'distribusi_insentif', 'verifikasi_bayar']
+Biasanya setelah melakukan CARA 1, menu langsung muncul. Silakan dicoba, Pak!
+
+Sudah syaa kerjakan kenapa di akun nasbah hilang menu oembayran jumlah tenor dan jumlah angsurannya yang tadi
+
+Kemungkinan besar saat Anda menambahkan kode verifikasi_bayar tadi, ada kurung kurawal } yang tertinggal atau terhapus, sehingga kode untuk Dashboard Nasabah menjadi rusak atau dianggap bagian dari kode lain (sehingga tidak terbaca).
+
+Atau, kode dashboard_nasabah tidak sengaja tertimpa saat Anda melakukan paste kode baru.
+
+Silakan Cari else if(id === 'dashboard_nasabah') di dalam fungsi page(id).
+
+Jika tidak ada atau isinya tidak lengkap, silakan SALIN & TEMPEL (PASTE) kode lengkap di bawah ini. Pastikan Anda menaruhnya sejajar dengan else if yang lain (misalnya sebelum else if(id === 'ajukan_pinjaman')).
+
+Kode Lengkap Dashboard Nasabah (Kembalikan yang Hilang)
+JavaScript
+            else if(id === 'dashboard_nasabah') { 
+                t.innerText = `Dashboard Nasabah`; 
+                
+                // 1. Cari Data Nasabah sesuai User yang Login
+                // Kita cocokkan nama user (tanpa spasi) dengan data nasabah
+                let myData = dbNasabah.filter(n => n.nama.replace(/\s/g, '').toLowerCase() === activeUser.user.toLowerCase() && n.status === 'Approved');
+                
+                let contentHtml = '';
+                
+                if(myData.length === 0) {
+                    contentHtml = '<div class="card" style="text-align:center; padding:30px;"><i class="fas fa-search" style="font-size:2rem; color:#ccc;"></i><br><br>Data pembiayaan tidak ditemukan.<br>Pastikan pengajuan Anda sudah di-ACC oleh Manager.</div>';
+                } else {
+                    myData.forEach(d => {
+                        // --- LOGIKA HITUNGAN YANG MUNGKIN HILANG TADI ---
+                        let marginPersen = settings.margins[d.unit] || 0;
+                        let totalHutangAwal = parseInt(d.plafond) + (parseInt(d.plafond) * marginPersen / 100);
+                        let angsuranPerTenor = totalHutangAwal / parseInt(d.tenor);
+                        
+                        // Hitung Sisa Hutang Realtime
+                        let riwayatBayar = dbArusKas.filter(k => k.desc.includes(d.nama) && k.type === 'Masuk');
+                        let totalSudahBayar = riwayatBayar.reduce((a, b) => a + parseInt(b.amount), 0);
+                        let sisaHutang = totalHutangAwal - totalSudahBayar;
+                        
+                        // Hitung Sisa Tenor
+                        let sisaTenor = Math.ceil(sisaHutang / angsuranPerTenor);
+                        if(sisaTenor < 0) sisaTenor = 0;
+
+                        // --- TAMPILAN KARTU (CARD) ---
+                        contentHtml += `
+                        <div class="card" style="background: var(--primary-gradient); color: white; margin-bottom: 15px;">
+                            <small>Total Sisa Kewajiban (${d.unit.toUpperCase()})</small>
+                            <h1 style="margin: 10px 0;">Rp ${sisaHutang.toLocaleString()}</h1>
+                            
+                            <div style="display: flex; justify-content: space-between; font-size: 0.9rem; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 10px; margin-top: 10px;">
+                                <span><i class="fas fa-calendar-alt"></i> Sisa Tenor: <b>${sisaTenor} ${d.tenorType}</b></span>
+                                <span><i class="fas fa-tags"></i> Angsuran: <b>Rp ${Math.round(angsuranPerTenor).toLocaleString()}</b></span>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <h4>Menu Pembayaran</h4>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                                <button class="btn btn-primary" onclick="bukaFormBayar('${d.id}', ${Math.round(angsuranPerTenor)}, 'Angsuran')">
+                                    <i class="fas fa-money-bill"></i> Bayar Angsuran
+                                </button>
+                                <button class="btn btn-success" onclick="bukaFormBayar('${d.id}', ${sisaHutang}, 'Pelunasan')">
+                                    <i class="fas fa-check-double"></i> Pelunasan Total
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div id="form-bayar-nasabah" class="card hidden" style="border: 2px dashed var(--secondary); margin-top:15px;">
+                            <h4 id="judul-bayar" style="color:var(--primary)">Upload Bukti</h4>
+                            <div class="form-vertical">
+                                <label>Nominal Pembayaran (Rp)</label>
+                                <input type="number" id="nom-bayar-nasabah" class="form-control" readonly style="background:#eee; font-weight:bold;">
+                                
+                                <label>Pilih Foto Kuitansi/Transfer</label>
+                                <input type="file" id="file-bukti-nasabah" class="form-control" accept="image/*" onchange="previewBukti(this)">
+                                
+                                <div id="preview-container" style="margin: 15px 0; text-align: center; min-height:50px;">
+                                    <small style="color:#aaa;">Preview foto akan muncul di sini</small>
+                                </div>
+                                
+                                <button class="btn btn-warning" style="width:100%; font-weight:bold;" onclick="kirimBuktiKeAccounting()">
+                                    <i class="fas fa-paper-plane"></i> KIRIM BUKTI SEKARANG
+                                </button>
+                            </div>
+                        </div>`;
+                    });
+                }
+                b.innerHTML = contentHtml;
+            }
+Cara Memasangnya:
+Cari kode else if di dalam function page(id).
+
+Pastikan kode di atas ditaruh SEBELUM kode verifikasi_bayar atau SESUDAH kode distribusi_insentif yang baru saja Anda buat.
+
+Hati-hati dengan Kurung { }:
+
+Setiap else if harus dibuka dengan { dan ditutup dengan }.
+
+Jangan menaruh else if di dalam else if lain.
+
+Jika Anda kesulitan menemukan tempatnya, tempel kode tersebut tepat di bawah kode distribusi_insentif yang tadi kita buat.
+
+Saya kasih script saya yanag sudah sya edit ya
+
+Silakan, Pak. Boleh langsung di-paste (tempel) semua kode HTML/Javascript yang terakhir Bapak edit di sini.
+
+Saya akan bantu periksa 3 hal penting ini:
+
+Apakah kode Dashboard Nasabah yang hilang sudah kembali (termasuk hitungan tenor & angsuran).
+
+Apakah posisi menu Verifikasi Pembayaran sudah benar letaknya.
+
+Apakah menu Distribusi Insentif sudah menampilkan data bonus marketing (bukan verifikasi lagi).
+
+Ditunggu kodenya, Pak.
+
+Bagus sekali, Pak! Saya sudah memeriksa kode yang Bapak lampirkan (index (1).html).
+
+Berikut hasil pengecekan saya:
+
+✅ Dashboard Nasabah: SUDAH BENAR. Perhitungan tenor, angsuran, dan sisa hutang sudah kembali lengkap. Form upload bukti bayar juga sudah ada.
+
+✅ Distribusi Insentif: SUDAH BENAR. Sekarang sudah menampilkan data "Bonus Marketing" dari Arus Kas, bukan lagi verifikasi pembayaran.
+
+❌ Verifikasi Pembayaran: MASIH ERROR (Isinya Kosong). Di baris 1175 - 1178, kodenya masih berisi titik-titik (...) atau placeholder. Ini akan menyebabkan halaman kosong atau error saat diklik.
+
+Perbaikan Terakhir (Wajib Diganti)
+Silakan cari bagian kode ini di file Bapak (sekitar baris 1170 - 1178):
+
+JavaScript
+            else if(id === 'verifikasi_bayar') {
+    t.innerText = "Verifikasi Pembayaran Nasabah";
+    // ... (Paste kode lama 'distribusi_insentif' di sini) ...
+    // Mengambil data kiriman nasabah dari database instruksi
+    let listVerif = dbInstruksi.filter(i => i.toRole === 'ACCOUNTING' && i.message.includes('KONFIRMASI BAYAR'));
+
+    // ... Lanjutkan sisa kode render tampilan bukti bayar ...
+    let rows = listVerif.map(v => `...`).join(''); // (Kode render yang lama)
+
+    b.innerHTML = `...`; // (Kode HTML yang lama)
+}
+🔴 HAPUS seluruh blok di atas, dan GANTI dengan kode lengkap di bawah ini agar fiturnya jalan:
+
+JavaScript
+            else if(id === 'verifikasi_bayar') {
+                t.innerText = "Verifikasi Pembayaran Nasabah";
+                
+                // 1. Ambil data instruksi/pesan khusus Accounting yang berisi 'KONFIRMASI BAYAR'
+                let listVerif = dbInstruksi.filter(i => i.toRole === 'ACCOUNTING' && i.message.includes('KONFIRMASI BAYAR'));
+                
+                // 2. Render tampilan kartu untuk setiap pengajuan
+                let rows = listVerif.map(v => `
+                    <div class="card" style="display: flex; gap: 15px; align-items: center; border-left: 5px solid var(--secondary); margin-bottom: 10px;">
+                        <img src="${v.buktiFoto}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 5px; cursor: pointer; border:1px solid #ddd;" onclick="window.open(this.src)">
+                        
+                        <div style="flex: 1;">
+                            <b style="color:var(--primary)">${v.sender.toUpperCase()}</b><br>
+                            <small>${v.message}</small><br>
+                            <small style="color:#888;">${new Date(v.id).toLocaleString()}</small>
+                        </div>
+                        
+                        <button class="btn btn-success btn-sm" onclick="terimaBayarNasabah('${v.id}')">
+                            <i class="fas fa-check"></i> TERIMA
+                        </button>
+                    </div>
+                `).join('');
+                
+                // 3. Masukkan ke layar (HTML)
+                b.innerHTML = `
+                    <div class="card" style="background:#e3f2fd; margin-bottom:15px;">
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <i class="fas fa-info-circle" style="font-size:1.5rem; color:var(--primary);"></i>
+                            <div>
+                                <b>Tugas Accounting:</b><br>
+                                Cek mutasi bank. Jika uang masuk, klik <b>TERIMA</b>. Sistem akan otomatis memotong hutang nasabah & mengirim WA Lunas.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="list-verifikasi-container">
+                        ${rows || '<div class="card" style="text-align:center; padding:30px; color:#999;"><i class="fas fa-check-circle" style="font-size:2rem; margin-bottom:10px;"></i><br>Tidak ada pengajuan pembayaran baru.</div>'}
+                    </div>
+                `;
+            }
+Setelah kode ini dipasang, jangan lupa klik FIX AKSES (tombol ungu di halaman login) sekali lagi untuk memastikan menu Verifikasi muncul di akun Accounting. Selamat mencoba!
+
+Setelah itu apakah dashboard nasabah bisa menampilkan tenor angsuran dan tombol bayar
+
+Ya, Benar Sekali.
+
+Jika Bapak sudah memasang kode dashboard_nasabah yang saya berikan di atas (sebelum kode verifikasi_bayar), maka tampilan Nasabah akan menjadi lengkap.
+
+Berikut adalah fitur yang pasti muncul di layar Nasabah setelah perbaikan tersebut:
+
+1. Informasi Tenor & Angsuran
+Nasabah tidak perlu lagi menebak-nebak berapa yang harus dibayar. Kode tersebut otomatis menghitung:
+
+Total Sisa Hutang: (Pokok + Margin) - (Total yang sudah dibayar).
+
+Angsuran per Bulan/Minggu: Dihitung dari Total Awal / Lama Tenor.
+
+Sisa Tenor: Berapa bulan/minggu lagi sampai lunas.
+
+Bukti di dalam kode:
+
+JavaScript
+// Ini kode yang menghitung angsuran otomatis
+let angsuranPerTenor = totalHutangAwal / parseInt(d.tenor);
+...
+// Ini yang menampilkannya di layar
+<span>Angsuran: <b>Rp ${Math.round(angsuranPerTenor).toLocaleString()}</b></span>
+2. Tombol Bayar (Upload Bukti)
+Akan muncul Dua Tombol di bawah info tagihan:
+
+🟦 Bayar Angsuran (Untuk bayar cicilan rutin).
+
+🟩 Pelunasan Total (Untuk melunasi sisa hutang sekaligus).
+
+Bukti di dalam kode:
+
+JavaScript
+<button ... onclick="bukaFormBayar(..., 'Angsuran')">Bayar Angsuran</button>
+<button ... onclick="bukaFormBayar(..., 'Pelunasan')">Pelunasan Total</button>
+3. Apa yang terjadi saat tombol diklik?
+Ketika tombol diklik, form tersembunyi (#form-bayar-nasabah) akan terbuka otomatis di bawahnya. Nasabah bisa:
+
+Melihat nominal yang harus ditransfer.
+
+Memilih foto bukti transfer dari HP/Laptop.
+
+Klik "Kirim Bukti Sekarang".
+
+Kesimpulan
+Setelah Bapak menerapkan perbaikan ini, alur sistemnya akan berjalan sempurna:
+
+Nasabah: Login -> Lihat Tagihan -> Klik Bayar -> Upload Bukti.
+
+Sistem: Kirim notifikasi ke menu Accounting.
+
+Accounting: Buka menu "Verifikasi Pembayaran" -> Cek Foto -> Klik Terima.
+
+Sistem: Potong hutang Nasabah & Kirim WA Lunas otomatis.
+
+Silakan dicoba login menggunakan akun nasabah (atau buat user baru sebagai nasabah) untuk melihat hasilnya!
+
+Untuk cetak akad dan yang lain biar tetap bagus tampilannya rapi bisa dieting tetap tampilan desktop untuk cetaknya aja, jadi kalau kita tekan download pdf akad itu, meskipun kita pakai HP atau apk di download versi desktop
+
+Ide yang sangat bagus, Pak. Masalah utama saat cetak dari HP adalah library PDF-nya sering "tertipu" oleh layar kecil HP, sehingga hasil cetaknya jadi sempit atau berantakan (responsive mobile view).
+
+Agar hasil cetak (PDF) tetap Tampilan Desktop (Lebar & Rapi) walaupun ditekan dari HP, Bapak perlu menambahkan satu "mantra" khusus di pengaturan html2canvas. Mantra itu adalah: windowWidth.
+
+Berikut adalah perbaikan untuk script Bapak.
+
+1. Update Fungsi generatePDF (Untuk Laporan Umum)
+Cari fungsi generatePDF di kode Bapak, lalu GANTI dengan kode ini. Saya menambahkan pengaturan agar sistem "berpura-pura" sedang dibuka di layar komputer selebar 1200px.
+
+JavaScript
+        function generatePDF(elementId, filename) {
+            const element = document.getElementById(elementId);
+            
+            // 1. SIMPAN STATUS ASLI
+            const originalDisplay = element.style.display;
+            
+            // 2. PAKSA TAMPIL & SET LEBAR FIX (Agar tabel tidak gepeng di HP)
+            element.style.display = 'block';
+            element.style.width = '800px'; // Paksa lebar seukuran kertas A4 desktop
+            element.style.maxWidth = 'none';
+            element.style.margin = '0 auto';
+            element.style.backgroundColor = 'white';
+
+            let wm = element.querySelector('.watermark');
+            if(wm) wm.style.display = 'none';
+
+            // 3. SETTINGAN KHUSUS "DESKTOP MODE"
+            const opt = {
+                margin: 10,
+                filename: filename + '.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { 
+                    scale: 2, 
+                    useCORS: true,
+                    // INI KUNCINYA: Memaksa render seolah-olah di layar komputer lebar
+                    windowWidth: 1200, 
+                    width: 800 
+                }, 
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save().then(() => { 
+                if(wm) wm.style.display = 'block';
+                
+                // 4. KEMBALIKAN TAMPILAN SEPERTI SEMULA
+                element.style.display = originalDisplay || 'none'; 
+                element.style.width = ''; // Hapus paksaan lebar tadi
+            });
+        }
+2. Update Fungsi printAkad (Khusus Akad F4)
+Fungsi printAkad Bapak sudah bagus, tapi perlu tambahan windowWidth juga agar posisi tanda tangan dan tabel margin tidak bergeser saat di-klik dari HP.
+
+Cari fungsi printAkad (sekitar baris 1360-an), lalu perbaiki bagian const opt = { ... } di bagian bawahnya menjadi seperti ini:
+
+JavaScript
+            // ... (Kode HTML Akad di atasnya BIARKAN SAMA) ...
+
+            // --- EKSEKUSI CETAK (SETTINGAN F4 DESKTOP MODE) ---
+            const area = document.getElementById('printable-area');
+            area.innerHTML = html;
+            area.style.display = 'block';
+            
+            // Paksa container agar selebar kertas F4 sungguhan, bukan lebar HP
+            area.style.width = '215mm'; 
+            area.style.margin = '0 auto';
+
+            const opt = {
+                margin:       [5, 5, 5, 5], 
+                filename:     `Akad_F4_${d.nama.replace(/\s/g,'_')}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { 
+                    scale: 2, 
+                    useCORS: true,
+                    // MANTRA ANTI-GEPENG:
+                    windowWidth: 1200,  // Pura-pura layar desktop
+                    width: 900          // Lebar area canvas (sedikit lebih besar dari A4)
+                }, 
+                // Ukuran F4 (Folio)
+                jsPDF:        { unit: 'mm', format: [215, 330], orientation: 'portrait' },
+                pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+            };
+
+            html2pdf().set(opt).from(area).save().then(() => {
+                area.style.display = 'none';
+                area.style.width = ''; // Reset
+            });
+Penjelasan Apa yang Berubah:
+windowWidth: 1200: Ini perintah ke sistem PDF Maker: "Hey, render HTML ini seolah-olah kamu sedang berjalan di Layar Komputer (1200px), abaikan layar HP saya yang sempit (360px)."
+
+element.style.width = '800px': Sebelum dicetak, kita memaksa tabel laporan melebar. Jika tidak begini, tabel akan mengikuti lebar HP dan kolom-kolomnya akan turun ke bawah (berantakan).
+
+Dengan kode ini, Bapak bisa test login dari HP Android, lalu klik Cetak PDF. Hasilnya akan sama persis seperti Bapak mencetak dari Laptop/Komputer (Rapi & Lebar).
+
+Kenapa ndak bisa download setlah saya rubah
+
+Jika fitur download tiba-tiba tidak berfungsi setelah kode diubah, biasanya penyebabnya adalah Syntax Error (kesalahan penulisan kode), seperti:
+
+Lupa tanda koma (,) antar baris pengaturan.
+
+Kurung kurawal {} yang tidak lengkap (kebanyakan atau kurang).
+
+Salah menaruh kode (di luar fungsi yang seharusnya).
+
+Agar tidak bingung mencari baris mana yang salah, saran saya adalah: Hapus total fungsi yang bermasalah, lalu ganti dengan fungsi lengkap yang sudah saya rapikan di bawah ini.
+
+Silakan copy-paste kode berikut untuk menggantikan fungsi yang lama.
+
+1. Perbaikan Fungsi generatePDF (Untuk Laporan Umum)
+Cari fungsi function generatePDF(elementId, filename) { ... } yang lama, hapus semuanya, lalu ganti dengan ini:
+
+JavaScript
+        function generatePDF(elementId, filename) {
+            const element = document.getElementById(elementId);
+            if (!element) return alert("Elemen tidak ditemukan!");
+            
+            // 1. SIMPAN STATUS ASLI
+            const originalDisplay = element.style.display;
+            const originalWidth = element.style.width;
+            
+            // 2. PAKSA TAMPIL & SET LEBAR FIX (Agar tabel tidak gepeng di HP)
+            element.style.display = 'block';
+            element.style.width = '800px'; // Paksa lebar seukuran kertas A4 desktop
+            element.style.maxWidth = 'none';
+            element.style.margin = '0 auto';
+            element.style.backgroundColor = 'white';
+
+            let wm = element.querySelector('.watermark');
+            if(wm) wm.style.display = 'none';
+
+            // 3. SETTINGAN KHUSUS "DESKTOP MODE"
+            const opt = {
+                margin: 10,
+                filename: filename + '.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { 
+                    scale: 2, 
+                    useCORS: true,
+                    // INI PENTING: Memaksa render seolah-olah di layar komputer lebar
+                    windowWidth: 1200, 
+                    width: 800 
+                }, 
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            // 4. EKSEKUSI DOWNLOAD
+            html2pdf().set(opt).from(element).save().then(() => { 
+                if(wm) wm.style.display = 'block';
+                
+                // 5. KEMBALIKAN TAMPILAN SEPERTI SEMULA
+                element.style.display = originalDisplay || 'none'; 
+                element.style.width = originalWidth; // Reset lebar
+            }).catch(err => {
+                console.error("Gagal Download:", err);
+                alert("Gagal download PDF. Cek console browser.");
+                // Tetap kembalikan tampilan jika error
+                element.style.display = originalDisplay || 'none';
+                element.style.width = originalWidth;
+            });
+        }
+2. Perbaikan Fungsi printAkad (Khusus Akad Nasabah)
+Cari fungsi function printAkad(id) { ... } yang lama, hapus semuanya, lalu ganti dengan ini:
+
+JavaScript
+        function printAkad(id) {
+            let d = dbNasabah.find(x => x.id == id);
+            if (!d) return alert("Data tidak ditemukan");
+
+            // --- DATA NASABAH ---
+            let uName = d.unit === 'sps' ? 'MUDHARABAH (BAGI HASIL)' : (d.unit === 'kms' ? 'MURABAHAH (JUAL BELI)' : 'RAHN (GADAI)');
+            let tpl = d.unit === 'sps' ? settings.templates.sps : (d.unit === 'kms' ? settings.templates.kms : settings.templates.gadai);
+            let margin = parseInt(d.plafond) * (settings.margins[d.unit] / 100);
+            let totalTotal = parseInt(d.plafond) + margin;
+            let angsuran = totalTotal / parseInt(d.tenor);
+            
+            let tglSekarang = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+            let autoNum = d.noSurat !== '-' ? d.noSurat : `0${Math.floor(Math.random() * 100)}/AKAD/${new Date().getFullYear()}`;
+            
+            let photoSrc = (d.foto && d.foto.length > 50) ? d.foto : "https://cdn-icons-png.flaticon.com/512/1077/1077114.png";
+            let logoSrc = settings.logo || "https://cdn-icons-png.flaticon.com/512/2317/2317968.png";
+
+            // --- HTML STRUKTUR (UKURAN F4 / FOLIO) ---
+            let html = `
+            <div id="akad-final" style="width: 215mm; background: white; font-family: Arial, sans-serif; color: #000; font-size: 11px; line-height: 1.2;">
+                
+                <style>
+                    .no-break { page-break-inside: avoid; }
+                    table { width: 100%; border-collapse: collapse; }
+                    td { vertical-align: top; padding: 3px; }
+                </style>
+
+                <div class="no-break" style="border-bottom: 2px double #000; padding-bottom: 5px; margin-bottom: 15px; display:flex; align-items:center;">
+                    <img src="${logoSrc}" style="width:15mm; height:15mm; object-fit:contain; margin-right:10px;">
+                    <div style="flex:1;">
+                        <div style="font-size: 16px; font-weight: 900; text-transform: uppercase;">${settings.nama}</div>
+                        <div style="font-size: 10px;">${settings.alamat}</div>
+                        <div style="font-size: 10px;">Izin: ${settings.izin}</div>
+                    </div>
+                </div>
+
+                <div class="no-break" style="text-align: center; margin-bottom: 20px;">
+                    <b style="font-size: 13px; text-decoration: underline;">PERJANJIAN PEMBIAYAAN ${uName}</b><br>
+                    <span style="font-size: 10px;">Nomor: ${autoNum}</span>
+                </div>
+
+                <div style="margin-bottom: 10px;">Pada hari ini <b>${tglSekarang}</b>, telah disepakati perjanjian antara:</div>
+
+                <div class="no-break" style="border: 1px solid #000; padding: 8px; margin-bottom: 20px;">
+                    <table border="0">
+                        <tr>
+                            <td width="30mm" align="center" style="border-right:1px solid #ddd; padding-right:10px;">
+                                <img src="${photoSrc}" style="width: 25mm; height: 30mm; object-fit: cover; border:1px solid #999; display:block;">
+                                <div style="font-size:8px; margin-top:3px;">PIHAK PERTAMA</div>
+                            </td>
+
+                            <td style="padding-left:10px;">
+                                <table border="0">
+                                    <tr>
+                                        <td width="100">Nama Lengkap</td>
+                                        <td width="10">:</td>
+                                        <td><b>${d.nama.toUpperCase()}</b></td>
+                                    </tr>
+                                    <tr>
+                                        <td>NIK</td>
+                                        <td>:</td>
+                                        <td>${d.nik}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Alamat</td>
+                                        <td>:</td>
+                                        <td>${d.alamat}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>No. HP/WA</td>
+                                        <td>:</td>
+                                        <td>${d.wa}</td>
+                                    </tr>
+                                </table>
+                                <div style="margin-top:8px; font-style:italic; font-size:10px; border-top:1px dashed #ccc; padding-top:3px;">
+                                    Bertindak atas nama diri sendiri selaku <b>PIHAK PERTAMA (NASABAH)</b>.
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div style="margin-bottom: 10px;">Serta Manager Unit mewakili <b>${settings.nama}</b> selaku <b>PIHAK KEDUA</b>.</div>
+
+                <div class="no-break" style="margin-bottom: 20px;">
+                    <table border="1" cellpadding="5" style="text-align: center; font-size: 11px;">
+                        <tr style="background-color: #eee;">
+                            <th>PLAFOND</th>
+                            <th>TENOR</th>
+                            <th>MARGIN/JASA</th>
+                            <th>ANGSURAN</th>
+                        </tr>
+                        <tr>
+                            <td>Rp ${parseInt(d.plafond).toLocaleString()}</td>
+                            <td>${d.tenor} ${d.tenorType}</td>
+                            <td>Rp ${parseInt(margin).toLocaleString()}</td>
+                            <td style="font-weight: bold;">Rp ${parseInt(angsuran).toLocaleString()}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="no-break" style="border: 1px solid #000; padding: 8px; font-size: 10px; text-align: justify; margin-bottom: 30px;">
+                    <b>KETENTUAN AKAD:</b><br>
+                    ${tpl.replace(/\n/g, '<br>')}
+                    <br>1. Nasabah wajib membayar angsuran tepat waktu sesuai jadwal.
+                    <br>2. Segala perselisihan akan diselesaikan secara kekeluargaan / musyawarah.
+                </div>
+
+                <div class="no-break">
+                    <table border="0" style="text-align:center;">
+                        <tr>
+                            <td width="33%">
+                                <div style="margin-bottom:5px;">PIHAK PERTAMA</div>
+                                <div style="border:1px dashed #bbb; width:50px; height:50px; margin:0 auto; display:flex; align-items:center; justify-content:center; font-size:8px; color:#aaa;">METERAI</div>
+                                <br><u style="font-weight:bold;">${d.nama.toUpperCase()}</u>
+                            </td>
+                            <td width="33%">
+                                <div style="margin-bottom:50px;">SAKSI</div>
+                                <u>${d.inputBy || '....................'}</u>
+                            </td>
+                            <td width="33%">
+                                <div style="margin-bottom:50px;">PIHAK KEDUA</div>
+                                <u>( Manager Unit )</u>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div style="font-size: 9px; color: #888; margin-top: 20px; text-align: right;">
+                    Dicetak: ${new Date().toLocaleString()} (Ukuran F4)
+                </div>
+            </div>`;
+
+            // --- EKSEKUSI CETAK (SETTINGAN F4 DESKTOP MODE) ---
+            const area = document.getElementById('printable-area');
+            area.innerHTML = html;
+            area.style.display = 'block';
+            
+            // Paksa container agar selebar kertas F4 sungguhan, bukan lebar HP
+            area.style.width = '215mm'; 
+            area.style.margin = '0 auto';
+
+            const opt = {
+                margin:       [5, 5, 5, 5], 
+                filename:     `Akad_F4_${d.nama.replace(/\s/g,'_')}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { 
+                    scale: 2, 
+                    useCORS: true,
+                    // MANTRA ANTI-GEPENG:
+                    windowWidth: 1200,  // Pura-pura layar desktop
+                    width: 900          // Lebar area canvas (sedikit lebih besar dari A4)
+                }, 
+                // Ukuran F4 (Folio)
+                jsPDF:        { unit: 'mm', format: [215, 330], orientation: 'portrait' },
+                pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+            };
+
+            html2pdf().set(opt).from(area).save().then(() => {
+                area.style.display = 'none';
+                area.style.width = ''; // Reset
+            }).catch(e => {
+                alert("Gagal cetak: " + e.message);
+                area.style.display = 'none';
+                area.style.width = '';
+            });
+        }
+Cara Memasangnya:
+Buka kode Anda.
+
+Cari function generatePDF -> Blok sampai tutup kurung kurawal } -> Hapus -> Paste kode baru.
+
+Cari function printAkad -> Blok sampai tutup kurung kurawal } -> Hapus -> Paste kode baru.
+
+Simpan dan coba jalankan kembali.
+
+Ini sudah sesuai dengan yang saya mau yaitu download seperi desktop miskin tamoikan hp
+
+Alhamdulillah! Senang mendengarnya, Pak.
+
+Benar sekali, dengan trik windowWidth: 1200 itu, sistem dipaksa "berpura-pura" memiliki layar lebar (desktop) saat membuat PDF, meskipun Bapak menekannya dari layar HP yang sempit. Jadi hasilnya tabel tidak terpotong atau berantakan ke bawah.
+
+Saran Tambahan (Supaya Rapi Semua)
+Karena Bapak sudah punya kodenya, saya sarankan Bapak juga menerapkan trik yang sama ke fungsi laporan lainnya agar konsisten.
+
+Di dalam file Bapak, masih ada fungsi cetak lain yang mungkin perlu ditambahkan windowWidth: 1200, yaitu:
+
+printLaporanKas (Laporan Keuangan)
+
+printLaporanPresensi (Absensi Pegawai)
+
+printLaporanSarpras (Inventaris)
+
+printDatabaseNasabah
+
+printLaporanPenyaluran
+
+Caranya sama: Cukup tambahkan baris windowWidth: 1200, width: 800 di dalam bagian html2canvas: { ... } pada fungsi-fungsi tersebut.
+
+Sekarang fitur Cetak Akad (PDF Desktop) dan Verifikasi Pembayaran sudah aman. Ada fitur lain yang mau kita bedah atau perbaiki selanjutnya, Pak?
+
+Saya bertanya itu
+
+Baik, Pak. Saya mengerti Bapak ingin penjelasan lebih detail mengenai "Kenapa kok bisa tidak bisa download (macet) setelah kodenya diubah?"
+
+Jawabannya adalah: JavaScript itu sangat sensitif.
+
+Saat Bapak menyisipkan kode baru (windowWidth: 1200) ke dalam kode lama, besar kemungkinan terjadi Syntax Error (Kesalahan Penulisan).
+
+Biasanya ini penyebab utamanya:
+
+Lupa Tanda Koma (,) Di dalam pengaturan html2canvas: { ... }, setiap baris wajib diakhiri koma jika ada baris di bawahnya.
+
+Salah:
+
+JavaScript
+useCORS: true  <-- Lupa koma di sini
+windowWidth: 1200
+Benar:
+
+JavaScript
+useCORS: true, // Ada koma
+windowWidth: 1200
+Jika koma ini hilang, komputer bingung membacanya dan seluruh fungsi tombol download langsung dimatikan oleh sistem (error).
+
+Kurung Kurawal { } Tidak Pas Mungkin saat copy-paste, ada kurung tutup } yang terhapus atau tertinggal. Jika kurung tidak lengkap (buka satu, tutup satu), kode dianggap rusak.
+
+Salah Posisi (Salah Kamar) Mungkin kode windowWidth ditaruh di luar blok html2canvas. Padahal dia harus ada di dalam "kamar" html2canvas.
+
+Solusinya? Itulah kenapa di jawaban sebelumnya saya memberikan kode satu blok penuh (Full Function) untuk generatePDF dan printAkad.
+
+Tujuannya agar Bapak tidak perlu pusing mencari di mana kurang komanya. Cukup hapus fungsi yang lama, lalu tempel fungsi baru yang sudah saya rapikan struktur koma dan kurungnya.
+
+Silakan dicoba pakai kode yang baru tadi ya, Pak. Harusnya sekarang sudah lancar jaya.
+
+Kayak gini
+
+Mantap, Pak! 💯
+
+Tampilannya sudah sempurna. Persis seperti yang Bapak inginkan:
+
+Layout Lebar (Desktop Mode): Tabelnya melebar ke samping, tidak gepeng/turun ke bawah meskipun Bapak bukanya di HP.
+
+Rapi & Resmi: Kop surat, posisi tanda tangan, dan tabel angsuran terlihat profesional.
+
+Ukuran F4: Terlihat dari footer di bawah kanan yang tertulis (Ukuran F4), sesuai kode yang kita pasang.
+
+Ini membuktikan kode windowWidth: 1200 tadi sudah berjalan dengan sukses.
+
+Langkah Selanjutnya (Saran Saya)
+Agar semua laporan lain (Laporan Kas, Absensi, Surat, dll) juga rapi seperti ini saat di-download dari HP, sebaiknya Bapak menerapkan "Mantra" yang sama ke fungsi cetak lainnya.
+
+Saya buatkan daftarnya biar tinggal Copy-Paste satu per satu ya, Pak?
+
+1. Update printLaporanKas (Laporan Keuangan) Cari fungsi printLaporanKas, ganti bagian const opt = ... dan html2pdf()... dengan ini:
+
+JavaScript
+            // ... (kode HTML sebelumnya biarkan) ...
+
+            const opt = {
+                margin: 10,
+                filename: `Laporan_Kas_${unitScope}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { 
+                    scale: 2, 
+                    useCORS: true,
+                    windowWidth: 1200, // <-- MANTRA DESKTOP
+                    width: 800         // Paksa lebar canvas
+                },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            
+            // Tambahkan style width manual sebelum cetak
+            const area = document.getElementById('printable-area');
+            area.style.width = '800px'; 
+            
+            html2pdf().set(opt).from(area).save().then(() => {
+                area.style.width = ''; // Reset setelah selesai
+            });
+2. Update printLaporanPresensi (Absensi Pegawai) Sama juga, cari printLaporanPresensi, lalu update bagian cetaknya:
+
+JavaScript
+            // ... (kode HTML sebelumnya biarkan) ...
+
+            const opt = {
+                margin: 10,
+                filename: 'Laporan_Presensi.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, windowWidth: 1200, width: 800 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            const area = document.getElementById('printable-area');
+            area.style.width = '800px';
+
+            html2pdf().set(opt).from(area).save().then(() => { area.style.width = ''; });
+3. Update printLaporanPenyaluran (Modal)
+
+JavaScript
+            // ... (kode HTML sebelumnya biarkan) ...
+
+            const opt = {
+                margin: 10,
+                filename: 'Laporan_Penyaluran_Modal.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, windowWidth: 1200, width: 800 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            const area = document.getElementById('printable-area');
+            area.style.width = '800px';
+
+            html2pdf().set(opt).from(area).save().then(() => { area.style.width = ''; });
+Kalau ini sudah diterapkan semua, Bapak bisa download laporan apapun dari HP dengan tenang, hasilnya pasti rapi seperti buka di komputer. Ada lagi yang mau dirapikan, Pak?
+
+Kenapa tapi tidak simetris, sampai ada yang tidak tampil
+
+Analisis saya melihat dua penyebab utama masalah "Tidak Simetris" dan "Ada yang terpotong/tidak tampil" pada hasil cetak Akad F4 Anda:
+
+Penyebab Tidak Simetris: Lebar kertas F4 adalah 215mm. Kita memberi margin kiri-kanan 5mm. Artinya area bersih untuk tulisan adalah 205mm.
+
+Di kode sebelumnya, lebar konten diatur 200mm.
+
+Hasilnya: Margin Kiri 5mm, tapi Margin Kanan sisa 10mm (lebih lebar). Jadi terlihat berat sebelah kiri.
+
+Penyebab Terpotong (Tidak Tampil): Di kode perbaikan sebelumnya, saya menyarankan area.style.width = '215mm'. Ini terlalu lebar karena belum dikurangi margin. Akibatnya, tulisan paling kanan "ditendang" keluar oleh margin PDF sehingga hilang.
+
+Solusi Akhir (Pasti Rapi & Simetris)
+Silakan GANTI TOTAL fungsi printAkad Anda dengan kode di bawah ini. Saya sudah mengubah ukurannya menjadi 205mm (Pas Tengah) dan menggunakan width: 100% agar isinya otomatis menyesuaikan.
+
+JavaScript
+        function printAkad(id) {
+            let d = dbNasabah.find(x => x.id == id);
+            if (!d) return alert("Data tidak ditemukan");
+
+            // --- DATA NASABAH ---
+            let uName = d.unit === 'sps' ? 'MUDHARABAH (BAGI HASIL)' : (d.unit === 'kms' ? 'MURABAHAH (JUAL BELI)' : 'RAHN (GADAI)');
+            let tpl = d.unit === 'sps' ? settings.templates.sps : (d.unit === 'kms' ? settings.templates.kms : settings.templates.gadai);
+            let margin = parseInt(d.plafond) * (settings.margins[d.unit] / 100);
+            let totalTotal = parseInt(d.plafond) + margin;
+            let angsuran = totalTotal / parseInt(d.tenor);
+            
+            let tglSekarang = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+            let autoNum = d.noSurat !== '-' ? d.noSurat : `0${Math.floor(Math.random() * 100)}/AKAD/${new Date().getFullYear()}`;
+            
+            let photoSrc = (d.foto && d.foto.length > 50) ? d.foto : "https://cdn-icons-png.flaticon.com/512/1077/1077114.png";
+            let logoSrc = settings.logo || "https://cdn-icons-png.flaticon.com/512/2317/2317968.png";
+
+            // --- HTML STRUKTUR (FULL WIDTH 100%) ---
+            let html = `
+            <div id="akad-final" style="width: 100%; background: white; font-family: Arial, sans-serif; color: #000; font-size: 11px; line-height: 1.2;">
+                
+                <style>
+                    .no-break { page-break-inside: avoid; }
+                    table { width: 100%; border-collapse: collapse; }
+                    td { vertical-align: top; padding: 3px; }
+                </style>
+
+                <div class="no-break" style="border-bottom: 2px double #000; padding-bottom: 5px; margin-bottom: 15px; display:flex; align-items:center;">
+                    <img src="${logoSrc}" style="width:15mm; height:15mm; object-fit:contain; margin-right:10px;">
+                    <div style="flex:1;">
+                        <div style="font-size: 16px; font-weight: 900; text-transform: uppercase;">${settings.nama}</div>
+                        <div style="font-size: 10px;">${settings.alamat}</div>
+                        <div style="font-size: 10px;">Izin: ${settings.izin}</div>
+                    </div>
+                </div>
+
+                <div class="no-break" style="text-align: center; margin-bottom: 20px;">
+                    <b style="font-size: 13px; text-decoration: underline;">PERJANJIAN PEMBIAYAAN ${uName}</b><br>
+                    <span style="font-size: 10px;">Nomor: ${autoNum}</span>
+                </div>
+
+                <div style="margin-bottom: 10px;">Pada hari ini <b>${tglSekarang}</b>, telah disepakati perjanjian antara:</div>
+
+                <div class="no-break" style="border: 1px solid #000; padding: 8px; margin-bottom: 20px;">
+                    <table border="0">
+                        <tr>
+                            <td width="30mm" align="center" style="border-right:1px solid #ddd; padding-right:10px;">
+                                <img src="${photoSrc}" style="width: 25mm; height: 30mm; object-fit: cover; border:1px solid #999; display:block;">
+                                <div style="font-size:8px; margin-top:3px;">PIHAK PERTAMA</div>
+                            </td>
+
+                            <td style="padding-left:10px;">
+                                <table border="0">
+                                    <tr>
+                                        <td width="100">Nama Lengkap</td>
+                                        <td width="10">:</td>
+                                        <td><b>${d.nama.toUpperCase()}</b></td>
+                                    </tr>
+                                    <tr>
+                                        <td>NIK</td>
+                                        <td>:</td>
+                                        <td>${d.nik}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Alamat</td>
+                                        <td>:</td>
+                                        <td>${d.alamat}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>No. HP/WA</td>
+                                        <td>:</td>
+                                        <td>${d.wa}</td>
+                                    </tr>
+                                </table>
+                                <div style="margin-top:8px; font-style:italic; font-size:10px; border-top:1px dashed #ccc; padding-top:3px;">
+                                    Bertindak atas nama diri sendiri selaku <b>PIHAK PERTAMA (NASABAH)</b>.
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div style="margin-bottom: 10px;">Serta Manager Unit mewakili <b>${settings.nama}</b> selaku <b>PIHAK KEDUA</b>.</div>
+
+                <div class="no-break" style="margin-bottom: 20px;">
+                    <table border="1" cellpadding="5" style="text-align: center; font-size: 11px;">
+                        <tr style="background-color: #eee;">
+                            <th>PLAFOND</th>
+                            <th>TENOR</th>
+                            <th>MARGIN/JASA</th>
+                            <th>ANGSURAN</th>
+                        </tr>
+                        <tr>
+                            <td>Rp ${parseInt(d.plafond).toLocaleString()}</td>
+                            <td>${d.tenor} ${d.tenorType}</td>
+                            <td>Rp ${parseInt(margin).toLocaleString()}</td>
+                            <td style="font-weight: bold;">Rp ${parseInt(angsuran).toLocaleString()}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="no-break" style="border: 1px solid #000; padding: 8px; font-size: 10px; text-align: justify; margin-bottom: 30px;">
+                    <b>KETENTUAN AKAD:</b><br>
+                    ${tpl.replace(/\n/g, '<br>')}
+                    <br>1. Nasabah wajib membayar angsuran tepat waktu sesuai jadwal.
+                    <br>2. Segala perselisihan akan diselesaikan secara kekeluargaan / musyawarah.
+                </div>
+
+                <div class="no-break">
+                    <table border="0" style="text-align:center;">
+                        <tr>
+                            <td width="33%">
+                                <div style="margin-bottom:5px;">PIHAK PERTAMA</div>
+                                <div style="border:1px dashed #bbb; width:50px; height:50px; margin:0 auto; display:flex; align-items:center; justify-content:center; font-size:8px; color:#aaa;">METERAI</div>
+                                <br><u style="font-weight:bold;">${d.nama.toUpperCase()}</u>
+                            </td>
+                            <td width="33%">
+                                <div style="margin-bottom:50px;">SAKSI</div>
+                                <u>${d.inputBy || '....................'}</u>
+                            </td>
+                            <td width="33%">
+                                <div style="margin-bottom:50px;">PIHAK KEDUA</div>
+                                <u>( Manager Unit )</u>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div style="font-size: 9px; color: #888; margin-top: 20px; text-align: right;">
+                    Dicetak: ${new Date().toLocaleString()} (Ukuran F4)
+                </div>
+            </div>`;
+
+            // --- EKSEKUSI CETAK (SETTINGAN PRESISI F4) ---
+            const area = document.getElementById('printable-area');
+            area.innerHTML = html;
+            area.style.display = 'block';
+            
+            // PERBAIKAN UTAMA:
+            // Lebar Kertas F4 (215mm) - Margin Kiri (5mm) - Margin Kanan (5mm) = 205mm
+            // Kita set width container pas 205mm agar simetris & tidak terpotong.
+            area.style.width = '205mm'; 
+            area.style.margin = '0 auto'; // Pastikan container di tengah
+
+            const opt = {
+                margin:       [5, 5, 5, 5], 
+                filename:     `Akad_F4_${d.nama.replace(/\s/g,'_')}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { 
+                    scale: 2, 
+                    useCORS: true,
+                    windowWidth: 1200,  // Tampilan Desktop
+                    width: 800          // Lebar Canvas Render
+                }, 
+                jsPDF:        { unit: 'mm', format: [215, 330], orientation: 'portrait' },
+                pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+            };
+
+            html2pdf().set(opt).from(area).save().then(() => {
+                area.style.display = 'none';
+                area.style.width = ''; 
+            }).catch(e => {
+                alert("Gagal cetak: " + e.message);
+                area.style.display = 'none';
+                area.style.width = '';
+            });
+        }
+Masih kayak gini
+
+Masalah "Tidak Simetris" atau "Terpotong" ini terjadi karena ada bentrok pengaturan antara html2canvas (yang memotret layar) dengan jsPDF (yang membuat halaman PDF).
+
+Di kode sebelumnya, kita memasang width: 800 atau width: 900 di dalam pengaturan html2canvas. Ini yang membuat hasil fotonya "dipaksa" ukurannya, sehingga kadang geser ke kiri atau terpotong kanannya.
+
+Solusi Final (Pasti Rapi)
+Kita akan menggunakan teknik "Pixel Fixed". Kita paksa tabelnya selebar 750px (ukuran ideal kertas A4/F4 di layar komputer), lalu kita biarkan PDF menyesuaikannya sendiri agar pas di tengah.
+
+Silakan Hapus Total fungsi printAkad yang lama, dan ganti dengan kode di bawah ini. Kode ini sudah saya set agar:
+
+Otomatis Tengah (Center).
+
+Tidak Terpotong (Karena lebar konten dikunci di 750px).
+
+Tetap Tampilan Desktop (Meskipun dari HP).
+
+JavaScript
+        function printAkad(id) {
+            let d = dbNasabah.find(x => x.id == id);
+            if (!d) return alert("Data tidak ditemukan");
+
+            // --- DATA VARIABLES ---
+            let uName = d.unit === 'sps' ? 'MUDHARABAH (BAGI HASIL)' : (d.unit === 'kms' ? 'MURABAHAH (JUAL BELI)' : 'RAHN (GADAI)');
+            let tpl = d.unit === 'sps' ? settings.templates.sps : (d.unit === 'kms' ? settings.templates.kms : settings.templates.gadai);
+            let margin = parseInt(d.plafond) * (settings.margins[d.unit] / 100);
+            let totalTotal = parseInt(d.plafond) + margin;
+            let angsuran = totalTotal / parseInt(d.tenor);
+            let tglSekarang = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+            let autoNum = d.noSurat !== '-' ? d.noSurat : `0${Math.floor(Math.random() * 100)}/AKAD/${new Date().getFullYear()}`;
+            let photoSrc = (d.foto && d.foto.length > 50) ? d.foto : "https://cdn-icons-png.flaticon.com/512/1077/1077114.png";
+            let logoSrc = settings.logo || "https://cdn-icons-png.flaticon.com/512/2317/2317968.png";
+
+            // --- HTML STRUKTUR (FIXED PIXEL WIDTH) ---
+            // Kita gunakan width: 750px agar konsisten di HP maupun Laptop
+            let html = `
+            <div id="akad-print-container" style="width: 750px; background: white; font-family: 'Times New Roman', serif; color: #000; padding: 20px;">
+                
+                <style>
+                    .no-break { page-break-inside: avoid; }
+                    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+                    td { vertical-align: top; padding: 4px; }
+                    .header-title { font-size: 18px; font-weight: bold; text-transform: uppercase; }
+                    .header-sub { font-size: 12px; }
+                </style>
+
+                <div class="no-break" style="border-bottom: 3px double #000; padding-bottom: 10px; margin-bottom: 20px; display:flex; align-items:center;">
+                    <img src="${logoSrc}" style="width:80px; height:80px; object-fit:contain; margin-right:20px;">
+                    <div style="flex:1; text-align:center;">
+                        <div class="header-title">${settings.nama}</div>
+                        <div class="header-sub">${settings.alamat}</div>
+                        <div class="header-sub">Izin: ${settings.izin}</div>
+                    </div>
+                </div>
+
+                <div class="no-break" style="text-align: center; margin-bottom: 25px;">
+                    <b style="font-size: 16px; text-decoration: underline;">PERJANJIAN PEMBIAYAAN ${uName}</b><br>
+                    <span style="font-size: 12px;">Nomor: ${autoNum}</span>
+                </div>
+
+                <div style="margin-bottom: 15px; font-size: 14px;">Pada hari ini <b>${tglSekarang}</b>, telah disepakati perjanjian antara:</div>
+
+                <div class="no-break" style="border: 1px solid #000; padding: 15px; margin-bottom: 20px;">
+                    <table border="0">
+                        <tr>
+                            <td width="100" align="center" style="border-right:1px solid #ddd; padding-right:15px;">
+                                <img src="${photoSrc}" style="width: 3cm; height: 4cm; object-fit: cover; border:1px solid #333; display:block;">
+                                <div style="font-size:10px; margin-top:5px;">PIHAK PERTAMA</div>
+                            </td>
+                            <td style="padding-left:15px;">
+                                <table border="0">
+                                    <tr><td width="120">Nama Lengkap</td><td width="10">:</td><td><b>${d.nama.toUpperCase()}</b></td></tr>
+                                    <tr><td>NIK</td><td>:</td><td>${d.nik}</td></tr>
+                                    <tr><td>Alamat</td><td>:</td><td>${d.alamat}</td></tr>
+                                    <tr><td>No. HP/WA</td><td>:</td><td>${d.wa}</td></tr>
+                                </table>
+                                <div style="margin-top:10px; font-style:italic; font-size:12px; border-top:1px dashed #ccc; padding-top:5px;">
+                                    Bertindak atas nama diri sendiri selaku <b>PIHAK PERTAMA (NASABAH)</b>.
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div style="margin-bottom: 15px; font-size: 14px;">Serta Manager Unit mewakili <b>${settings.nama}</b> selaku <b>PIHAK KEDUA</b>.</div>
+
+                <div class="no-break" style="margin-bottom: 25px;">
+                    <table border="1" cellpadding="8" style="text-align: center; font-size: 13px;">
+                        <tr style="background-color: #f0f0f0;">
+                            <th>PLAFOND</th>
+                            <th>TENOR</th>
+                            <th>MARGIN/JASA</th>
+                            <th>ANGSURAN</th>
+                        </tr>
+                        <tr>
+                            <td>Rp ${parseInt(d.plafond).toLocaleString()}</td>
+                            <td>${d.tenor} ${d.tenorType}</td>
+                            <td>Rp ${parseInt(margin).toLocaleString()}</td>
+                            <td style="font-weight: bold;">Rp ${parseInt(angsuran).toLocaleString()}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="no-break" style="border: 1px solid #000; padding: 15px; font-size: 12px; text-align: justify; margin-bottom: 40px;">
+                    <b>KETENTUAN AKAD:</b><br>
+                    ${tpl.replace(/\n/g, '<br>')}
+                    <br>1. Nasabah wajib membayar angsuran tepat waktu sesuai jadwal.
+                    <br>2. Segala perselisihan akan diselesaikan secara kekeluargaan / musyawarah.
+                </div>
+
+                <div class="no-break">
+                    <table border="0" style="text-align:center; font-size:12px;">
+                        <tr>
+                            <td width="33%">
+                                <div style="margin-bottom:10px;">PIHAK PERTAMA</div>
+                                <div style="border:1px dashed #bbb; width:60px; height:60px; margin:0 auto 10px auto; display:flex; align-items:center; justify-content:center; font-size:9px; color:#aaa;">METERAI</div>
+                                <u style="font-weight:bold;">${d.nama.toUpperCase()}</u>
+                            </td>
+                            <td width="33%">
+                                <div style="margin-bottom:70px;">SAKSI</div>
+                                <u>${d.inputBy || '....................'}</u>
+                            </td>
+                            <td width="33%">
+                                <div style="margin-bottom:70px;">PIHAK KEDUA</div>
+                                <u>( Manager Unit )</u>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div style="font-size: 10px; color: #888; margin-top: 30px; text-align: right;">
+                    Dicetak Otomatis: ${new Date().toLocaleString()}
+                </div>
+            </div>`;
+
+            // --- PROSES CETAK ---
             const area = document.getElementById('printable-area');
             area.innerHTML = html;
             
@@ -1742,6 +3191,176 @@ function prosesPelunasan(id, totalHutangAwal) {
             }).catch(err => {
                 alert("Gagal cetak: " + err);
                 area.style.display = 'none';
+            });
+        }
+Apa yang diubah?
+Hapus width di html2canvas: Saya menghapus setting width: 800 di dalam opt karena itu yang bikin "crop" (terpotong).
+
+Width di HTML (750px): Saya menaruh ukuran fix 750px langsung di elemen HTML (#akad-print-container). Ini ukuran "emas" yang pas banget buat A4/F4 saat dikonversi ke PDF.
+
+Center Alignment: Saya menambahkan display: flex; justifyContent: center; di container pembungkus sementara, supaya saat diproses, posisinya benar-benar di tengah.
+
+Coba kembalikan keseringan seblumnya masih harus cetak lewat desktop
+
+Baik Pak, saya paham maksud Bapak.
+
+Bapak ingin kembali ke tampilan "Desktop Mode" (yang tabelnya lebar dan rapi) seperti sebelumnya, tetapi ingin masalah Rata Kiri (Tidak Simetris) diperbaiki agar pas di tengah kertas.
+
+Masalah "Rata Kiri" itu terjadi karena lebar HTML yang kita paksa (800px) tidak pas dengan lebar kertas F4 di PDF.
+
+Berikut adalah kode FINAL yang mengembalikan fitur "Desktop Mode" namun dengan ukuran yang sudah saya kunci pas di tengah kertas F4 (215mm).
+
+Silakan Hapus Fungsi printAkad yang lama dan ganti dengan yang ini:
+
+JavaScript
+        function printAkad(id) {
+            let d = dbNasabah.find(x => x.id == id);
+            if (!d) return alert("Data tidak ditemukan");
+
+            // --- DATA VARIABLES ---
+            let uName = d.unit === 'sps' ? 'MUDHARABAH (BAGI HASIL)' : (d.unit === 'kms' ? 'MURABAHAH (JUAL BELI)' : 'RAHN (GADAI)');
+            let tpl = d.unit === 'sps' ? settings.templates.sps : (d.unit === 'kms' ? settings.templates.kms : settings.templates.gadai);
+            let margin = parseInt(d.plafond) * (settings.margins[d.unit] / 100);
+            let totalTotal = parseInt(d.plafond) + margin;
+            let angsuran = totalTotal / parseInt(d.tenor);
+            let tglSekarang = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+            let autoNum = d.noSurat !== '-' ? d.noSurat : `0${Math.floor(Math.random() * 100)}/AKAD/${new Date().getFullYear()}`;
+            
+            let photoSrc = (d.foto && d.foto.length > 50) ? d.foto : "https://cdn-icons-png.flaticon.com/512/1077/1077114.png";
+            let logoSrc = settings.logo || "https://cdn-icons-png.flaticon.com/512/2317/2317968.png";
+
+            // --- HTML STRUKTUR (UKURAN PAS F4: 215mm) ---
+            let html = `
+            <div id="akad-cetak" style="width: 215mm; background: white; font-family: 'Times New Roman', serif; color: #000; padding: 25px; box-sizing: border-box;">
+                
+                <style>
+                    .no-break { page-break-inside: avoid; }
+                    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+                    td { vertical-align: top; padding: 5px; }
+                </style>
+
+                <div class="no-break" style="border-bottom: 3px double #000; padding-bottom: 10px; margin-bottom: 20px; display:flex; align-items:center;">
+                    <img src="${logoSrc}" style="width:80px; height:80px; object-fit:contain; margin-right:20px;">
+                    <div style="flex:1;">
+                        <div style="font-size: 18px; font-weight: 900; text-transform: uppercase;">${settings.nama}</div>
+                        <div style="font-size: 12px;">${settings.alamat}</div>
+                        <div style="font-size: 12px;">Izin: ${settings.izin}</div>
+                    </div>
+                </div>
+
+                <div class="no-break" style="text-align: center; margin-bottom: 25px;">
+                    <b style="font-size: 16px; text-decoration: underline;">PERJANJIAN PEMBIAYAAN ${uName}</b><br>
+                    <span style="font-size: 12px;">Nomor: ${autoNum}</span>
+                </div>
+
+                <div style="margin-bottom: 10px; font-size: 14px;">Pada hari ini <b>${tglSekarang}</b>, telah disepakati perjanjian antara:</div>
+
+                <div class="no-break" style="border: 1px solid #000; padding: 15px; margin-bottom: 20px;">
+                    <table border="0">
+                        <tr>
+                            <td width="100" align="center" style="border-right:1px solid #ddd; padding-right:15px;">
+                                <img src="${photoSrc}" style="width: 3cm; height: 4cm; object-fit: cover; border:1px solid #333; display:block;">
+                                <div style="font-size:10px; margin-top:5px;">PIHAK PERTAMA</div>
+                            </td>
+                            <td style="padding-left:15px;">
+                                <table border="0">
+                                    <tr><td width="120">Nama Lengkap</td><td width="10">:</td><td><b>${d.nama.toUpperCase()}</b></td></tr>
+                                    <tr><td>NIK</td><td>:</td><td>${d.nik}</td></tr>
+                                    <tr><td>Alamat</td><td>:</td><td>${d.alamat}</td></tr>
+                                    <tr><td>No. HP/WA</td><td>:</td><td>${d.wa}</td></tr>
+                                </table>
+                                <div style="margin-top:10px; font-style:italic; font-size:12px; border-top:1px dashed #ccc; padding-top:5px;">
+                                    Bertindak atas nama diri sendiri selaku <b>PIHAK PERTAMA (NASABAH)</b>.
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div style="margin-bottom: 15px; font-size: 14px;">Serta Manager Unit mewakili <b>${settings.nama}</b> selaku <b>PIHAK KEDUA</b>.</div>
+
+                <div class="no-break" style="margin-bottom: 25px;">
+                    <table border="1" cellpadding="8" style="text-align: center; font-size: 13px;">
+                        <tr style="background-color: #f0f0f0;">
+                            <th>PLAFOND</th>
+                            <th>TENOR</th>
+                            <th>MARGIN/JASA</th>
+                            <th>ANGSURAN</th>
+                        </tr>
+                        <tr>
+                            <td>Rp ${parseInt(d.plafond).toLocaleString()}</td>
+                            <td>${d.tenor} ${d.tenorType}</td>
+                            <td>Rp ${parseInt(margin).toLocaleString()}</td>
+                            <td style="font-weight: bold;">Rp ${parseInt(angsuran).toLocaleString()}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="no-break" style="border: 1px solid #000; padding: 15px; font-size: 12px; text-align: justify; margin-bottom: 40px;">
+                    <b>KETENTUAN AKAD:</b><br>
+                    ${tpl.replace(/\n/g, '<br>')}
+                    <br>1. Nasabah wajib membayar angsuran tepat waktu sesuai jadwal.
+                    <br>2. Segala perselisihan akan diselesaikan secara kekeluargaan / musyawarah.
+                </div>
+
+                <div class="no-break">
+                    <table border="0" style="text-align:center; font-size:12px;">
+                        <tr>
+                            <td width="33%">
+                                <div style="margin-bottom:10px;">PIHAK PERTAMA</div>
+                                <div style="border:1px dashed #bbb; width:60px; height:60px; margin:0 auto 10px auto; display:flex; align-items:center; justify-content:center; font-size:9px; color:#aaa;">METERAI</div>
+                                <u style="font-weight:bold;">${d.nama.toUpperCase()}</u>
+                            </td>
+                            <td width="33%">
+                                <div style="margin-bottom:70px;">SAKSI</div>
+                                <u>${d.inputBy || '....................'}</u>
+                            </td>
+                            <td width="33%">
+                                <div style="margin-bottom:70px;">PIHAK KEDUA</div>
+                                <u>( Manager Unit )</u>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div style="font-size: 10px; color: #888; margin-top: 30px; text-align: right;">
+                    Dicetak Otomatis: ${new Date().toLocaleString()} (Format F4)
+                </div>
+            </div>`;
+
+            // --- EKSEKUSI CETAK (LOGIKA FIX TENGAH) ---
+            const area = document.getElementById('printable-area');
+            area.innerHTML = html;
+            
+            // 1. Tampilkan Area & Pastikan Lebar Sesuai Konten
+            area.style.display = 'block';
+            area.style.width = 'fit-content'; // Biar container mengikuti lebar kertas 215mm
+            area.style.margin = '0 auto';     // Jaga-jaga biar senter di layar
+
+            const element = document.getElementById('akad-cetak');
+
+            const opt = {
+                // Margin 0 karena kita sudah pakai padding di dalam HTML
+                margin:       0, 
+                filename:     `Akad_${d.nama.replace(/\s/g,'_')}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { 
+                    scale: 2, 
+                    useCORS: true,
+                    // INI KUNCINYA: Memaksa mode desktop agar tabel melebar
+                    windowWidth: 1200
+                }, 
+                // Ukuran kertas F4 (215mm x 330mm)
+                jsPDF:        { unit: 'mm', format: [215, 330], orientation: 'portrait' } 
+            };
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                area.style.display = 'none';
+                area.style.width = '';
+            }).catch(e => {
+                alert("Error: " + e.message);
+                area.style.display = 'none';
+                area.style.width = '';
             });
         }
                             
