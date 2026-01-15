@@ -954,7 +954,67 @@
                     </div>
                 </div>`;
             }
-            else if(id === 'dashboard_nasabah') { t.innerText = `Halo, ${activeUser.user}`; let myData = dbNasabah.filter(n => n.nama.toLowerCase() === activeUser.user.toLowerCase() && n.status === 'Approved'); let totalHutang = myData.reduce((a,b) => a + parseInt(b.plafond), 0); let rows = myData.map(d => `<tr><td>${d.unit.toUpperCase()}</td><td>Rp ${parseInt(d.plafond).toLocaleString()}</td><td>${d.tenor} ${d.tenorType}</td></tr>`).join(''); b.innerHTML = `<div class="card" style="background:var(--primary-gradient); color:white;"><h3>Sisa Pembiayaan</h3><h1>Rp ${totalHutang.toLocaleString()}</h1><small>SHU Anda: Rp 0</small></div><div class="card"><h4>Riwayat Akad</h4><div class="table-responsive"><table><thead><tr><th>Unit</th><th>Plafond</th><th>Tenor</th></tr></thead><tbody>${rows || '<tr><td colspan="3">Belum ada akad aktif.</td></tr>'}</tbody></table></div></div>`; }
+            else if(id === 'dashboard_nasabah') { 
+    t.innerText = `Dashboard Nasabah`; 
+    // Mencari data nasabah berdasarkan username yang sedang login
+    let myData = dbNasabah.filter(n => n.nama.replace(/\s/g, '').toLowerCase() === activeUser.user.toLowerCase() && n.status === 'Approved');
+    
+    let contentHtml = '';
+    
+    if(myData.length === 0) {
+        contentHtml = '<div class="card">Anda belum memiliki pembiayaan aktif.</div>';
+    } else {
+        myData.forEach(d => {
+            // Hitung kalkulasi hutang
+            let marginPersen = settings.margins[d.unit] || 0;
+            let totalHutangAwal = parseInt(d.plafond) + (parseInt(d.plafond) * marginPersen / 100);
+            let angsuranPerTenor = totalHutangAwal / parseInt(d.tenor);
+            
+            // Logika Sisa Hutang (Hutang awal dikurangi riwayat bayar yang sudah masuk kas)
+            let riwayatBayar = dbArusKas.filter(k => k.desc.includes(d.nama) && k.type === 'Masuk');
+            let totalSudahBayar = riwayatBayar.reduce((a, b) => a + parseInt(b.amount), 0);
+            let sisaHutang = totalHutangAwal - totalSudahBayar;
+            let sisaTenor = Math.ceil(sisaHutang / angsuranPerTenor);
+
+            contentHtml += `
+            <div class="card" style="background: var(--primary-gradient); color: white; margin-bottom: 15px;">
+                <small>Total Sisa Hutang (${d.unit.toUpperCase()})</small>
+                <h1 style="margin: 10px 0;">Rp ${sisaHutang.toLocaleString()}</h1>
+                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; opacity: 0.9;">
+                    <span>Angsuran: Rp ${Math.round(angsuranPerTenor).toLocaleString()}</span>
+                    <span>Sisa Tenor: ${sisaTenor} ${d.tenorType}</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <h4>Opsi Pembayaran</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                    <button class="btn btn-primary" onclick="bukaFormBayar('${d.id}', ${Math.round(angsuranPerTenor)}, 'Angsuran')">
+                        <i class="fas fa-money-bill"></i> Bayar Angsuran
+                    </button>
+                    <button class="btn btn-success" onclick="bukaFormBayar('${d.id}', ${sisaHutang}, 'Pelunasan')">
+                        <i class="fas fa-check-double"></i> Pelunasan Total
+                    </button>
+                </div>
+            </div>
+
+            <div id="form-bayar-nasabah" class="card hidden" style="border: 2px dashed var(--secondary);">
+                <h4 id="judul-bayar">Upload Bukti</h4>
+                <div class="form-vertical">
+                    <label>Nominal Pembayaran</label>
+                    <input type="number" id="nom-bayar-nasabah" class="form-control" readonly>
+                    <label>Pilih Foto Kuitansi/Bukti Transfer</label>
+                    <input type="file" id="file-bukti-nasabah" class="form-control" accept="image/*" onchange="previewBukti(this)">
+                    <div id="preview-container" style="margin-bottom: 15px; text-align: center;"></div>
+                    <button class="btn btn-warning" style="width:100%" onclick="kirimBuktiKeAccounting()">
+                        <i class="fas fa-paper-plane"></i> Kirim Bukti Sekarang
+                    </button>
+                </div>
+            </div>`;
+        });
+    }
+    b.innerHTML = contentHtml;
+}
             else if(id === 'ajukan_pinjaman') { t.innerText = "Ajukan Pinjaman Anggota"; b.innerHTML = `<div class="card"><h4>Formulir Pengajuan</h4><div class="form-vertical"><input id="ang-amt" type="number" class="form-control" placeholder="Nominal (Rp)"><div style="display:flex; gap:10px;"><input id="ang-ten" type="number" class="form-control" placeholder="Tenor"><select id="ang-type" class="form-control"><option value="Bulan">Bulan</option><option value="Minggu">Minggu</option></select></div><textarea class="form-control" placeholder="Keperluan"></textarea><button class="btn btn-primary" onclick="saveAnggotaLoan()">Kirim Pengajuan</button></div></div>`; }
             else if(id === 'rapat_online_anggota') { t.innerText = "Rapat Online"; b.innerHTML = `<div class="card"><h4>Bergabung Rapat</h4><p>Klik tombol di bawah jika diundang.</p><button class="btn btn-primary" onclick="openMeeting()"><i class="fas fa-video"></i> Masuk Ruang Rapat</button><div id="jitsi-container" style="height:500px; margin-top:20px;"></div></div>`; }
             else if(id === 'kelayakan_marketing') { t.innerText = "Kelayakan Marketing (Sekretaris)"; let mkt = dbUsers.filter(u => u.role === 'marketing'); let rows = mkt.map(u => { let status = u.isEligible === false ? '<span style="color:red">Dibekukan</span>' : '<span style="color:green">Layak</span>'; let btn = u.isEligible === false ? `<button class="btn btn-success btn-sm" onclick="setMarketingEligible('${u.user}', true)">Buka Akses</button>` : `<button class="btn btn-danger btn-sm" onclick="setMarketingEligible('${u.user}', false)">Kunci Akses</button>`; return `<tr><td>${u.user}</td><td>${status}</td><td>${btn}</td></tr>`; }).join(''); b.innerHTML = `<div class="card"><div class="table-responsive"><table><thead><tr><th>Marketing</th><th>Status</th><th>Aksi</th></tr></thead><tbody>${rows}</tbody></table></div></div>`; }
@@ -1017,7 +1077,32 @@
 }
             else if(id === 'acc_profit_ketua') { t.innerText = "ACC Distribusi Profit (Ketua)"; let rows = dbProfitFlow.filter(p => p.status === 'Pending Ketua').map(p => `<tr><td>${p.targetUnit}</td><td>Rp ${parseInt(p.amount).toLocaleString()}</td><td><button class="btn btn-success btn-sm" onclick="approveProfitKetua(${p.id})">ACC</button></td></tr>`).join(''); b.innerHTML = `<div class="card"><h4>Menunggu Persetujuan</h4><div class="table-responsive"><table><thead><tr><th>Unit</th><th>Nominal</th><th>Aksi</th></tr></thead><tbody>${rows || '<tr><td colspan="3">Tidak ada data</td></tr>'}</tbody></table></div></div>`; }
             else if(id === 'terima_profit_manager') { t.innerText = "Terima Dana SHU (Manager)"; let rows = dbProfitFlow.filter(p => p.status === 'Pending Manager' && p.targetUnit === activeApp).map(p => `<tr><td>Rp ${parseInt(p.amount).toLocaleString()}</td><td><button class="btn btn-primary btn-sm" onclick="acceptProfitManager(${p.id})">Terima Dana</button></td></tr>`).join(''); b.innerHTML = `<div class="card"><h4>Dana Masuk dari Pusat</h4><div class="table-responsive"><table><thead><tr><th>Nominal</th><th>Aksi</th></tr></thead><tbody>${rows || '<tr><td colspan="2">Kosong</td></tr>'}</tbody></table></div></div>`; }
-            else if(id === 'distribusi_insentif') { t.innerText = "Distribusi ke Marketing (Accounting)"; let rows = dbProfitFlow.filter(p => p.status === 'Pending Accounting' && p.targetUnit === activeApp).map(p => `<tr><td>Rp ${parseInt(p.amount).toLocaleString()}</td><td><button class="btn btn-warning btn-sm" onclick="distributeProfitAccounting(${p.id})">Distribusi Otomatis</button></td></tr>`).join(''); b.innerHTML = `<div class="card"><h4>Siap Didistribusikan</h4><p>Sistem akan membagi rata berdasarkan jumlah nasabah lolos per marketing.</p><div class="table-responsive"><table><thead><tr><th>Nominal</th><th>Aksi</th></tr></thead><tbody>${rows || '<tr><td colspan="2">Kosong</td></tr>'}</tbody></table></div></div>`; }
+            else if(id === 'distribusi_insentif') { 
+    t.innerText = "Verifikasi Pembayaran Nasabah";
+    // Mengambil data kiriman nasabah dari database instruksi
+    let listVerif = dbInstruksi.filter(i => i.toRole === 'ACCOUNTING' && i.message.includes('KONFIRMASI BAYAR'));
+    
+    let rows = listVerif.map(v => `
+        <div class="card" style="display: flex; gap: 15px; align-items: center; border-left: 5px solid var(--secondary);">
+            <img src="${v.buktiFoto}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 5px; cursor: pointer;" onclick="window.open(this.src)">
+            <div style="flex: 1;">
+                <b style="color:var(--primary)">${v.sender.toUpperCase()}</b><br>
+                <small>${v.message}</small><br>
+                <small style="color:#888;">${new Date(v.id).toLocaleString()}</small>
+            </div>
+            <button class="btn btn-success btn-sm" onclick="terimaBayarNasabah('${v.id}')">
+                <i class="fas fa-check"></i> TERIMA
+            </button>
+        </div>
+    `).join('');
+    
+    b.innerHTML = `
+        <div class="card" style="background:#e3f2fd; margin-bottom:15px;">
+            <i class="fas fa-info-circle"></i> Klik gambar untuk memperbesar kuitansi. Klik <b>TERIMA</b> untuk memotong hutang nasabah secara otomatis.
+        </div>
+        ${rows || '<div class="card" style="text-align:center;">Tidak ada bukti bayar baru.</div>'}
+    `;
+}
             else if(id === 'dompet_marketing') { 
     t.innerText = "Dompet Saya (" + activeUser.user + ")"; 
     
@@ -1831,6 +1916,90 @@ function updateHitunganProfit() {
         document.getElementById('pd-amt').value = Math.floor(hasil);
     } else {
         document.getElementById('pd-amt').value = 0;
+    }
+}
+        // Global variable untuk menyimpan data sementara
+let dataBayarTemp = {};
+
+function bukaFormBayar(id, nominal, tipe) {
+    document.getElementById('form-bayar-nasabah').classList.remove('hidden');
+    document.getElementById('nom-bayar-nasabah').value = nominal;
+    document.getElementById('judul-bayar').innerText = "Kirim Bukti " + tipe;
+    dataBayarTemp = { nasabahId: id, nominal: nominal, tipe: tipe };
+    document.getElementById('form-bayar-nasabah').scrollIntoView({ behavior: 'smooth' });
+}
+
+function previewBukti(input) {
+    if (input.files && input.files[0]) {
+        resizeImage(input.files[0], (res) => {
+            dataBayarTemp.foto = res;
+            document.getElementById('preview-container').innerHTML = `<img src="${res}" style="width: 150px; border: 1px solid #ddd; border-radius: 5px;">`;
+        }, 500);
+    }
+}
+
+function kirimBuktiKeAccounting() {
+    if(!dataBayarTemp.foto) return alert("Pilih foto bukti terlebih dahulu!");
+    
+    // Data dikirim ke array instruksi agar bisa dicek Accounting
+    dbInstruksi.push({
+        id: Date.now(),
+        toRole: 'ACCOUNTING',
+        sender: activeUser.user,
+        message: `KONFIRMASI BAYAR: Nasabah ${activeUser.user} mengirim bukti ${dataBayarTemp.tipe} sebesar Rp ${dataBayarTemp.nominal.toLocaleString()}`,
+        buktiFoto: dataBayarTemp.foto,
+        metaData: dataBayarTemp, // Simpan info teknis nasabah
+        date: Date.now(),
+        read: false
+    });
+    
+    saveToCloud();
+    alert("Bukti terkirim! Silakan tunggu Accounting memverifikasi pembayaran Anda.");
+    page('dashboard_nasabah');
+}
+        // --- FITUR NO 3: EKSEKUSI VERIFIKASI & NOTIFIKASI WA ---
+
+function terimaBayarNasabah(instruksiId) {
+    let idx = dbInstruksi.findIndex(v => v.id == instruksiId);
+    let dataInstruksi = dbInstruksi[idx];
+    let dataMeta = dataInstruksi.metaData;
+    
+    if(confirm(`Konfirmasi pembayaran Rp ${parseInt(dataMeta.nominal).toLocaleString()}?`)) {
+        // 1. Catat uang masuk ke Buku Kas Unit tempat Accounting bertugas
+        dbArusKas.push({
+            date: Date.now(),
+            unit: activeApp,
+            type: 'Masuk',
+            amount: dataMeta.nominal,
+            desc: `${dataMeta.tipe} a.n ${dataInstruksi.sender}`
+        });
+
+        // 2. Cari data nasabah untuk update status & ambil nomor WA
+        let nIdx = dbNasabah.findIndex(n => n.id == dataMeta.nasabahId);
+        let nasabahObj = dbNasabah[nIdx];
+
+        // Jika tipe pembayarannya adalah Pelunasan, maka status nasabah diganti Lunas
+        if(dataMeta.tipe === 'Pelunasan' && nIdx !== -1) {
+            dbNasabah[nIdx].payStatus = 'Lunas';
+        }
+
+        // 3. Susun Pesan WhatsApp Konfirmasi
+        let sapaan = nasabahObj.gender === 'P' ? 'Ibu' : 'Bapak';
+        let pesanWA = `*KONFIRMASI PEMBAYARAN - ${settings.nama}*\n\n` +
+                      `Alhamdulillah, ${sapaan} *${nasabahObj.nama}*,\n` +
+                      `Pembayaran *${dataMeta.tipe}* sebesar *Rp ${parseInt(dataMeta.nominal).toLocaleString()}* telah kami terima dan diverifikasi.\n\n` +
+                      `Status: BERHASIL\n` +
+                      `Tanggal: ${new Date().toLocaleString()}\n\n` +
+                      `Terima kasih telah menjadi mitra amanah kami.`;
+
+        // 4. Hapus data dari antrian verifikasi dan simpan ke Cloud
+        dbInstruksi.splice(idx, 1);
+        saveToCloud();
+        
+        // 5. Beri peringatan sukses dan buka jendela WhatsApp
+        alert("Pembayaran Berhasil Diverifikasi!");
+        openWA(nasabahObj.wa, pesanWA);
+        page('distribusi_insentif'); // Refresh halaman verifikasi
     }
 }
     </script>
