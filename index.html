@@ -1114,16 +1114,45 @@
                 </div>`; 
             }
             else if(id === 'verifikasi_bayar') {
-    t.innerText = "Verifikasi Pembayaran Nasabah";
-    // ... (Paste kode lama 'distribusi_insentif' di sini) ...
-    // Mengambil data kiriman nasabah dari database instruksi
-    let listVerif = dbInstruksi.filter(i => i.toRole === 'ACCOUNTING' && i.message.includes('KONFIRMASI BAYAR'));
-
-    // ... Lanjutkan sisa kode render tampilan bukti bayar ...
-    let rows = listVerif.map(v => `...`).join(''); // (Kode render yang lama)
-
-    b.innerHTML = `...`; // (Kode HTML yang lama)
-}
+                t.innerText = "Verifikasi Pembayaran Nasabah";
+                
+                // 1. Ambil data instruksi/pesan khusus Accounting yang berisi 'KONFIRMASI BAYAR'
+                let listVerif = dbInstruksi.filter(i => i.toRole === 'ACCOUNTING' && i.message.includes('KONFIRMASI BAYAR'));
+                
+                // 2. Render tampilan kartu untuk setiap pengajuan
+                let rows = listVerif.map(v => `
+                    <div class="card" style="display: flex; gap: 15px; align-items: center; border-left: 5px solid var(--secondary); margin-bottom: 10px;">
+                        <img src="${v.buktiFoto}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 5px; cursor: pointer; border:1px solid #ddd;" onclick="window.open(this.src)">
+                        
+                        <div style="flex: 1;">
+                            <b style="color:var(--primary)">${v.sender.toUpperCase()}</b><br>
+                            <small>${v.message}</small><br>
+                            <small style="color:#888;">${new Date(v.id).toLocaleString()}</small>
+                        </div>
+                        
+                        <button class="btn btn-success btn-sm" onclick="terimaBayarNasabah('${v.id}')">
+                            <i class="fas fa-check"></i> TERIMA
+                        </button>
+                    </div>
+                `).join('');
+                
+                // 3. Masukkan ke layar (HTML)
+                b.innerHTML = `
+                    <div class="card" style="background:#e3f2fd; margin-bottom:15px;">
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <i class="fas fa-info-circle" style="font-size:1.5rem; color:var(--primary);"></i>
+                            <div>
+                                <b>Tugas Accounting:</b><br>
+                                Cek mutasi bank. Jika uang masuk, klik <b>TERIMA</b>. Sistem akan otomatis memotong hutang nasabah & mengirim WA Lunas.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="list-verifikasi-container">
+                        ${rows || '<div class="card" style="text-align:center; padding:30px; color:#999;"><i class="fas fa-check-circle" style="font-size:2rem; margin-bottom:10px;"></i><br>Tidak ada pengajuan pembayaran baru.</div>'}
+                    </div>
+                `;
+            }
             else if(id === 'kas_pusat') { t.innerText = "Kas Induk BMT (Pusat)"; let totalIuran = dbSimpananWajib.reduce((a,b)=>a+parseInt(b.amount), 0); let totalProfitUnit = parseInt(settings.shu.profit || 0); let pengeluaran = dbArusKas.filter(x => x.unit === 'induk' && x.type === 'Keluar'); let totalKeluar = pengeluaran.reduce((a,b)=>a+parseInt(b.amount), 0); let saldoAkhir = (totalIuran + totalProfitUnit) - totalKeluar; let rowsKeluar = pengeluaran.map(x => `<tr><td data-label="Tgl">${new Date(x.date).toLocaleDateString()}</td><td data-label="Ket">${x.desc}</td><td data-label="Jml" style="color:red">Rp ${parseInt(x.amount).toLocaleString()}</td></tr>`).join(''); b.innerHTML = `<div class="card" style="background:#e3f2fd;"><h4><i class="fas fa-plus-circle"></i> Tambah Modal BMT</h4><div class="form-vertical" style="display:flex; gap:10px;"><input id="modal-in-amt" type="number" class="form-control" placeholder="Nominal Modal"><button class="btn btn-success" onclick="let a = document.getElementById('modal-in-amt').value;if(a){ dbArusKas.push({date:Date.now(), unit:'induk', type:'Masuk', amount:a, desc:'Suntikan Modal'}); saveToCloud(); page('kas_pusat'); }">Setor</button></div></div><div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); gap:15px; margin-bottom:20px;"><div class="card" style="background:var(--secondary-gradient); color:#0f3d3e;"><h3>Saldo Kas BMT</h3><h2>Rp ${saldoAkhir.toLocaleString()}</h2></div><div class="card"><h3>Total Iuran</h3><h3 style="color:var(--primary)">+ Rp ${totalIuran.toLocaleString()}</h3></div><div class="card"><h3>Profit Unit</h3><h3 style="color:var(--primary)">+ Rp ${totalProfitUnit.toLocaleString()}</h3></div><div class="card"><h3>Pengeluaran</h3><h3 style="color:#c0392b">- Rp ${totalKeluar.toLocaleString()}</h3></div></div><div class="card"><h4>Catat Pengeluaran Pusat</h4><div class="form-vertical" style="display:flex; gap:10px; flex-wrap:wrap;"><input id="k-induk-amt" type="number" class="form-control" placeholder="Nominal (Rp)" style="flex:1;"><input id="k-induk-desc" class="form-control" placeholder="Keterangan Pengeluaran" style="flex:2;"><button class="btn btn-danger" onclick="saveKasInduk()">Simpan</button></div></div><div class="card"><div style="display:flex; justify-content:space-between; margin-bottom:15px;"><h4>Riwayat Pengeluaran</h4><button class="btn btn-primary" onclick="generatePDF('printable-area', 'Laporan_Kas_Pusat'); printLaporanKas('induk');"><i class="fas fa-print"></i> PDF</button></div><div class="table-responsive"><table><thead><tr><th>Tanggal</th><th>Keterangan</th><th>Nominal</th></tr></thead><tbody>${rowsKeluar}</tbody></table></div></div>`; }
             else if(id === 'approval_pusat') { t.innerText = "Persetujuan Pusat (Ketua)"; let danaPending = dbDana.filter(d => d.status === 'Pending').map(d => `<tr><td data-label="Tgl">${new Date(d.date).toLocaleDateString()}</td><td data-label="Tipe">DANA UNIT</td><td data-label="Ket">${d.desc} (${d.unit.toUpperCase()})</td><td data-label="Jml">Rp ${parseInt(d.amount).toLocaleString()}</td><td data-label="Aksi"><button class="btn btn-sm btn-success" onclick="accDana('${d.id}')">SETUJUI</button></td></tr>`).join(''); let sarprasPending = dbSarpras.map((s,i) => s.status==='Pending' ? `<tr><td data-label="Tgl">-</td><td data-label="Tipe">SARPRAS</td><td data-label="Ket">${s.item} - ${s.alasan}</td><td data-label="Jml">-</td><td data-label="Aksi"><button class="btn btn-sm btn-success" onclick="accSarpras(${i})">SETUJUI</button></td></tr>` : '').join(''); let content = danaPending + sarprasPending; if(content === '') content = '<tr><td colspan="5" style="text-align:center;">Tidak ada permintaan tertunda.</td></tr>'; b.innerHTML = `<div class="card"><h4>Permintaan Menunggu Persetujuan Ketua</h4><div class="table-responsive"><table><thead><tr><th>Tanggal</th><th>Tipe</th><th>Keterangan</th><th>Nominal</th><th>Aksi</th></tr></thead><tbody>${content}</tbody></table></div></div>`; }
             else if(id === 'manajemen_anggota') { t.innerText = "Manajemen Anggota Tetap"; let rows = dbUsers.filter(u => u.role !== 'admin').map((u,i) => `<tr><td data-label="Foto"><img src="${u.photo||'https://cdn-icons-png.flaticon.com/512/1077/1077114.png'}" class="user-thumb" style="width:40px;height:40px;border-radius:50%;"></td><td data-label="User">${u.user}</td><td data-label="Role">${u.role}</td><td data-label="Aksi"><span class="badge" style="background:#e8f5e9; color:#2e7d32; padding:5px 10px; border-radius:15px;">Aktif</span></td></tr>`).join(''); b.innerHTML = `<div class="card"><h4>Daftar Anggota Tetap & Staff</h4><div class="table-responsive"><table><thead><tr><th>Foto</th><th>Nama</th><th>Jabatan</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table></div></div>`; }
