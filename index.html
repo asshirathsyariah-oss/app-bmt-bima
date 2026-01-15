@@ -702,6 +702,18 @@
     alert(`Pengajuan Berhasil!\nUnit: ${unit.toUpperCase()}\nPersen: ${persen}%\nNominal: Rp ${parseInt(amt).toLocaleString()}`); 
     page('distribusi_profit'); 
 }
+        // Tambahkan baris ini di dalam fungsi renderMenu()
+allMenus.forEach(menu => { 
+    if (checkAccess(r, menu.id)) { 
+        let extra = menu.id === 'inbox_ketua' ? badge : ''; 
+        add(menu.id, getMenuIcon(menu.id), menu.name, extra); 
+    } 
+});
+
+// Tambahkan menu manual khusus Verifikasi Kuitansi jika role adalah Accounting atau Admin
+if (r === 'ACCOUNTING' || r === 'ADMIN') {
+    add('konfirmasi_bayar', 'fas fa-file-invoice-dollar', 'Konfirmasi Bayar');
+}
         function approveProfitKetua(id) { 
     let p = dbProfitFlow.find(x => x.id == id); 
     
@@ -956,21 +968,18 @@
             }
             else if(id === 'dashboard_nasabah') { 
     t.innerText = `Dashboard Nasabah`; 
-    // Mencari data nasabah berdasarkan username yang sedang login
     let myData = dbNasabah.filter(n => n.nama.replace(/\s/g, '').toLowerCase() === activeUser.user.toLowerCase() && n.status === 'Approved');
     
     let contentHtml = '';
-    
     if(myData.length === 0) {
         contentHtml = '<div class="card">Anda belum memiliki pembiayaan aktif.</div>';
     } else {
         myData.forEach(d => {
-            // Hitung kalkulasi hutang
             let marginPersen = settings.margins[d.unit] || 0;
             let totalHutangAwal = parseInt(d.plafond) + (parseInt(d.plafond) * marginPersen / 100);
             let angsuranPerTenor = totalHutangAwal / parseInt(d.tenor);
             
-            // Logika Sisa Hutang (Hutang awal dikurangi riwayat bayar yang sudah masuk kas)
+            // Hitung sisa hutang berdasarkan kas masuk yang deskripsinya mengandung nama nasabah
             let riwayatBayar = dbArusKas.filter(k => k.desc.includes(d.nama) && k.type === 'Masuk');
             let totalSudahBayar = riwayatBayar.reduce((a, b) => a + parseInt(b.amount), 0);
             let sisaHutang = totalHutangAwal - totalSudahBayar;
@@ -982,33 +991,24 @@
                 <h1 style="margin: 10px 0;">Rp ${sisaHutang.toLocaleString()}</h1>
                 <div style="display: flex; justify-content: space-between; font-size: 0.8rem; opacity: 0.9;">
                     <span>Angsuran: Rp ${Math.round(angsuranPerTenor).toLocaleString()}</span>
-                    <span>Sisa Tenor: ${sisaTenor} ${d.tenorType}</span>
+                    <span>Sisa Tenor: ${sisaTenor > 0 ? sisaTenor : 0} ${d.tenorType}</span>
                 </div>
             </div>
-
             <div class="card">
                 <h4>Opsi Pembayaran</h4>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
-                    <button class="btn btn-primary" onclick="bukaFormBayar('${d.id}', ${Math.round(angsuranPerTenor)}, 'Angsuran')">
-                        <i class="fas fa-money-bill"></i> Bayar Angsuran
-                    </button>
-                    <button class="btn btn-success" onclick="bukaFormBayar('${d.id}', ${sisaHutang}, 'Pelunasan')">
-                        <i class="fas fa-check-double"></i> Pelunasan Total
-                    </button>
+                    <button class="btn btn-primary" onclick="bukaFormBayar('${d.id}', ${Math.round(angsuranPerTenor)}, 'Angsuran')">Bayar Angsuran</button>
+                    <button class="btn btn-success" onclick="bukaFormBayar('${d.id}', ${sisaHutang}, 'Pelunasan')">Pelunasan Total</button>
                 </div>
             </div>
-
             <div id="form-bayar-nasabah" class="card hidden" style="border: 2px dashed var(--secondary);">
                 <h4 id="judul-bayar">Upload Bukti</h4>
                 <div class="form-vertical">
-                    <label>Nominal Pembayaran</label>
+                    <label>Nominal</label>
                     <input type="number" id="nom-bayar-nasabah" class="form-control" readonly>
-                    <label>Pilih Foto Kuitansi/Bukti Transfer</label>
                     <input type="file" id="file-bukti-nasabah" class="form-control" accept="image/*" onchange="previewBukti(this)">
-                    <div id="preview-container" style="margin-bottom: 15px; text-align: center;"></div>
-                    <button class="btn btn-warning" style="width:100%" onclick="kirimBuktiKeAccounting()">
-                        <i class="fas fa-paper-plane"></i> Kirim Bukti Sekarang
-                    </button>
+                    <div id="preview-container" style="text-align: center;"></div>
+                    <button class="btn btn-warning" style="width:100%" onclick="kirimBuktiKeAccounting()">Kirim Bukti</button>
                 </div>
             </div>`;
         });
@@ -1078,30 +1078,14 @@
             else if(id === 'acc_profit_ketua') { t.innerText = "ACC Distribusi Profit (Ketua)"; let rows = dbProfitFlow.filter(p => p.status === 'Pending Ketua').map(p => `<tr><td>${p.targetUnit}</td><td>Rp ${parseInt(p.amount).toLocaleString()}</td><td><button class="btn btn-success btn-sm" onclick="approveProfitKetua(${p.id})">ACC</button></td></tr>`).join(''); b.innerHTML = `<div class="card"><h4>Menunggu Persetujuan</h4><div class="table-responsive"><table><thead><tr><th>Unit</th><th>Nominal</th><th>Aksi</th></tr></thead><tbody>${rows || '<tr><td colspan="3">Tidak ada data</td></tr>'}</tbody></table></div></div>`; }
             else if(id === 'terima_profit_manager') { t.innerText = "Terima Dana SHU (Manager)"; let rows = dbProfitFlow.filter(p => p.status === 'Pending Manager' && p.targetUnit === activeApp).map(p => `<tr><td>Rp ${parseInt(p.amount).toLocaleString()}</td><td><button class="btn btn-primary btn-sm" onclick="acceptProfitManager(${p.id})">Terima Dana</button></td></tr>`).join(''); b.innerHTML = `<div class="card"><h4>Dana Masuk dari Pusat</h4><div class="table-responsive"><table><thead><tr><th>Nominal</th><th>Aksi</th></tr></thead><tbody>${rows || '<tr><td colspan="2">Kosong</td></tr>'}</tbody></table></div></div>`; }
             else if(id === 'distribusi_insentif') { 
-    t.innerText = "Verifikasi Pembayaran Nasabah";
-    // Mengambil data kiriman nasabah dari database instruksi
-    let listVerif = dbInstruksi.filter(i => i.toRole === 'ACCOUNTING' && i.message.includes('KONFIRMASI BAYAR'));
-    
-    let rows = listVerif.map(v => `
-        <div class="card" style="display: flex; gap: 15px; align-items: center; border-left: 5px solid var(--secondary);">
-            <img src="${v.buktiFoto}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 5px; cursor: pointer;" onclick="window.open(this.src)">
-            <div style="flex: 1;">
-                <b style="color:var(--primary)">${v.sender.toUpperCase()}</b><br>
-                <small>${v.message}</small><br>
-                <small style="color:#888;">${new Date(v.id).toLocaleString()}</small>
-            </div>
-            <button class="btn btn-success btn-sm" onclick="terimaBayarNasabah('${v.id}')">
-                <i class="fas fa-check"></i> TERIMA
-            </button>
-        </div>
-    `).join('');
-    
-    b.innerHTML = `
-        <div class="card" style="background:#e3f2fd; margin-bottom:15px;">
-            <i class="fas fa-info-circle"></i> Klik gambar untuk memperbesar kuitansi. Klik <b>TERIMA</b> untuk memotong hutang nasabah secara otomatis.
-        </div>
-        ${rows || '<div class="card" style="text-align:center;">Tidak ada bukti bayar baru.</div>'}
-    `;
+    t.innerText = "Distribusi ke Marketing (Accounting)"; 
+    let rows = dbProfitFlow.filter(p => p.status === 'Pending Accounting' && p.targetUnit === activeApp).map(p => `
+        <tr>
+            <td>Rp ${parseInt(p.amount).toLocaleString()}</td>
+            <td><button class="btn btn-warning btn-sm" onclick="distributeProfitAccounting(${p.id})">Distribusi Otomatis</button></td>
+        </tr>`).join(''); 
+
+    b.innerHTML = `<div class="card"><h4>Siap Didistribusikan</h4><div class="table-responsive"><table><thead><tr><th>Nominal</th><th>Aksi</th></tr></thead><tbody>${rows || '<tr><td colspan="2">Kosong</td></tr>'}</tbody></table></div></div>`;
 }
             else if(id === 'dompet_marketing') { 
     t.innerText = "Dompet Saya (" + activeUser.user + ")"; 
@@ -1277,6 +1261,25 @@
                     </div>
                 </div>`; 
             }
+                else if(id === 'konfirmasi_bayar') { 
+    t.innerText = "Verifikasi Kuitansi Nasabah";
+    // Mengambil data dari dbInstruksi yang dikirim nasabah
+    let listVerif = dbInstruksi.filter(i => i.toRole === 'ACCOUNTING' && i.message.includes('KONFIRMASI BAYAR'));
+    
+    let rows = listVerif.map(v => `
+        <div class="card" style="display: flex; gap: 15px; align-items: center; border-left: 5px solid var(--secondary);">
+            <img src="${v.buktiFoto}" style="width: 70px; height: 70px; object-fit: cover; border-radius: 8px; cursor: pointer;" onclick="window.open(this.src)">
+            <div style="flex: 1;">
+                <b>${v.sender.toUpperCase()}</b><br>
+                <small>${v.message}</small>
+            </div>
+            <button class="btn btn-success btn-sm" onclick="terimaBayarNasabah('${v.id}')">
+                <i class="fas fa-check"></i> TERIMA & WA
+            </button>
+        </div>`).join('');
+    
+    b.innerHTML = rows || '<div class="card" style="text-align:center;">Tidak ada bukti bayar baru.</div>';
+}
             else if(id==='identitas') { t.innerText="Identitas"; b.innerHTML=`<div class="card"><h4>Identitas Lembaga</h4><div class="form-vertical"><label>Nama BMT</label><input id="s-nm" class="form-control" value="${settings.nama}"><label>Nomor Izin</label><input id="s-iz" class="form-control" value="${settings.izin}"><label>Alamat Lengkap</label><input id="s-al" class="form-control" value="${settings.alamat}"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><label>Email</label><input id="s-em" class="form-control" value="${settings.email}"></div><div><label>WA</label><input id="s-wa" class="form-control" value="${settings.wa}"></div></div><hr><label><b>Logo Baru:</b></label><input type="file" onchange="updateLogo(this)"><label><b>Wallpaper:</b></label><input type="file" onchange="updateWall(this)"><button class="btn btn-primary" onclick="saveID()">Simpan</button></div></div>`; }
             else if(id==='home' && activeApp==='induk') { t.innerText="Dashboard Induk"; let prof = parseInt(settings.shu.profit); let totalAsset = dbDana.reduce((a,b)=>a+parseInt(b.amount),0); let shuAnggotaTotal = prof * (settings.shu.p_nasabah / 100); let totalPinjamanAll = dbNasabah.filter(x=>x.status==='Approved').reduce((a,b)=>a+parseInt(b.plafond),0); let shuRows = dbNasabah.filter(x=>x.status==='Approved').map(x => { let share = (parseInt(x.plafond) / totalPinjamanAll) * shuAnggotaTotal; if(isNaN(share)) share = 0; return `<tr><td data-label="Nama">${x.nama}</td><td data-label="Pinjaman">Rp ${parseInt(x.plafond).toLocaleString()}</td><td data-label="SHU">Rp ${share.toLocaleString(undefined, {maximumFractionDigits:0})}</td></tr>`; }).join(''); b.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(250px,1fr));gap:20px;margin-bottom:20px"><div class="card" style="background:var(--primary-gradient);color:white"><h3>SHU Berjalan</h3><h2>Rp ${prof.toLocaleString()}</h2></div><div class="card" style="background:var(--secondary-gradient);color:#0f3d3e"><h3>Total Aset</h3><h2>Rp ${totalAsset.toLocaleString()}</h2></div></div><div class="card"><h3>Estimasi SHU Anggota</h3><p>Alokasi: <b>Rp ${shuAnggotaTotal.toLocaleString()}</b></p><div class="table-responsive"><table><thead><tr><th>Nama</th><th>Pinjaman</th><th>Est. SHU</th></tr></thead><tbody>${shuRows || '<tr><td colspan="3">Data kosong.</td></tr>'}</tbody></table></div></div>`; }
             else if(id==='home') { 
@@ -2002,6 +2005,64 @@ function terimaBayarNasabah(instruksiId) {
         page('distribusi_insentif'); // Refresh halaman verifikasi
     }
 }
+ // Global variable nasabah
+let dataBayarTemp = {};
+
+function bukaFormBayar(id, nominal, tipe) {
+    document.getElementById('form-bayar-nasabah').classList.remove('hidden');
+    document.getElementById('nom-bayar-nasabah').value = nominal;
+    dataBayarTemp = { nasabahId: id, nominal: nominal, tipe: tipe };
+}
+
+function previewBukti(input) {
+    if (input.files && input.files[0]) {
+        resizeImage(input.files[0], (res) => {
+            dataBayarTemp.foto = res;
+            document.getElementById('preview-container').innerHTML = `<img src="${res}" style="width: 100px; margin-top:10px;">`;
+        }, 500);
+    }
+}
+
+function kirimBuktiKeAccounting() {
+    if(!dataBayarTemp.foto) return alert("Upload foto bukti!");
+    dbInstruksi.push({
+        id: Date.now(),
+        toRole: 'ACCOUNTING',
+        sender: activeUser.user,
+        message: `KONFIRMASI BAYAR: Nasabah ${activeUser.user} mengirim bukti ${dataBayarTemp.tipe}`,
+        buktiFoto: dataBayarTemp.foto,
+        metaData: dataBayarTemp,
+        date: Date.now(),
+        read: false
+    });
+    saveToCloud();
+    alert("Terkirim!");
+    page('dashboard_nasabah');
+}
+
+function terimaBayarNasabah(instruksiId) {
+    let idx = dbInstruksi.findIndex(v => v.id == instruksiId);
+    let dataIns = dbInstruksi[idx];
+    let meta = dataIns.metaData;
+    
+    if(confirm("Terima pembayaran?")) {
+        // Catat ke Kas
+        dbArusKas.push({ date: Date.now(), unit: activeApp, type: 'Masuk', amount: meta.nominal, desc: `Bayar ${meta.tipe} a.n ${dataIns.sender}` });
+
+        // Update Nasabah
+        let nIdx = dbNasabah.findIndex(n => n.id == meta.nasabahId);
+        if(meta.tipe === 'Pelunasan' && nIdx !== -1) dbNasabah[nIdx].payStatus = 'Lunas';
+
+        // Kirim WA
+        let nObj = dbNasabah[nIdx];
+        let msg = `*PEMBAYARAN DITERIMA*\n\nTerima kasih Bapak/Ibu ${nObj.nama}, pembayaran ${meta.tipe} sebesar Rp ${parseInt(meta.nominal).toLocaleString()} telah kami verifikasi.`;
+        
+        dbInstruksi.splice(idx, 1);
+        saveToCloud();
+        openWA(nObj.wa, msg);
+        page('konfirmasi_bayar');
+    }
+}       
     </script>
 </body>
 </html>
