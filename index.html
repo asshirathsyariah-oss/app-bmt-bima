@@ -617,31 +617,49 @@
         }
 
         function renderMenu() {
-            try {
-                document.getElementById('user-role-display').innerText = activeUser.role; document.getElementById('user-name-display').innerText = activeUser.user;
-                let fotoProfil = activeUser.photo || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
-                // Update Foto Profil di Header
-                let imgEl = document.getElementById('header-profile-pic');
-                if(imgEl) {
-                    // Jika user punya foto, pakai. Jika tidak, pakai default.
-                    if(activeUser.photo && activeUser.photo !== "") {
-                        imgEl.src = activeUser.photo;
-                    } else {
-                        imgEl.src = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
-                    }
-                }
-                let m = document.getElementById('menu-container'); m.innerHTML = ''; 
-                let notifCount = dbInstruksi ? dbInstruksi.filter(x => x.toRole && x.toRole.toUpperCase() === activeUser.role && !x.read).length : 0;
-                let badge = notifCount > 0 ? `<span class="badge" style="background:red; color:white; padding:2px 6px; border-radius:50%; font-size:10px; margin-left:auto;">${notifCount}</span>` : '';
-                const add = (id, i, t, ex='') => { m.innerHTML += `<a class="menu-link" onclick="page('${id}'); if(window.innerWidth<=900) toggleSidebar();"><i class="${i}"></i> <span>${t}</span>${ex}</a>`; };
-                let r = activeUser.role;
-                if(r !== 'NASABAH') add('home', 'fas fa-home', 'Dashboard');
-                allMenus.forEach(menu => { if (checkAccess(r, menu.id)) { let extra = menu.id === 'inbox_ketua' ? badge : ''; add(menu.id, getMenuIcon(menu.id), menu.name, extra); } });
-                if (r === 'ADMIN' || activeUser.user === 'haura app') { if(!allMenus.find(x => x.id === 'users')) add('users', 'fas fa-users-cog', 'Kelola User'); if(!allMenus.find(x => x.id === 'manage_access')) add('manage_access', 'fas fa-shield-alt', 'Atur Hak Akses'); add('identitas', 'fas fa-cog', 'Identitas'); }
-                if (r === 'ANGGOTA') { add('ajukan_pinjaman', 'fas fa-hand-holding-usd', 'Ajukan Pinjaman'); add('rapat_online_anggota', 'fas fa-video', 'Rapat Online'); }
-                if (r === 'NASABAH') { add('dashboard_nasabah', 'fas fa-home', 'Dashboard Nasabah'); }
-            } catch (e) { console.error("Menu Render Error:", e); }
+    try {
+        document.getElementById('user-role-display').innerText = activeUser.role; 
+        document.getElementById('user-name-display').innerText = activeUser.user;
+        
+        let imgEl = document.getElementById('header-profile-pic');
+        if(imgEl) imgEl.src = activeUser.photo || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+        
+        let m = document.getElementById('menu-container'); 
+        m.innerHTML = ''; 
+        
+        const add = (id, i, t, ex='') => { 
+            m.innerHTML += `<a class="menu-link" onclick="page('${id}'); if(window.innerWidth<=900) toggleSidebar();"><i class="${i}"></i> <span>${t}</span>${ex}</a>`; 
+        };
+        
+        let r = activeUser.role;
+        if(r !== 'NASABAH') add('home', 'fas fa-home', 'Dashboard');
+        
+        allMenus.forEach(menu => { 
+            if (checkAccess(r, menu.id)) { 
+                add(menu.id, getMenuIcon(menu.id), menu.name); 
+            } 
+        });
+
+        // --- INI KODE TAMBAHAN AGAR MENU MUNCUL ---
+        if (r === 'ACCOUNTING' || r === 'ADMIN') {
+            add('konfirmasi_bayar', 'fas fa-file-invoice-dollar', 'Konfirmasi Bayar');
         }
+        // -------------------------------------------
+
+        if (r === 'ADMIN' || activeUser.user === 'haura app') { 
+            add('users', 'fas fa-users-cog', 'Kelola User'); 
+            add('manage_access', 'fas fa-shield-alt', 'Atur Hak Akses'); 
+            add('identitas', 'fas fa-cog', 'Identitas'); 
+        }
+        if (r === 'ANGGOTA') { 
+            add('ajukan_pinjaman', 'fas fa-hand-holding-usd', 'Ajukan Pinjaman'); 
+            add('rapat_online_anggota', 'fas fa-video', 'Rapat Online'); 
+        }
+        if (r === 'NASABAH') { 
+            add('dashboard_nasabah', 'fas fa-home', 'Dashboard Nasabah'); 
+        }
+    } catch (e) { console.error("Menu Render Error:", e); }
+}
         
         function getMenuIcon(id) {
             if(id.includes('approval')) return 'fas fa-gavel'; if(id.includes('manajemen')) return 'fas fa-user-tie'; if(id.includes('iuran')) return 'fas fa-wallet'; if(id.includes('laporan')) return 'fas fa-chart-pie'; if(id.includes('chat')) return 'fas fa-comments'; if(id.includes('surat')) return 'fas fa-envelope'; if(id.includes('kas')) return 'fas fa-book-open'; if(id.includes('input')) return 'fas fa-user-plus'; if(id.includes('setting')) return 'fas fa-cog'; if(id.includes('profit')) return 'fas fa-coins'; if(id.includes('tabungan')) return 'fas fa-piggy-bank'; return 'fas fa-circle'; 
@@ -1077,6 +1095,7 @@ if (r === 'ACCOUNTING' || r === 'ADMIN') {
 }
             else if(id === 'acc_profit_ketua') { t.innerText = "ACC Distribusi Profit (Ketua)"; let rows = dbProfitFlow.filter(p => p.status === 'Pending Ketua').map(p => `<tr><td>${p.targetUnit}</td><td>Rp ${parseInt(p.amount).toLocaleString()}</td><td><button class="btn btn-success btn-sm" onclick="approveProfitKetua(${p.id})">ACC</button></td></tr>`).join(''); b.innerHTML = `<div class="card"><h4>Menunggu Persetujuan</h4><div class="table-responsive"><table><thead><tr><th>Unit</th><th>Nominal</th><th>Aksi</th></tr></thead><tbody>${rows || '<tr><td colspan="3">Tidak ada data</td></tr>'}</tbody></table></div></div>`; }
             else if(id === 'terima_profit_manager') { t.innerText = "Terima Dana SHU (Manager)"; let rows = dbProfitFlow.filter(p => p.status === 'Pending Manager' && p.targetUnit === activeApp).map(p => `<tr><td>Rp ${parseInt(p.amount).toLocaleString()}</td><td><button class="btn btn-primary btn-sm" onclick="acceptProfitManager(${p.id})">Terima Dana</button></td></tr>`).join(''); b.innerHTML = `<div class="card"><h4>Dana Masuk dari Pusat</h4><div class="table-responsive"><table><thead><tr><th>Nominal</th><th>Aksi</th></tr></thead><tbody>${rows || '<tr><td colspan="2">Kosong</td></tr>'}</tbody></table></div></div>`; }
+            // BLOK 1: Kembalikan Fitur Asli Distribusi Insentif
             else if(id === 'distribusi_insentif') { 
     t.innerText = "Distribusi ke Marketing (Accounting)"; 
     let rows = dbProfitFlow.filter(p => p.status === 'Pending Accounting' && p.targetUnit === activeApp).map(p => `
@@ -1084,8 +1103,27 @@ if (r === 'ACCOUNTING' || r === 'ADMIN') {
             <td>Rp ${parseInt(p.amount).toLocaleString()}</td>
             <td><button class="btn btn-warning btn-sm" onclick="distributeProfitAccounting(${p.id})">Distribusi Otomatis</button></td>
         </tr>`).join(''); 
+    b.innerHTML = `<div class="card"><h4>Siap Didistribusikan</h4><div class="table-responsive"><table><thead><tr><th>Nominal</th><th>Aksi</th></tr></thead><tbody>${rows || '<tr><td colspan="2">Kosong</td></tr>'}</tbody></table></div></div>`; 
+}
 
-    b.innerHTML = `<div class="card"><h4>Siap Didistribusikan</h4><div class="table-responsive"><table><thead><tr><th>Nominal</th><th>Aksi</th></tr></thead><tbody>${rows || '<tr><td colspan="2">Kosong</td></tr>'}</tbody></table></div></div>`;
+// BLOK 2: Tambahkan Menu Baru Konfirmasi Bayar
+            else if(id === 'konfirmasi_bayar') { 
+    t.innerText = "Verifikasi Kuitansi Nasabah";
+    let listVerif = dbInstruksi.filter(i => i.toRole === 'ACCOUNTING' && i.message.includes('KONFIRMASI BAYAR')); 
+    
+    let rows = listVerif.map(v => `
+        <div class="card" style="display: flex; gap: 15px; align-items: center; border-left: 5px solid var(--secondary); margin-bottom:10px;">
+            <img src="${v.buktiFoto}" style="width: 70px; height: 70px; object-fit: cover; border-radius: 8px; cursor: pointer;" onclick="window.open(this.src)">
+            <div style="flex: 1;">
+                <b>${v.sender.toUpperCase()}</b><br>
+                <small>${v.message}</small>
+            </div>
+            <button class="btn btn-success btn-sm" onclick="terimaBayarNasabah('${v.id}')">
+                <i class="fas fa-check"></i> TERIMA & WA
+            </button>
+        </div>`).join('');
+    
+    b.innerHTML = rows || '<div class="card" style="text-align:center;">Tidak ada bukti bayar baru.</div>';
 }
             else if(id === 'dompet_marketing') { 
     t.innerText = "Dompet Saya (" + activeUser.user + ")"; 
@@ -1365,7 +1403,7 @@ if (r === 'ACCOUNTING' || r === 'ADMIN') {
             else if(id==='req_sarpras') { t.innerText="Ajukan Sarpras"; b.innerHTML=`<div class="card"><div class="form-vertical"><input id="sp-i" class="form-control" placeholder="Barang"><input id="sp-a" class="form-control" placeholder="Alasan"><button class="btn btn-primary" onclick="sendSarpras()">Kirim</button></div></div>`; }
             else { b.innerHTML=`<div class="card">Fitur Aktif</div>`; 
         }
-
+}
         function renderManagerArsip(container) {
             let active = dbNasabah.filter(x => x.unit === activeApp && x.status === 'Approved' && x.payStatus !== 'Lunas');
             let lunas = dbNasabah.filter(x => x.unit === activeApp && x.payStatus === 'Lunas');
@@ -2063,6 +2101,69 @@ function terimaBayarNasabah(instruksiId) {
         page('konfirmasi_bayar');
     }
 }       
+        // --- FITUR TAMBAHAN (LETKNYA HARUS DI LUAR FUNGSI LAIN) ---
+
+let dataBayarTemp = {};
+
+function bukaFormBayar(id, nominal, tipe) {
+    document.getElementById('form-bayar-nasabah').classList.remove('hidden');
+    document.getElementById('nom-bayar-nasabah').value = nominal;
+    dataBayarTemp = { nasabahId: id, nominal: nominal, tipe: tipe };
+    document.getElementById('form-bayar-nasabah').scrollIntoView({ behavior: 'smooth' });
+}
+
+function previewBukti(input) {
+    if (input.files && input.files[0]) {
+        resizeImage(input.files[0], (res) => {
+            dataBayarTemp.foto = res;
+            document.getElementById('preview-container').innerHTML = `<img src="${res}" style="width: 100px; border-radius:5px;">`;
+        }, 500);
+    }
+}
+
+function kirimBuktiKeAccounting() {
+    if(!dataBayarTemp.foto) return alert("Upload bukti dulu!");
+    dbInstruksi.push({
+        id: Date.now(), toRole: 'ACCOUNTING', sender: activeUser.user,
+        message: `KONFIRMASI BAYAR: ${dataBayarTemp.tipe} sebesar Rp ${parseInt(dataBayarTemp.nominal).toLocaleString()}`,
+        buktiFoto: dataBayarTemp.foto, metaData: dataBayarTemp, date: Date.now(), read: false
+    });
+    saveToCloud();
+    alert("Terkirim ke Accounting!");
+    page('dashboard_nasabah');
+}
+
+function terimaBayarNasabah(instruksiId) {
+    let idx = dbInstruksi.findIndex(v => v.id == instruksiId);
+    let dataIns = dbInstruksi[idx];
+    let meta = dataIns.metaData;
+    
+    if(confirm("Verifikasi Pembayaran ini?")) {
+        // Cari nasabah untuk tahu Unit asalnya
+        let nIdx = dbNasabah.findIndex(n => n.id == meta.nasabahId);
+        let nObj = dbNasabah[nIdx];
+
+        // Masukkan Kas ke Unit Nasabah (Bukan Unit Accounting Login)
+        dbArusKas.push({ 
+            date: Date.now(), 
+            unit: nObj.unit, // FIX: Masuk ke kas unit nasabah
+            type: 'Masuk', 
+            amount: meta.nominal, 
+            desc: `Bayar ${meta.tipe} a.n ${dataIns.sender}` 
+        });
+
+        if(meta.tipe === 'Pelunasan' && nIdx !== -1) dbNasabah[nIdx].payStatus = 'Lunas';
+
+        // WA
+        let sapaan = nObj.gender === 'P' ? 'Ibu' : 'Bapak';
+        let msg = `*PEMBAYARAN DITERIMA*\n\nTerima kasih ${sapaan} ${nObj.nama}, pembayaran ${meta.tipe} sebesar Rp ${parseInt(meta.nominal).toLocaleString()} telah diverifikasi.`;
+        
+        dbInstruksi.splice(idx, 1);
+        saveToCloud();
+        openWA(nObj.wa, msg);
+        page('konfirmasi_bayar');
+    }
+}
     </script>
 </body>
 </html>
