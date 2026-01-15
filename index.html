@@ -1607,28 +1607,26 @@ function prosesPelunasan(id, totalHutangAwal) {
             let angsuran = totalTotal / parseInt(d.tenor);
             let tglSekarang = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
             let autoNum = d.noSurat !== '-' ? d.noSurat : `0${Math.floor(Math.random() * 100)}/AKAD/${new Date().getFullYear()}`;
+            
             let photoSrc = (d.foto && d.foto.length > 50) ? d.foto : "https://cdn-icons-png.flaticon.com/512/1077/1077114.png";
             let logoSrc = settings.logo || "https://cdn-icons-png.flaticon.com/512/2317/2317968.png";
 
-            // --- HTML STRUKTUR (FIXED PIXEL WIDTH) ---
-            // Kita gunakan width: 750px agar konsisten di HP maupun Laptop
+            // --- HTML STRUKTUR (UKURAN PAS F4: 215mm) ---
             let html = `
-            <div id="akad-print-container" style="width: 750px; background: white; font-family: 'Times New Roman', serif; color: #000; padding: 20px;">
+            <div id="akad-cetak" style="width: 215mm; background: white; font-family: 'Times New Roman', serif; color: #000; padding: 25px; box-sizing: border-box;">
                 
                 <style>
                     .no-break { page-break-inside: avoid; }
                     table { width: 100%; border-collapse: collapse; font-size: 14px; }
-                    td { vertical-align: top; padding: 4px; }
-                    .header-title { font-size: 18px; font-weight: bold; text-transform: uppercase; }
-                    .header-sub { font-size: 12px; }
+                    td { vertical-align: top; padding: 5px; }
                 </style>
 
                 <div class="no-break" style="border-bottom: 3px double #000; padding-bottom: 10px; margin-bottom: 20px; display:flex; align-items:center;">
                     <img src="${logoSrc}" style="width:80px; height:80px; object-fit:contain; margin-right:20px;">
-                    <div style="flex:1; text-align:center;">
-                        <div class="header-title">${settings.nama}</div>
-                        <div class="header-sub">${settings.alamat}</div>
-                        <div class="header-sub">Izin: ${settings.izin}</div>
+                    <div style="flex:1;">
+                        <div style="font-size: 18px; font-weight: 900; text-transform: uppercase;">${settings.nama}</div>
+                        <div style="font-size: 12px;">${settings.alamat}</div>
+                        <div style="font-size: 12px;">Izin: ${settings.izin}</div>
                     </div>
                 </div>
 
@@ -1637,7 +1635,7 @@ function prosesPelunasan(id, totalHutangAwal) {
                     <span style="font-size: 12px;">Nomor: ${autoNum}</span>
                 </div>
 
-                <div style="margin-bottom: 15px; font-size: 14px;">Pada hari ini <b>${tglSekarang}</b>, telah disepakati perjanjian antara:</div>
+                <div style="margin-bottom: 10px; font-size: 14px;">Pada hari ini <b>${tglSekarang}</b>, telah disepakati perjanjian antara:</div>
 
                 <div class="no-break" style="border: 1px solid #000; padding: 15px; margin-bottom: 20px;">
                     <table border="0">
@@ -1708,80 +1706,45 @@ function prosesPelunasan(id, totalHutangAwal) {
                 </div>
 
                 <div style="font-size: 10px; color: #888; margin-top: 30px; text-align: right;">
-                    Dicetak Otomatis: ${new Date().toLocaleString()}
+                    Dicetak Otomatis: ${new Date().toLocaleString()} (Format F4)
                 </div>
             </div>`;
 
-            // --- PROSES CETAK ---
-            Perbaikan Data Hilang Akun Accounting
-Percakapan dengan Gemini
-Saya punya HTML, tapi kenpa distribusi instntif Untuk marketing hilang adi akun accounting
+            // --- EKSEKUSI CETAK (LOGIKA FIX TENGAH) ---
+            const area = document.getElementById('printable-area');
+            area.innerHTML = html;
+            
+            // 1. Tampilkan Area & Pastikan Lebar Sesuai Konten
+            area.style.display = 'block';
+            area.style.width = 'fit-content'; // Biar container mengikuti lebar kertas 215mm
+            area.style.margin = '0 auto';     // Jaga-jaga biar senter di layar
 
-Masalah data yang "hilang" di dashboard role tertentu (seperti Accounting) padahal data sudah diinput oleh role lain (Marketing), biasanya disebabkan oleh salah satu dari 3 hal berikut dalam kode JavaScript/HTML Anda.
+            const element = document.getElementById('akad-cetak');
 
-Karena Anda belum melampirkan kodenya, silakan periksa 3 poin utama ini terlebih dahulu:
+            const opt = {
+                // Margin 0 karena kita sudah pakai padding di dalam HTML
+                margin:       0, 
+                filename:     `Akad_${d.nama.replace(/\s/g,'_')}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { 
+                    scale: 2, 
+                    useCORS: true,
+                    // INI KUNCINYA: Memaksa mode desktop agar tabel melebar
+                    windowWidth: 1200
+                }, 
+                // Ukuran kertas F4 (215mm x 330mm)
+                jsPDF:        { unit: 'mm', format: [215, 330], orientation: 'portrait' } 
+            };
 
-1. Cek Logika "Filtering" (Penyaringan Data)
-Di halaman Accounting, biasanya ada fungsi yang mengambil data dari database. Periksa apakah ada kode if yang tidak sengaja menyaring data marketing.
-
-Masalah Umum: Kode hanya menampilkan data jika status == 'approved', padahal data baru dari marketing statusnya masih pending.
-
-Contoh Kode yang harus diperiksa:
-
-JavaScript
-// Periksa bagian seperti ini di fungsi renderAccounting()
-if (data.divisi === 'marketing' && data.status === 'siap_cair') {
-   // Kode render tabel
-}
-// Jika data marketing belum punya status 'siap_cair', maka tidak akan muncul.
-2. Cek Struktur Object/Database
-Pastikan data yang disimpan oleh Marketing memiliki Key atau Field yang dibaca oleh halaman Accounting.
-
-Kasus: Halaman Accounting mencari field bernama nominal_insentif, tapi Marketing menyimpannya dengan nama jumlah_bonus. Karena namanya beda, hasilnya undefined atau kosong.
-
-Solusi: Samakan nama variabel saat save (di marketing) dan saat read (di accounting).
-
-3. Cek Izin Akses (Database Rules)
-Jika Anda menggunakan database seperti Firebase atau SQL:
-
-Pastikan akun Accounting memiliki izin untuk membaca path atau tabel tempat Marketing menyimpan data.
-
-Cek apakah data tersebut tersimpan di collection yang sama atau terpisah.
-
-Cara Debugging Cepat
-Coba tambahkan console.log di dalam fungsi yang memuat data di halaman Accounting untuk melihat apakah data mentahnya sebenarnya masuk atau tidak.
-
-JavaScript
-function loadDataAccounting() {
-    // ... proses ambil data ...
-    console.log("Data Mentah:", allData); // <-- Cek di Console Browser (F12)
-    
-    // ... proses filter ...
-    console.log("Data Setelah Filter:", filteredData); // <-- Apakah jadi kosong disini?
-}
-Langkah Selanjutnya: Boleh tolong tempelkan (paste) kode HTML dan JavaScript Anda di sini? Khususnya pada bagian:
-
-Fungsi penyimpanan data di sisi Marketing.
-
-Fungsi pemanggilan (render) data di sisi Accounting.
-
-Saya akan bantu koreksi di mana letak kesalahannya.
-
-Saya punya HTML, tapi kenpa distribusi instntif Untuk marketing hilang adi akun accounting l. analisis HTML saya itu
-
-Berdasarkan analisis file index (9).html yang Anda lampirkan, saya menemukan penyebab utama kenapa data Distribusi Insentif Marketing tidak muncul di akun Accounting.
-
-Masalahnya ada pada fungsi page(id). Menu dengan ID distribusi_insentif isinya tertukar atau tertimpa dengan fitur "Verifikasi Pembayaran Nasabah".
-
-Analisis Akar Masalah
-Logic yang Salah: Di dalam kode Anda, blok else if(id === 'distribusi_insentif') justru mengambil data dari dbInstruksi (pesan konfirmasi bayar dari nasabah), bukannya mengambil data Insentif dari dbArusKas.
-
-Judul Halaman: Bahkan judul halamannya tertulis: t.innerText = "Verifikasi Pembayaran Nasabah";. Ini membuktikan kodenya salah tempat.
-
-Solusi Perbaikan Code
-Cari bagian kode else if(id === 'distribusi_insentif') (sekitar baris 1025), lalu HAPUS blok tersebut dan GANTI dengan kode berikut ini agar Accounting bisa melihat daftar insentif yang sudah cair:
-
-JavaScript
+            html2pdf().set(opt).from(element).save().then(() => {
+                area.style.display = 'none';
+                area.style.width = '';
+            }).catch(e => {
+                alert("Error: " + e.message);
+                area.style.display = 'none';
+                area.style.width = '';
+            });
+        }
             else if(id === 'distribusi_insentif') { 
                 t.innerText = "Laporan Distribusi Insentif Marketing"; 
                 
